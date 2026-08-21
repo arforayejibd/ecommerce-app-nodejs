@@ -7,12 +7,14 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app.js",
     "start-server": "node app.js",
-    "start:dev": "nodemon app.js"
+    "start:dev": "nodemon app.js",
+    "deploy": "node deploy.js"
   },
   "author": "Maximilian Schwarzmüller",
   "license": "ISC",
   "devDependencies": {
-    "nodemon": "^1.18.3"
+    "nodemon": "^1.18.3",
+    "ssh2-sftp-client": "^12.1.1"
   },
   "dependencies": {
     "body-parser": "^1.18.3",

@@ -1,38 +1,613 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ক্যাটাগরি ম্যানেজমেন্ট - Backend Admin Portal</title>
-    <link rel="stylesheet" href="/css/admin.css">
+    <title>Category & Sub-Category Management - Rosedrape Admin</title>
+    <link rel="stylesheet" href="/backEnd/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/backEnd/assets/css/icons.min.css">
+    <link rel="stylesheet" href="/backEnd/assets/css/app.min.css">
+    <link rel="stylesheet" href="/backEnd/assets/css/sidebar-modern.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        [data-theme="dark"] body {
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .content-page {
+            margin-top: 85px !important;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+        .hero-banner-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 24px 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            margin-bottom: 24px;
+        }
+        [data-theme="dark"] .hero-banner-card {
+            background: #1e293b !important;
+            border-color: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.2);
+        }
+        .content-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+            margin-bottom: 24px;
+        }
+        [data-theme="dark"] .content-card {
+            background: #1e293b;
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+        .badge-soft-success {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-weight: 700;
+        }
+        .badge-soft-danger {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-weight: 700;
+        }
+        .badge-soft-primary {
+            background: rgba(99, 102, 241, 0.12);
+            color: #6366f1;
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-weight: 700;
+        }
+
+        .stat-card-widget {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+        }
+        .stat-widget-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .nav-tabs-custom .nav-link {
+            border: none;
+            color: #64748b;
+            font-weight: 700;
+            padding: 10px 20px;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+        .nav-tabs-custom .nav-link.active {
+            background: #fe5200;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(254, 82, 0, 0.25);
+        }
+
+        .cat-grid-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .cat-grid-card:hover {
+            transform: translateY(-3px);
+            border-color: #cbd5e1;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+        }
+        .cat-thumb-img {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #fe5200;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            background: #f8fafc;
+        }
+        .subcat-pill-item {
+            background: #f1f5f9;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+    </style>
 </head>
-<body class="admin-body">
+<body>
 
     <%- include('../includes/admin-navigation.ejs') %>
 
-    <div class="admin-wrapper">
-        <div class="admin-content-box">
-            <div class="box-header">
-                <div>
-                    <h2>🏷️ ক্যাটাগরি তালিকা (Category Management)</h2>
-                    <p style="color: var(--text-subtle); font-size: 0.88rem; margin-top: 0.2rem;">স্টোরের সকল প্রোডাক্ট ক্যাটাগরি গ্রুপ</p>
+    <% 
+        const safeCategories = (typeof categories !== 'undefined' && categories) ? categories : [];
+        const safeSubcategories = (typeof subcategories !== 'undefined' && subcategories) ? subcategories : [];
+        const defaultSvgImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z'%3E%3C/path%3E%3C/svg%3E";
+    %>
+
+    <div class="content-page">
+        <div class="container-fluid">
+            
+            <!-- Hero Header Banner -->
+            <div class="hero-banner-card d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="api-logo-badge" style="width: 48px; height: 48px; border-radius: 12px; background: rgba(254, 82, 0, 0.12); color: #fe5200; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                        <i class="fe-grid"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold m-0 text-slate-900" style="color: #0f172a;">Category & Sub-Category Management</h3>
+                        <p class="text-muted m-0 font-13">Organize store product categories, sub-categories and display hierarchy.</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-primary" style="background: #fe5200; border-color: #fe5200;" onclick="openAddCatModal()">
+                        <i class="fe-plus-circle me-1"></i> Add Main Category
+                    </button>
+                    <button type="button" class="btn btn-secondary" style="background: #6366f1; border-color: #6366f1;" onclick="openAddSubCatModal()">
+                        <i class="fe-plus me-1"></i> Add Sub-Category
+                    </button>
                 </div>
             </div>
 
-            <div style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); display: grid; gap: 1.5rem;">
-                <% categories.forEach(cat => { %>
-                    <div style="background: rgba(11, 15, 25, 0.6); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.5rem; text-align: center; display: flex; flex-direction: column; align-items: center;">
-                        <img src="<%= cat.img %>" alt="<%= cat.name %>" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; border: 2px solid var(--accent-blue);">
-                        <h3 style="font-size: 1.15rem; font-weight: 800; color: white; margin-bottom: 0.3rem;"><%= cat.name %></h3>
-                        <p style="color: var(--accent-blue); font-weight: 700; font-size: 0.88rem; margin-bottom: 1rem;"><%= cat.count %> টি প্রোডাক্ট যুক্ত</p>
-                        <a href="/products?category=<%= encodeURIComponent(cat.name) %>" target="_blank" class="btn-edit" style="width: 100%; text-align: center;">
-                            ভিউ ক্যাটাগরি ↗
-                        </a>
+            <!-- Stats Widgets Row -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3 col-sm-6">
+                    <div class="stat-card-widget">
+                        <div class="stat-widget-icon" style="background: rgba(254, 82, 0, 0.12); color: #fe5200;">
+                            <i class="fe-folder"></i>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold m-0" style="color: #0f172a;"><%= safeCategories.length %></h3>
+                            <span class="text-muted font-13">Main Categories</span>
+                        </div>
                     </div>
-                <% }); %>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="stat-card-widget">
+                        <div class="stat-widget-icon" style="background: rgba(99, 102, 241, 0.12); color: #6366f1;">
+                            <i class="fe-tag"></i>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold m-0" style="color: #0f172a;"><%= safeSubcategories.length %></h3>
+                            <span class="text-muted font-13">Sub-Categories</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="stat-card-widget">
+                        <div class="stat-widget-icon" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
+                            <i class="fe-check-circle"></i>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold m-0" style="color: #0f172a;"><%= safeCategories.filter(c => c.status).length %></h3>
+                            <span class="text-muted font-13">Active Categories</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="stat-card-widget">
+                        <div class="stat-widget-icon" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;">
+                            <i class="fe-box"></i>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold m-0" style="color: #0f172a;"><%= safeCategories.reduce((sum, c) => sum + (c.productCount || 0), 0) %></h3>
+                            <span class="text-muted font-13">Linked Products</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Card with Tabs -->
+            <div class="content-card">
+                
+                <!-- Nav Tabs -->
+                <ul class="nav nav-pills nav-tabs-custom mb-4" id="categoryTabs" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link <%= (typeof activeTab === 'undefined' || activeTab === 'categories') ? 'active' : '' %>" onclick="switchTab('categories')">
+                            <i class="fe-folder me-1"></i> Main Categories (<%= safeCategories.length %>)
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link <%= (typeof activeTab !== 'undefined' && activeTab === 'subcategories') ? 'active' : '' %>" onclick="switchTab('subcategories')">
+                            <i class="fe-tag me-1"></i> Sub-Categories (<%= safeSubcategories.length %>)
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- TAB 1: MAIN CATEGORIES GRID -->
+                <div id="tab-categories-content" style="display: <%= (typeof activeTab === 'undefined' || activeTab === 'categories') ? 'block' : 'none' %>;">
+                    <div class="row g-3">
+                        <% if (safeCategories.length > 0) { %>
+                            <% safeCategories.forEach(cat => { %>
+                                <div class="col-lg-3 col-md-4 col-sm-6">
+                                    <div class="cat-grid-card">
+                                        <img src="<%= cat.image || defaultSvgImage %>" alt="<%= cat.name %>" class="cat-thumb-img" onerror="this.onerror=null; this.src='<%= defaultSvgImage %>';">
+                                        
+                                        <div class="mb-2">
+                                            <% if (cat.status) { %>
+                                                <span class="badge-soft-success">Active</span>
+                                            <% } else { %>
+                                                <span class="badge-soft-danger">Inactive</span>
+                                            <% } %>
+                                        </div>
+
+                                        <h5 class="fw-bold m-0 text-slate-900" style="color: #0f172a;"><%= cat.name %></h5>
+                                        <p class="font-12 text-muted font-monospace mb-2">slug: <%= cat.slug %></p>
+
+                                        <div class="fw-bold font-13 mb-3" style="color: #fe5200;">
+                                            <i class="fe-box me-1"></i> <%= cat.productCount || 0 %> Products
+                                        </div>
+
+                                        <!-- Subcategory Pills -->
+                                        <div class="d-flex flex-wrap gap-1 justify-content-center mb-3">
+                                            <% if (cat.subcategories && cat.subcategories.length > 0) { %>
+                                                <% cat.subcategories.forEach(sub => { %>
+                                                    <span class="subcat-pill-item"><i class="fe-tag me-1"></i><%= sub.name %></span>
+                                                <% }); %>
+                                            <% } else { %>
+                                                <span class="font-12 text-muted fst-italic">No Sub-categories</span>
+                                            <% } %>
+                                        </div>
+
+                                        <!-- Action Buttons -->
+                                        <div class="d-flex align-items-center justify-content-center gap-1">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                    data-id="<%= cat.id %>" 
+                                                    data-name="<%= cat.name %>" 
+                                                    data-image="<%= cat.image || '' %>" 
+                                                    data-status="<%= cat.status ? '1' : '0' %>" 
+                                                    data-order="<%= cat.order || 0 %>" 
+                                                    onclick="openEditCatModalFromBtn(this)" title="Edit">
+                                                <i class="fe-edit"></i> Edit
+                                            </button>
+
+                                            <form action="/admin/category/status" method="POST" class="d-inline">
+                                                <input type="hidden" name="id" value="<%= cat.id %>">
+                                                <button type="submit" class="btn btn-sm btn-outline-warning" title="Toggle Status">
+                                                    <i class="fe-power"></i> <%= cat.status ? 'Off' : 'On' %>
+                                                </button>
+                                            </form>
+
+                                            <form action="/admin/category/delete" method="POST" class="d-inline" onsubmit="return confirm('Delete this category?')">
+                                                <input type="hidden" name="id" value="<%= cat.id %>">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                    <i class="fe-trash-2"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <div class="col-12 text-center py-5 text-muted">
+                                <i class="fe-folder fs-1 d-block mb-2"></i>
+                                No main categories found. Click "Add Main Category" to create one.
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- TAB 2: SUBCATEGORIES TABLE -->
+                <div id="tab-subcategories-content" style="display: <%= (typeof activeTab !== 'undefined' && activeTab === 'subcategories') ? 'block' : 'none' %>;">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr class="table-light">
+                                    <th style="width: 60px;">SL</th>
+                                    <th style="width: 70px;">Icon</th>
+                                    <th>Sub-Category Name</th>
+                                    <th>Parent Category</th>
+                                    <th>Linked Products</th>
+                                    <th>Status</th>
+                                    <th style="width: 160px;" class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (safeSubcategories.length > 0) { %>
+                                    <% safeSubcategories.forEach((sub, index) => { %>
+                                        <tr>
+                                            <td class="fw-bold"><%= index + 1 %></td>
+                                            <td>
+                                                <img src="<%= sub.image || defaultSvgImage %>" alt="<%= sub.name %>" style="width: 38px; height: 38px; border-radius: 8px; object-fit: cover; border: 1px solid #e2e8f0; background: #f8fafc;" onerror="this.onerror=null; this.src='<%= defaultSvgImage %>';">
+                                            </td>
+                                            <td class="fw-bold" style="color: #0f172a;">
+                                                <%= sub.name %>
+                                                <div class="font-12 text-muted font-monospace">slug: <%= sub.slug %></div>
+                                            </td>
+                                            <td>
+                                                <span class="badge-soft-primary"><i class="fe-folder me-1"></i><%= sub.category ? sub.category.name : 'Unknown' %></span>
+                                            </td>
+                                            <td class="fw-bold text-indigo" style="color: #fe5200;">
+                                                <%= sub.productCount || 0 %> Products
+                                            </td>
+                                            <td>
+                                                <% if (sub.status) { %>
+                                                    <span class="badge-soft-success">Active</span>
+                                                <% } else { %>
+                                                    <span class="badge-soft-danger">Inactive</span>
+                                                <% } %>
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="d-flex align-items-center justify-content-end gap-2">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                            data-id="<%= sub.id %>" 
+                                                            data-name="<%= sub.name %>" 
+                                                            data-categoryid="<%= sub.categoryId %>" 
+                                                            data-image="<%= sub.image || '' %>" 
+                                                            data-status="<%= sub.status ? '1' : '0' %>" 
+                                                            onclick="openEditSubCatModalFromBtn(this)" title="Edit">
+                                                        <i class="fe-edit"></i>
+                                                    </button>
+                                                    <form action="/admin/subcategory/delete" method="POST" class="d-inline" onsubmit="return confirm('Delete this sub-category?')">
+                                                        <input type="hidden" name="id" value="<%= sub.id %>">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                            <i class="fe-trash-2"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted">No sub-categories found. Click "Add Sub-Category" above.</td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODAL 1: ADD MAIN CATEGORY -->
+    <div id="addCatModal" class="modal fade" tabindex="-1" role="dialog" style="display: none; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                <div class="modal-header d-flex align-items-center justify-content-between p-3" style="border-bottom: 1px dashed #e2e8f0;">
+                    <h5 class="modal-title fw-bold m-0" style="color: #0f172a;"><i class="fe-plus-circle me-2 text-indigo"></i> Add Main Category</h5>
+                    <button type="button" class="btn-close" onclick="closeModal('addCatModal')"></button>
+                </div>
+                <form action="/admin/category/create" method="POST">
+                    <div class="modal-body p-3">
+                        <div class="mb-3">
+                            <label class="form-label">Category Name *</label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g. Electronics, Fashion..." required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Image URL</label>
+                            <input type="text" name="image" class="form-control" placeholder="https://domain.com/image.png">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Display Order Priority</label>
+                            <input type="number" name="order" class="form-control" value="0">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <div class="form-check form-switch fs-5">
+                                <input class="form-check-input" type="checkbox" name="status" value="1" checked>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer p-3" style="border-top: 1px dashed #e2e8f0;">
+                        <button type="button" class="btn btn-light" onclick="closeModal('addCatModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary" style="background: #fe5200; border-color: #fe5200;"><i class="fe-save me-1"></i> Save Category</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
+    <!-- MODAL 2: EDIT MAIN CATEGORY -->
+    <div id="editCatModal" class="modal fade" tabindex="-1" role="dialog" style="display: none; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                <div class="modal-header d-flex align-items-center justify-content-between p-3" style="border-bottom: 1px dashed #e2e8f0;">
+                    <h5 class="modal-title fw-bold m-0" style="color: #0f172a;"><i class="fe-edit me-2 text-indigo"></i> Edit Main Category</h5>
+                    <button type="button" class="btn-close" onclick="closeModal('editCatModal')"></button>
+                </div>
+                <form action="/admin/category/edit" method="POST">
+                    <input type="hidden" name="id" id="editCatId">
+                    <div class="modal-body p-3">
+                        <div class="mb-3">
+                            <label class="form-label">Category Name *</label>
+                            <input type="text" name="name" id="editCatName" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Image URL</label>
+                            <input type="text" name="image" id="editCatImage" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Display Order</label>
+                            <input type="number" name="order" id="editCatOrder" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <div class="form-check form-switch fs-5">
+                                <input class="form-check-input" type="checkbox" name="status" id="editCatStatus" value="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer p-3" style="border-top: 1px dashed #e2e8f0;">
+                        <button type="button" class="btn btn-light" onclick="closeModal('editCatModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary" style="background: #fe5200; border-color: #fe5200;"><i class="fe-save me-1"></i> Update Category</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: ADD SUBCATEGORY -->
+    <div id="addSubCatModal" class="modal fade" tabindex="-1" role="dialog" style="display: none; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                <div class="modal-header d-flex align-items-center justify-content-between p-3" style="border-bottom: 1px dashed #e2e8f0;">
+                    <h5 class="modal-title fw-bold m-0" style="color: #0f172a;"><i class="fe-plus-circle me-2 text-indigo"></i> Add Sub-Category</h5>
+                    <button type="button" class="btn-close" onclick="closeModal('addSubCatModal')"></button>
+                </div>
+                <form action="/admin/subcategory/create" method="POST">
+                    <div class="modal-body p-3">
+                        <div class="mb-3">
+                            <label class="form-label">Parent Category *</label>
+                            <select name="categoryId" class="form-select" required>
+                                <option value="">Select Parent Category...</option>
+                                <% safeCategories.forEach(cat => { %>
+                                    <option value="<%= cat.id %>"><%= cat.name %></option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Sub-Category Name *</label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g. Wireless Mouse, Smart Watch..." required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Image / Icon URL</label>
+                            <input type="text" name="image" class="form-control" placeholder="https://domain.com/subcat.png">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <div class="form-check form-switch fs-5">
+                                <input class="form-check-input" type="checkbox" name="status" value="1" checked>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer p-3" style="border-top: 1px dashed #e2e8f0;">
+                        <button type="button" class="btn btn-light" onclick="closeModal('addSubCatModal')">Cancel</button>
+                        <button type="submit" class="btn btn-secondary" style="background: #6366f1; border-color: #6366f1;"><i class="fe-save me-1"></i> Save Sub-Category</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 4: EDIT SUBCATEGORY -->
+    <div id="editSubCatModal" class="modal fade" tabindex="-1" role="dialog" style="display: none; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px);">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                <div class="modal-header d-flex align-items-center justify-content-between p-3" style="border-bottom: 1px dashed #e2e8f0;">
+                    <h5 class="modal-title fw-bold m-0" style="color: #0f172a;"><i class="fe-edit me-2 text-indigo"></i> Edit Sub-Category</h5>
+                    <button type="button" class="btn-close" onclick="closeModal('editSubCatModal')"></button>
+                </div>
+                <form action="/admin/subcategory/edit" method="POST">
+                    <input type="hidden" name="id" id="editSubId">
+                    <div class="modal-body p-3">
+                        <div class="mb-3">
+                            <label class="form-label">Parent Category *</label>
+                            <select name="categoryId" id="editSubCategoryId" class="form-select" required>
+                                <% safeCategories.forEach(cat => { %>
+                                    <option value="<%= cat.id %>"><%= cat.name %></option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Sub-Category Name *</label>
+                            <input type="text" name="name" id="editSubName" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Image / Icon URL</label>
+                            <input type="text" name="image" id="editSubImage" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <div class="form-check form-switch fs-5">
+                                <input class="form-check-input" type="checkbox" name="status" id="editSubStatus" value="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer p-3" style="border-top: 1px dashed #e2e8f0;">
+                        <button type="button" class="btn btn-light" onclick="closeModal('editSubCatModal')">Cancel</button>
+                        <button type="submit" class="btn btn-secondary" style="background: #6366f1; border-color: #6366f1;"><i class="fe-save me-1"></i> Update Sub-Category</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/backEnd/assets/js/vendor.min.js"></script>
+    <script src="/backEnd/assets/js/app.min.js"></script>
+    <script>
+        function switchTab(tabName) {
+            document.querySelectorAll('.nav-tabs-custom .nav-link').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tab-categories-content').style.display = 'none';
+            document.getElementById('tab-subcategories-content').style.display = 'none';
+
+            if (tabName === 'categories') {
+                document.querySelectorAll('.nav-tabs-custom .nav-link')[0].classList.add('active');
+                document.getElementById('tab-categories-content').style.display = 'block';
+            } else {
+                document.querySelectorAll('.nav-tabs-custom .nav-link')[1].classList.add('active');
+                document.getElementById('tab-subcategories-content').style.display = 'block';
+            }
+        }
+
+        function openAddCatModal() {
+            const modal = document.getElementById('addCatModal');
+            modal.style.display = 'block';
+            modal.classList.add('show');
+        }
+
+        function openEditCatModalFromBtn(btn) {
+            document.getElementById('editCatId').value = btn.getAttribute('data-id');
+            document.getElementById('editCatName').value = btn.getAttribute('data-name');
+            document.getElementById('editCatImage').value = btn.getAttribute('data-image');
+            document.getElementById('editCatOrder').value = btn.getAttribute('data-order') || 0;
+            document.getElementById('editCatStatus').checked = btn.getAttribute('data-status') === '1';
+            const modal = document.getElementById('editCatModal');
+            modal.style.display = 'block';
+            modal.classList.add('show');
+        }
+
+        function openAddSubCatModal() {
+            const modal = document.getElementById('addSubCatModal');
+            modal.style.display = 'block';
+            modal.classList.add('show');
+        }
+
+        function openEditSubCatModalFromBtn(btn) {
+            document.getElementById('editSubId').value = btn.getAttribute('data-id');
+            document.getElementById('editSubName').value = btn.getAttribute('data-name');
+            document.getElementById('editSubCategoryId').value = btn.getAttribute('data-categoryid');
+            document.getElementById('editSubImage').value = btn.getAttribute('data-image');
+            document.getElementById('editSubStatus').checked = btn.getAttribute('data-status') === '1';
+            const modal = document.getElementById('editSubCatModal');
+            modal.style.display = 'block';
+            modal.classList.add('show');
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+        }
+    </script>
 </body>
 </html>

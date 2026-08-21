@@ -6,6 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><%= pageTitle %> - One Commerce</title>
     
+    <!-- Global Error Listener & Console Logger -->
+    <script>
+        window.addEventListener('error', function(e) {
+            console.error('🚨 [STOREFRONT ERROR]:', e.message, 'File:', e.filename, 'Line:', e.lineno, 'Col:', e.colno, 'Error Obj:', e.error);
+        });
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('🚨 [UNHANDLED PROMISE REJECTION]:', e.reason);
+        });
+    </script>
     <% if (typeof gtmConfig !== 'undefined' && gtmConfig && (gtmConfig.status === true || gtmConfig.status == 1) && gtmConfig.code) { %>
         <% if (gtmConfig.code.includes('<script')) { %>
             <%- gtmConfig.code %>

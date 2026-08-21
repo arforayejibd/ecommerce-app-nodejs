@@ -3,6 +3,12 @@
         var theme = localStorage.getItem('rosedrape-theme') || 'dark';
         document.documentElement.setAttribute('data-theme', theme);
     })();
+    window.addEventListener('error', function(e) {
+        console.error('🚨 [ADMIN PORTAL ERROR]:', e.message, 'File:', e.filename, 'Line:', e.lineno, 'Col:', e.colno, 'Error Obj:', e.error);
+    });
+    window.addEventListener('unhandledrejection', function(e) {
+        console.error('🚨 [UNHANDLED PROMISE REJECTION]:', e.reason);
+    });
 </script>
 <!-- Include Rosedrape Original Local Stylesheets -->
 <link href="/backEnd/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />

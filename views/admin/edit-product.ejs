@@ -433,25 +433,61 @@
 
                             <div class="form-group">
                                 <label class="form-label">Category *</label>
-                                <select name="category" class="form-control-custom" required>
+                                <select name="category" id="prodCategorySelect" class="form-control-custom" required onchange="onCategoryChanged(this.value)">
                                     <option value="">Select Category..</option>
-                                    <option value="Nosepin" <%= editing && product.category === 'Nosepin' ? 'selected' : '' %>>Nosepin</option>
-                                    <option value="Ring" <%= editing && product.category === 'Ring' ? 'selected' : '' %>>Ring</option>
-                                    <option value="Home Appliances" <%= editing && product.category === 'Home Appliances' ? 'selected' : '' %>>Home Appliances</option>
-                                    <option value="Health Appliances" <%= editing && product.category === 'Health Appliances' ? 'selected' : '' %>>Health Appliances</option>
-                                    <option value="General" <%= editing && product.category === 'General' ? 'selected' : '' %>>General</option>
+                                    <% if (typeof categories !== 'undefined' && categories.length > 0) { %>
+                                        <% categories.forEach(cat => { %>
+                                            <option value="<%= cat.name %>" <%= editing && product.category === cat.name ? 'selected' : '' %> data-id="<%= cat.id %>"><%= cat.name %></option>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <option value="Nosepin" <%= editing && product.category === 'Nosepin' ? 'selected' : '' %>>Nosepin</option>
+                                        <option value="Ring" <%= editing && product.category === 'Ring' ? 'selected' : '' %>>Ring</option>
+                                        <option value="Home Appliances" <%= editing && product.category === 'Home Appliances' ? 'selected' : '' %>>Home Appliances</option>
+                                        <option value="Health Appliances" <%= editing && product.category === 'Health Appliances' ? 'selected' : '' %>>Health Appliances</option>
+                                        <option value="General" <%= editing && product.category === 'General' ? 'selected' : '' %>>General</option>
+                                    <% } %>
                                 </select>
                             </div>
 
                             <div class="form-group" style="margin-top: 1rem;">
                                 <label class="form-label">SubCategory</label>
-                                <select name="subcategory" class="form-control-custom">
+                                <select name="subcategory" id="prodSubCategorySelect" class="form-control-custom">
                                     <option value="">Select Subcategory..</option>
-                                    <option value="Gold Plated">Gold Plated</option>
-                                    <option value="Silver Plated">Silver Plated</option>
-                                    <option value="Diamond Cut">Diamond Cut</option>
+                                    <% if (typeof subcategories !== 'undefined' && subcategories.length > 0) { %>
+                                        <% subcategories.forEach(sub => { %>
+                                            <option value="<%= sub.name %>" <%= editing && product.subCategory === sub.name ? 'selected' : '' %>><%= sub.name %></option>
+                                        <% }); %>
+                                    <% } %>
                                 </select>
                             </div>
+
+                            <script>
+                                function onCategoryChanged(catName) {
+                                    const subSelect = document.getElementById('prodSubCategorySelect');
+                                    if (!subSelect) return;
+                                    const catSelect = document.getElementById('prodCategorySelect');
+                                    const selectedOpt = catSelect.options[catSelect.selectedIndex];
+                                    const catId = selectedOpt ? selectedOpt.getAttribute('data-id') : null;
+
+                                    if (!catName) {
+                                        subSelect.innerHTML = '<option value="">Select Subcategory..</option>';
+                                        return;
+                                    }
+
+                                    fetch('/admin/api/subcategories/' + (catId || encodeURIComponent(catName)))
+                                        .then(res => res.json())
+                                        .then(data => {
+                                            if (data.success && data.subcategories) {
+                                                let html = '<option value="">Select Subcategory..</option>';
+                                                data.subcategories.forEach(s => {
+                                                    html += `<option value="${s.name}">${s.name}</option>`;
+                                                });
+                                                subSelect.innerHTML = html;
+                                            }
+                                        })
+                                        .catch(err => console.log('Err loading subcats:', err));
+                                }
+                            </script>
 
                             <div class="form-group" style="margin-top: 1rem;">
                                 <label class="form-label">Brand</label>

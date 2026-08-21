@@ -27,6 +27,10 @@ const Product = sequelize.define("product", {
     allowNull: true,
     defaultValue: "General",
   },
+  subCategory: {
+    type: Sequelize.STRING,
+    allowNull: true,
+  },
   oldPrice: {
     type: Sequelize.DOUBLE,
     allowNull: true,

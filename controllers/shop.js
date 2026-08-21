@@ -7,11 +7,15 @@ const { Op } = require("sequelize");
 
 exports.getProducts = (req, res, next) => {
   const category = req.query.category;
+  const subcategory = req.query.subcategory;
   const search = req.query.search;
   let whereCondition = {};
 
   if (category && category !== "All") {
     whereCondition.category = category;
+  }
+  if (subcategory) {
+    whereCondition.subCategory = subcategory;
   }
   if (search) {
     whereCondition.title = { [Op.like]: `%${search}%` };
@@ -26,11 +30,12 @@ exports.getProducts = (req, res, next) => {
         const categories = catResults.map(c => c.category).filter(Boolean);
         res.render("shop/product-list", {
           prods: products,
-          pageTitle: "All Products",
+          pageTitle: subcategory ? `${subcategory} - Products` : (category ? `${category} - Products` : "All Products"),
           path: "/products",
           hasProducts: products.length > 0,
           categories: categories,
           selectedCategory: category || "All",
+          selectedSubCategory: subcategory || "",
           searchQuery: search || ""
         });
       });

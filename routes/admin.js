@@ -51,6 +51,17 @@ router.get("/childcategories/manage", isAdmin, adminController.getCategories);
 router.get("/brands/manage", isAdmin, adminController.getCategories);
 router.get("/color/manage", isAdmin, adminController.getCategories);
 router.get("/size/manage", isAdmin, adminController.getCategories);
+
+router.post("/category/create", isAdmin, adminController.postCreateCategory);
+router.post("/category/edit", isAdmin, adminController.postEditCategory);
+router.post("/category/status", isAdmin, adminController.postToggleCategoryStatus);
+router.post("/category/delete", isAdmin, adminController.postDeleteCategory);
+
+router.post("/subcategory/create", isAdmin, adminController.postCreateSubCategory);
+router.post("/subcategory/edit", isAdmin, adminController.postEditSubCategory);
+router.post("/subcategory/delete", isAdmin, adminController.postDeleteSubCategory);
+router.get("/api/subcategories/:categoryId", isAdmin, adminController.getApiSubcategories);
+
 router.get("/products/price-edit", isAdmin, adminController.getQuickPriceEdit);
 
 // Protected Banners & Banner Categories

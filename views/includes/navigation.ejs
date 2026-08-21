@@ -69,14 +69,50 @@
     <nav class="nh-navbar">
         <ul class="nh-nav-list">
             <li><a href="/" class="nh-nav-link <%= path === '/' ? 'active' : '' %>">Home</a></li>
-            <li><a href="/products?category=Nosepin" class="nh-nav-link">Nosepin</a></li>
-            <li><a href="/products?category=Ring" class="nh-nav-link">Ring</a></li>
-            <li><a href="/products?category=Home%20Appliances" class="nh-nav-link">Home Appliances</a></li>
-            <li><a href="/products?category=Health%20Appliances" class="nh-nav-link">Health Appliances</a></li>
+            
+            <% if (typeof globalCategories !== 'undefined' && globalCategories && globalCategories.length > 0) { %>
+                <% globalCategories.forEach(cat => { %>
+                    <li class="<%= (cat.subcategories && cat.subcategories.length > 0) ? 'has-dropdown' : '' %>" style="position: relative;">
+                        <a href="/products?category=<%= encodeURIComponent(cat.name) %>" class="nh-nav-link">
+                            <%= cat.name %>
+                            <% if (cat.subcategories && cat.subcategories.length > 0) { %>
+                                <i class="fa-solid fa-chevron-down ms-1" style="font-size: 0.75rem;"></i>
+                            <% } %>
+                        </a>
+                        <% if (cat.subcategories && cat.subcategories.length > 0) { %>
+                            <ul class="nh-dropdown-menu" style="position: absolute; top: 100%; left: 0; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 0.5rem 0; min-width: 180px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: none; z-index: 100;">
+                                <% cat.subcategories.forEach(sub => { %>
+                                    <li>
+                                        <a href="/products?category=<%= encodeURIComponent(cat.name) %>&subcategory=<%= encodeURIComponent(sub.name) %>" style="display: block; padding: 0.5rem 1rem; color: #cbd5e1; font-size: 0.85rem; text-decoration: none;">
+                                            <%= sub.name %>
+                                        </a>
+                                    </li>
+                                <% }); %>
+                            </ul>
+                        <% } %>
+                    </li>
+                <% }); %>
+            <% } else { %>
+                <li><a href="/products?category=Nosepin" class="nh-nav-link">Nosepin</a></li>
+                <li><a href="/products?category=Ring" class="nh-nav-link">Ring</a></li>
+                <li><a href="/products?category=Home%20Appliances" class="nh-nav-link">Home Appliances</a></li>
+                <li><a href="/products?category=Health%20Appliances" class="nh-nav-link">Health Appliances</a></li>
+            <% } %>
+
             <li><a href="/order-track" class="nh-nav-link <%= path === '/order-track' ? 'active' : '' %>">Track Order</a></li>
         </ul>
     </nav>
 </header>
+
+<style>
+    .nh-nav-list li.has-dropdown:hover .nh-dropdown-menu {
+        display: block !important;
+    }
+    .nh-dropdown-menu li a:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #38bdf8 !important;
+    }
+</style>
 
 <!-- Mobile Slide-In Navigation Drawer -->
 <div class="mobile-drawer-overlay" id="drawerOverlay" onclick="toggleMobileDrawer()"></div>
@@ -87,10 +123,22 @@
     </div>
     <ul class="drawer-menu-list">
         <li><a href="/" class="<%= path === '/' ? 'active' : '' %>"><i class="fa-solid fa-house"></i> Home</a></li>
-        <li><a href="/products?category=Nosepin"><i class="fa-solid fa-gem"></i> Nosepin</a></li>
-        <li><a href="/products?category=Ring"><i class="fa-solid fa-ring"></i> Ring</a></li>
-        <li><a href="/products?category=Home%20Appliances"><i class="fa-solid fa-plug"></i> Home Appliances</a></li>
-        <li><a href="/products?category=Health%20Appliances"><i class="fa-solid fa-heart-pulse"></i> Health Appliances</a></li>
+        
+        <% if (typeof globalCategories !== 'undefined' && globalCategories && globalCategories.length > 0) { %>
+            <% globalCategories.forEach(cat => { %>
+                <li>
+                    <a href="/products?category=<%= encodeURIComponent(cat.name) %>">
+                        <i class="fa-solid fa-layer-group"></i> <%= cat.name %>
+                    </a>
+                </li>
+            <% }); %>
+        <% } else { %>
+            <li><a href="/products?category=Nosepin"><i class="fa-solid fa-gem"></i> Nosepin</a></li>
+            <li><a href="/products?category=Ring"><i class="fa-solid fa-ring"></i> Ring</a></li>
+            <li><a href="/products?category=Home%20Appliances"><i class="fa-solid fa-plug"></i> Home Appliances</a></li>
+            <li><a href="/products?category=Health%20Appliances"><i class="fa-solid fa-heart-pulse"></i> Health Appliances</a></li>
+        <% } %>
+
         <li><a href="/order-track" class="<%= path === '/order-track' ? 'active' : '' %>"><i class="fa-solid fa-truck-fast"></i> Track Order</a></li>
         <li><a href="/cart"><i class="fa-solid fa-cart-shopping"></i> Shopping Cart</a></li>
     </ul>

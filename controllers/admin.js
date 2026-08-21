@@ -4,6 +4,8 @@ const Product = require("../models/product");
 const Order = require("../models/order");
 const User = require("../models/user");
 const Setting = require("../models/setting");
+const Category = require("../models/category");
+const SubCategory = require("../models/subcategory");
 const Sequelize = require('sequelize');
 
 exports.getLogin = (req, res, next) => {
@@ -460,23 +462,188 @@ exports.postDeleteOrdersBulk = (req, res, next) => {
 };
 
 // 3. Categories Management Handler
-exports.getCategories = (req, res, next) => {
-  Product.findAll()
-    .then(products => {
-      const categories = [
-        { name: "Nosepin", count: products.filter(p => p.category === 'Nosepin').length, img: "https://www.onecommercebd.com/uploads/category/thumb/1787182103-Nosepin.jpg" },
-        { name: "Ring", count: products.filter(p => p.category === 'Ring').length, img: "https://www.onecommercebd.com/uploads/category/thumb/1787182061-Ring.png" },
-        { name: "Home Appliances", count: products.filter(p => p.category === 'Home Appliances').length, img: "https://www.onecommercebd.com/uploads/category/thumb/1787182036-home-app.png" },
-        { name: "Health Appliances", count: products.filter(p => p.category === 'Health Appliances').length, img: "https://www.onecommercebd.com/uploads/category/thumb/1787181977-beauty.jpg" }
-      ];
+// 3. Categories & Subcategories Management Handler
+exports.getCategories = async (req, res, next) => {
+  try {
+    const categories = await Category.findAll({
+      include: [{ model: SubCategory }],
+      order: [['order', 'ASC'], ['id', 'ASC']]
+    });
 
-      res.render("admin/categories", {
-        pageTitle: "Category Management",
-        path: "/admin/categories",
-        categories: categories
-      });
-    })
-    .catch(err => console.log("Error in getCategories: ", err));
+    const subcategories = await SubCategory.findAll({
+      include: [{ model: Category }],
+      order: [['id', 'DESC']]
+    });
+
+    const products = await Product.findAll({ attributes: ['category', 'subCategory'] });
+
+    // Calculate product counts for categories
+    const categoriesData = categories.map(cat => {
+      const pCount = products.filter(p => p.category && p.category.toLowerCase() === cat.name.toLowerCase()).length;
+      return {
+        ...cat.get({ plain: true }),
+        productCount: pCount
+      };
+    });
+
+    // Calculate product counts for subcategories
+    const subcategoriesData = subcategories.map(sub => {
+      const pCount = products.filter(p => p.subCategory && p.subCategory.toLowerCase() === sub.name.toLowerCase()).length;
+      return {
+        ...sub.get({ plain: true }),
+        productCount: pCount
+      };
+    });
+
+    res.render("admin/categories", {
+      pageTitle: "Category & Sub-Category Management",
+      path: "/admin/categories",
+      categories: categoriesData,
+      subcategories: subcategoriesData,
+      activeTab: req.query.tab || 'categories'
+    });
+  } catch (err) {
+    console.log("Error in getCategories: ", err);
+    res.redirect("/admin/dashboard");
+  }
+};
+
+// Create Category
+exports.postCreateCategory = async (req, res, next) => {
+  try {
+    const { name, image, status, order } = req.body;
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    await Category.create({
+      name: name,
+      slug: slug || 'cat-' + Date.now(),
+      image: image || 'https://www.onecommercebd.com/uploads/category/thumb/1787182103-Nosepin.jpg',
+      status: status === 'on' || status === '1' || status === true,
+      order: parseInt(order) || 0
+    });
+    res.redirect("/admin/categories?tab=categories");
+  } catch (err) {
+    console.log("Error in postCreateCategory:", err);
+    res.redirect("/admin/categories");
+  }
+};
+
+// Edit Category
+exports.postEditCategory = async (req, res, next) => {
+  try {
+    const { id, name, image, status, order } = req.body;
+    const category = await Category.findByPk(id);
+    if (category) {
+      category.name = name || category.name;
+      category.slug = name ? name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') : category.slug;
+      if (image) category.image = image;
+      category.status = status === 'on' || status === '1' || status === true;
+      if (order !== undefined) category.order = parseInt(order) || 0;
+      await category.save();
+    }
+    res.redirect("/admin/categories?tab=categories");
+  } catch (err) {
+    console.log("Error in postEditCategory:", err);
+    res.redirect("/admin/categories");
+  }
+};
+
+// Toggle Category Status
+exports.postToggleCategoryStatus = async (req, res, next) => {
+  try {
+    const { id } = req.body;
+    const category = await Category.findByPk(id);
+    if (category) {
+      category.status = !category.status;
+      await category.save();
+    }
+    res.redirect("/admin/categories?tab=categories");
+  } catch (err) {
+    console.log("Error in postToggleCategoryStatus:", err);
+    res.redirect("/admin/categories");
+  }
+};
+
+// Delete Category
+exports.postDeleteCategory = async (req, res, next) => {
+  try {
+    const { id } = req.body;
+    await Category.destroy({ where: { id: id } });
+    res.redirect("/admin/categories?tab=categories");
+  } catch (err) {
+    console.log("Error in postDeleteCategory:", err);
+    res.redirect("/admin/categories");
+  }
+};
+
+// Create SubCategory
+exports.postCreateSubCategory = async (req, res, next) => {
+  try {
+    const { name, categoryId, image, status } = req.body;
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    await SubCategory.create({
+      name: name,
+      slug: slug || 'subcat-' + Date.now(),
+      categoryId: parseInt(categoryId),
+      image: image || '',
+      status: status === 'on' || status === '1' || status === true
+    });
+    res.redirect("/admin/categories?tab=subcategories");
+  } catch (err) {
+    console.log("Error in postCreateSubCategory:", err);
+    res.redirect("/admin/categories?tab=subcategories");
+  }
+};
+
+// Edit SubCategory
+exports.postEditSubCategory = async (req, res, next) => {
+  try {
+    const { id, name, categoryId, image, status } = req.body;
+    const subcategory = await SubCategory.findByPk(id);
+    if (subcategory) {
+      subcategory.name = name || subcategory.name;
+      subcategory.slug = name ? name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') : subcategory.slug;
+      if (categoryId) subcategory.categoryId = parseInt(categoryId);
+      if (image) subcategory.image = image;
+      subcategory.status = status === 'on' || status === '1' || status === true;
+      await subcategory.save();
+    }
+    res.redirect("/admin/categories?tab=subcategories");
+  } catch (err) {
+    console.log("Error in postEditSubCategory:", err);
+    res.redirect("/admin/categories?tab=subcategories");
+  }
+};
+
+// Delete SubCategory
+exports.postDeleteSubCategory = async (req, res, next) => {
+  try {
+    const { id } = req.body;
+    await SubCategory.destroy({ where: { id: id } });
+    res.redirect("/admin/categories?tab=subcategories");
+  } catch (err) {
+    console.log("Error in postDeleteSubCategory:", err);
+    res.redirect("/admin/categories?tab=subcategories");
+  }
+};
+
+// API Endpoint: Get Subcategories for a given Category ID
+exports.getApiSubcategories = async (req, res, next) => {
+  try {
+    const categoryId = req.params.categoryId;
+    let whereClause = { status: true };
+    if (categoryId && categoryId !== 'all') {
+      if (isNaN(categoryId)) {
+        const catObj = await Category.findOne({ where: { name: categoryId } });
+        if (catObj) whereClause.categoryId = catObj.id;
+      } else {
+        whereClause.categoryId = parseInt(categoryId);
+      }
+    }
+    const subcategories = await SubCategory.findAll({ where: whereClause, order: [['name', 'ASC']] });
+    res.json({ success: true, subcategories });
+  } catch (err) {
+    res.status(500).json({ success: false, subcategories: [] });
+  }
 };
 
 // Banner & Banner Category Storage Helpers
@@ -603,7 +770,7 @@ exports.postCreateBanner = (req, res, next) => {
     category_id: parseInt(category_id),
     category_name: catObj ? catObj.name : 'General',
     link: link || '/products',
-    image: image || 'https://via.placeholder.com/600x300',
+    image: image || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='300' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'%3E%3C/circle%3E%3Cpolyline points='21 15 16 10 5 21'%3E%3C/polyline%3E%3C/svg%3E",
     status: status ? 1 : 0
   };
   banners.push(newBanner);
@@ -1003,32 +1170,44 @@ exports.getDropoffAnalytics = (req, res, next) => {
 };
 
 // Product CRUD Handlers
-exports.getAddProduct = (req, res, next) => {
-  res.render("admin/edit-product", {
-    pageTitle: "Add Product",
-    path: "/admin/add-product",
-    editing: false,
-  });
+exports.getAddProduct = async (req, res, next) => {
+  try {
+    const categories = await Category.findAll({ where: { status: true }, order: [['order', 'ASC']] });
+    const subcategories = await SubCategory.findAll({ where: { status: true }, order: [['name', 'ASC']] });
+    res.render("admin/edit-product", {
+      pageTitle: "Add Product",
+      path: "/admin/add-product",
+      editing: false,
+      categories: categories || [],
+      subcategories: subcategories || []
+    });
+  } catch (err) {
+    console.log("Error in getAddProduct:", err);
+    res.redirect("/admin/product-list");
+  }
 };
 
-exports.getEditProduct = (req, res, next) => {
-  const productId = req.params.productId;
-  Product.findByPk(productId)
-    .then((product) => {
-      if (!product) {
-        return res.redirect("/admin/product-list");
-      }
-      res.render("admin/edit-product", {
-        pageTitle: "Edit Product",
-        path: "/admin/edit-product",
-        editing: true,
-        product: product,
-      });
-    })
-    .catch((error) => {
-      console.log("Error in Admin Controller, getEditProduct: {}", error);
-      res.redirect("/admin/product-list");
+exports.getEditProduct = async (req, res, next) => {
+  try {
+    const productId = req.params.productId;
+    const product = await Product.findByPk(productId);
+    if (!product) {
+      return res.redirect("/admin/product-list");
+    }
+    const categories = await Category.findAll({ where: { status: true }, order: [['order', 'ASC']] });
+    const subcategories = await SubCategory.findAll({ where: { status: true }, order: [['name', 'ASC']] });
+    res.render("admin/edit-product", {
+      pageTitle: "Edit Product",
+      path: "/admin/edit-product",
+      editing: true,
+      product: product,
+      categories: categories || [],
+      subcategories: subcategories || []
     });
+  } catch (error) {
+    console.log("Error in getEditProduct:", error);
+    res.redirect("/admin/product-list");
+  }
 };
 
 exports.postAddProduct = (req, res, next) => {
@@ -1038,6 +1217,7 @@ exports.postAddProduct = (req, res, next) => {
   const price = req.body.price;
   const oldPrice = req.body.oldPrice ? parseFloat(req.body.oldPrice) : null;
   const category = req.body.category || "General";
+  const subCategory = req.body.subcategory || req.body.subCategory || null;
   const isHotDeal = req.body.isHotDeal === "true" || req.body.isHotDeal === true || req.body.isHotDeal === "on";
   const isFreeDelivery = req.body.isFreeDelivery === "true" || req.body.isFreeDelivery === true || req.body.isFreeDelivery === "on";
 
@@ -1049,6 +1229,7 @@ exports.postAddProduct = (req, res, next) => {
       imageUrl: imageUrl,
       description: description,
       category: category,
+      subCategory: subCategory,
       isHotDeal: isHotDeal,
       isFreeDelivery: isFreeDelivery,
     })
@@ -1072,6 +1253,7 @@ exports.postEditProduct = (req, res, next) => {
       product.price = req.body.price;
       product.oldPrice = req.body.oldPrice ? parseFloat(req.body.oldPrice) : null;
       product.category = req.body.category || "General";
+      product.subCategory = req.body.subcategory || req.body.subCategory || null;
       product.isHotDeal = req.body.isHotDeal === "true" || req.body.isHotDeal === true || req.body.isHotDeal === "on";
       product.isFreeDelivery = req.body.isFreeDelivery === "true" || req.body.isFreeDelivery === true || req.body.isFreeDelivery === "on";
       return product.save();
