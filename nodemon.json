@@ -1,0 +1,10 @@
+{
+    "env": { 
+        "PORT": 3000,
+        "DB_SCHEMA_NAME": "node-store",
+        "DB_USER_NAME": "root",
+        "DB_USER_PASSWORD": "258456",
+        "DB_HOST_URL": "localhost"
+    }
+ }
+

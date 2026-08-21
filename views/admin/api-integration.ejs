@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Integration & Courier Settings - Rosedrape Admin Backend</title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-body">
+
+    <%- include('../includes/admin-navigation.ejs') %>
+
+    <div class="admin-wrapper">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+            <!-- Steadfast Courier API -->
+            <div class="admin-content-box">
+                <div class="box-header">
+                    <div>
+                        <h2>🚚 Steadfast Courier API</h2>
+                        <p style="color: var(--text-subtle); font-size: 0.88rem;">Automatic parcel dispatch API settings</p>
+                    </div>
+                    <div class="status-pill"><span class="pulse-dot"></span> Active</div>
+                </div>
+                <form onsubmit="event.preventDefault(); alert('Steadfast API Key saved!');">
+                    <div style="margin-bottom: 1.25rem;">
+                        <label style="display: block; font-weight: 800; color: var(--text-heading); margin-bottom: 0.4rem;">Steadfast API Key</label>
+                        <input type="text" value="st_live_9f837482910482901a" style="width: 100%; padding: 0.75rem; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-heading); border-radius: 10px;">
+                    </div>
+                    <div style="margin-bottom: 1.25rem;">
+                        <label style="display: block; font-weight: 800; color: var(--text-heading); margin-bottom: 0.4rem;">Steadfast Secret Key</label>
+                        <input type="password" value="secret_key_8374928" style="width: 100%; padding: 0.75rem; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-heading); border-radius: 10px;">
+                    </div>
+                    <button type="submit" class="btn-edit" style="width: 100%; text-align: center; background: var(--brand-coral-gradient); color: white; border: none; padding: 0.75rem; border-radius: 10px;">Save Steadfast Config</button>
+                </form>
+            </div>
+
+            <!-- Pathao Courier API -->
+            <div class="admin-content-box">
+                <div class="box-header">
+                    <div>
+                        <h2>🛵 Pathao Courier API</h2>
+                        <p style="color: var(--text-subtle); font-size: 0.88rem;">Pathao merchant parcel API configuration</p>
+                    </div>
+                    <div class="status-pill"><span class="pulse-dot"></span> Active</div>
+                </div>
+                <form onsubmit="event.preventDefault(); alert('Pathao API Key saved!');">
+                    <div style="margin-bottom: 1.25rem;">
+                        <label style="display: block; font-weight: 800; color: var(--text-heading); margin-bottom: 0.4rem;">Pathao Client ID</label>
+                        <input type="text" value="pathao_client_82749" style="width: 100%; padding: 0.75rem; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-heading); border-radius: 10px;">
+                    </div>
+                    <div style="margin-bottom: 1.25rem;">
+                        <label style="display: block; font-weight: 800; color: var(--text-heading); margin-bottom: 0.4rem;">Pathao Secret Token</label>
+                        <input type="password" value="pathao_secret_739281" style="width: 100%; padding: 0.75rem; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-heading); border-radius: 10px;">
+                    </div>
+                    <button type="submit" class="btn-edit" style="width: 100%; text-align: center; background: var(--brand-coral-gradient); color: white; border: none; padding: 0.75rem; border-radius: 10px;">Save Pathao Config</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Payment & SMS Gateways -->
+        <div class="admin-content-box">
+            <div class="box-header">
+                <div>
+                    <h2>💬 Automated SMS Gateway & Payment Methods</h2>
+                    <p style="color: var(--text-subtle); font-size: 0.88rem;">Bulk SMS gateway & bKash / Nagad / Cash on Delivery settings</p>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div style="background: var(--bg-input); border: 1px solid var(--border-color); padding: 1.25rem; border-radius: 16px;">
+                    <label style="display: block; font-weight: 800; color: var(--text-heading); margin-bottom: 0.4rem;">SMS Gateway API Token</label>
+                    <input type="text" value="sms_token_bangladesh_83749" style="width: 100%; padding: 0.75rem; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-heading); border-radius: 10px;">
+                </div>
+
+                <div style="background: var(--bg-input); border: 1px solid var(--border-color); padding: 1.25rem; border-radius: 16px;">
+                    <label style="display: block; font-weight: 800; color: var(--text-heading); margin-bottom: 0.4rem;">Cash On Delivery Status</label>
+                    <select style="width: 100%; padding: 0.75rem; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-heading); border-radius: 10px;">
+                        <option value="1">Enabled (Active)</option>
+                        <option value="0">Disabled</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

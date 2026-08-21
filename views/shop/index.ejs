@@ -1,0 +1,323 @@
+<%- include('../includes/head.ejs') %>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  body { background: #fafafa; font-family: 'Inter', sans-serif; }
+
+  /* Hero Banner */
+  .hero-section {
+    margin: 1.5rem 0 3rem;
+    border-radius: 24px;
+    overflow: hidden;
+    position: relative;
+    background: #0f172a;
+    aspect-ratio: 16 / 6;
+    min-height: 320px;
+    max-height: 480px;
+  }
+  .hero-slides { display: flex; width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(.77,0,.175,1); }
+  .hero-slide { flex: 0 0 100%; min-width: 100%; width: 100%; flex-shrink: 0; height: 100%; position: relative; overflow: hidden; display: flex; align-items: center; }
+  .hero-slide a { display: block; width: 100%; height: 100%; text-decoration: none; }
+  .hero-slide img { width: 100%; height: 100%; object-fit: cover; transition: transform 8s ease; transform: scale(1.02); }
+  .hero-slide.active img { transform: scale(1); }
+
+  .hero-nav { position: absolute; bottom: 1.25rem; left: 50%; transform: translateX(-50%); display: flex; gap: 0.5rem; z-index: 5; }
+  .hero-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.4); border: none; cursor: pointer; transition: all 0.3s; padding: 0; }
+  .hero-dot.active { width: 28px; border-radius: 50px; background: #fff; }
+  .hero-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.25); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.25s; font-size: 1rem; z-index: 5;
+  }
+  .hero-arrow:hover { background: rgba(255,255,255,0.3); }
+  .hero-arrow.prev { left: 1.25rem; }
+  .hero-arrow.next { right: 1.25rem; }
+
+  /* Trust Bar */
+  .trust-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 3.5rem; }
+  .trust-item {
+    display: flex; align-items: center; gap: 0.85rem;
+    background: #fff; border: 1px solid #f1f5f9; border-radius: 14px;
+    padding: 1rem 1.2rem; box-shadow: 0 2px 12px rgba(15,23,42,0.04); transition: box-shadow 0.25s;
+  }
+  .trust-item:hover { box-shadow: 0 6px 24px rgba(15,23,42,0.08); }
+  .trust-icon { width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+  .trust-icon.red   { background: #fff1f2; color: #e11d48; }
+  .trust-icon.blue  { background: #eff6ff; color: #2563eb; }
+  .trust-icon.green { background: #f0fdf4; color: #16a34a; }
+  .trust-icon.amber { background: #fffbeb; color: #d97706; }
+  .trust-title { font-weight: 700; font-size: 0.875rem; color: #0f172a; line-height: 1.3; }
+  .trust-sub   { font-size: 0.78rem; color: #64748b; margin-top: 0.1rem; }
+
+  /* Section Titles */
+  .sec-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 1.75rem; padding-bottom: 1rem; border-bottom: 1.5px solid #f1f5f9; }
+  .sec-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #e11d48; margin-bottom: 0.35rem; }
+  .sec-title { font-size: 1.5rem; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; }
+  .sec-link { font-size: 0.875rem; font-weight: 600; color: #64748b; text-decoration: none; display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s; white-space: nowrap; }
+  .sec-link:hover { color: #e11d48; }
+
+  /* Category Pills Mobile Touch Scroll */
+  .cat-pills-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 2rem;
+    padding: 8px 4px 10px;
+  }
+  .cat-pills-wrap::-webkit-scrollbar { display: none; }
+  .cat-pills { display: flex; gap: 0.65rem; flex-wrap: nowrap; min-width: max-content; }
+  .cat-pill {
+    display: flex; align-items: center; gap: 0.55rem;
+    background: #fff; border: 1.5px solid #e2e8f0; border-radius: 50px;
+    padding: 0.5rem 1rem 0.5rem 0.6rem; text-decoration: none; color: #334155;
+    font-weight: 600; font-size: 0.85rem; transition: all 0.25s; box-shadow: 0 1px 4px rgba(15,23,42,0.04);
+    white-space: nowrap;
+  }
+  .cat-pill:hover { border-color: #e11d48; color: #e11d48; box-shadow: 0 4px 16px rgba(225,29,72,0.12); transform: translateY(-1px); }
+  .cat-pill-img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: #f1f5f9; }
+
+  /* Timer Chips */
+  .timer-chips { display: flex; align-items: center; gap: 0.35rem; }
+  .timer-chip { background: #1e293b; color: #fff; border-radius: 6px; padding: 0.25rem 0.5rem; font-weight: 800; font-size: 0.95rem; min-width: 34px; text-align: center; }
+  .timer-sep { font-weight: 800; color: #1e293b; font-size: 0.95rem; }
+
+  /* Mobile Responsive Queries */
+  @media (max-width: 1024px) {
+    .prod-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  @media (max-width: 768px) {
+    .hero-section {
+      margin: 0.75rem 0 2rem;
+      border-radius: 16px;
+      aspect-ratio: 16 / 8;
+      min-height: 220px;
+      max-height: 340px;
+    }
+    .hero-arrow { width: 32px; height: 32px; font-size: 0.85rem; }
+    .hero-arrow.prev { left: 0.5rem; }
+    .hero-arrow.next { right: 0.5rem; }
+
+    .trust-bar { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 2.5rem; }
+    .trust-item { padding: 0.75rem 0.85rem; border-radius: 12px; gap: 0.6rem; }
+    .trust-icon { width: 36px; height: 36px; font-size: 1rem; border-radius: 10px; }
+    .trust-title { font-size: 0.8rem; }
+    .trust-sub { font-size: 0.72rem; }
+
+    .sec-header { margin-bottom: 1.25rem; padding-bottom: 0.75rem; }
+    .sec-title { font-size: 1.2rem; }
+
+    .timer-chips { gap: 0.25rem; }
+    .timer-chip { font-size: 0.85rem; min-width: 30px; padding: 0.2rem 0.4rem; }
+    .timer-sep { font-size: 0.85rem; }
+
+    .prod-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+    .prod-card { border-radius: 12px; }
+    .prod-body { padding: 0.75rem 0.75rem 0.6rem; }
+    .prod-name { font-size: 0.82rem; margin-bottom: 0.35rem; line-height: 1.35; }
+    .prod-price { font-size: 0.95rem; }
+    .prod-old { font-size: 0.75rem; }
+    .prod-order-btn { padding: 0.55rem; font-size: 0.8rem; border-radius: 8px; }
+    .cat-section, .hotdeal-sec { margin-bottom: 2.5rem; }
+  }
+
+  @media (max-width: 480px) {
+    main { padding: 0.5rem 0.5rem 2.5rem !important; }
+    .trust-bar { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+    .prod-grid { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+    .hero-section { min-height: 170px; }
+  }
+</style>
+</head>
+<body>
+<%- include('../includes/navigation.ejs') %>
+<main>
+
+  <section class="hero-section" id="heroSection">
+    <div class="hero-slides" id="heroSlides">
+      <% if (typeof sliderBanners !== 'undefined' && sliderBanners.length > 0) { %>
+        <% sliderBanners.forEach((banner, idx) => { %>
+          <div class="hero-slide <%= idx === 0 ? 'active' : '' %>">
+            <a href="<%= banner.link || '/products' %>">
+              <img src="<%= banner.image %>" alt="Banner <%= idx + 1 %>" loading="<%= idx === 0 ? 'eager' : 'lazy' %>" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1400&q=80';">
+            </a>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <div class="hero-slide active">
+          <a href="/products">
+            <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1400&q=80" alt="One Commerce Banner 1" loading="eager">
+          </a>
+        </div>
+      <% } %>
+    </div>
+    <button class="hero-arrow prev" onclick="heroMove(-1)" aria-label="Previous">&#8249;</button>
+    <button class="hero-arrow next" onclick="heroMove(1)"  aria-label="Next">&#8250;</button>
+    <div class="hero-nav" id="heroDots">
+      <% if (typeof sliderBanners !== 'undefined' && sliderBanners.length > 0) { %>
+        <% sliderBanners.forEach((banner, idx) => { %>
+          <button class="hero-dot <%= idx === 0 ? 'active' : '' %>" onclick="heroSet(<%= idx %>)"></button>
+        <% }); %>
+      <% } %>
+    </div>
+  </section>
+
+  <div class="trust-bar">
+    <div class="trust-item">
+      <div class="trust-icon red"><i class="fa-solid fa-truck-fast"></i></div>
+      <div>
+        <div class="trust-title">Fast Delivery</div>
+        <div class="trust-sub">Inside Dhaka ৳<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.delivery_inside) ? siteSettings.delivery_inside : 60 %></div>
+      </div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon blue"><i class="fa-solid fa-shield-halved"></i></div>
+      <div><div class="trust-title">Secure Payment</div><div class="trust-sub">Cash on Delivery</div></div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon green"><i class="fa-solid fa-rotate-left"></i></div>
+      <div><div class="trust-title">Easy Returns</div><div class="trust-sub">7-day return policy</div></div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon amber"><i class="fa-solid fa-headset"></i></div>
+      <div>
+        <div class="trust-title">24/7 Support</div>
+        <div class="trust-sub"><%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.phone) ? siteSettings.phone : '01700000000' %></div>
+      </div>
+    </div>
+  </div>
+
+  <% if (typeof categoriesList !== 'undefined' && categoriesList.length > 0) { %>
+  <div class="cat-pills-wrap">
+    <div class="cat-pills">
+      <% categoriesList.forEach(cat => { %>
+      <a href="/products?category=<%= encodeURIComponent(cat.name) %>" class="cat-pill">
+        <img src="<%= cat.img %>" alt="<%= cat.name %>" class="cat-pill-img" onerror="this.style.display='none'">
+        <%= cat.name %>
+      </a>
+      <% }); %>
+    </div>
+  </div>
+  <% } %>
+
+  <% if (typeof hotDeals !== 'undefined' && hotDeals.length > 0) { %>
+  <section class="hotdeal-sec">
+    <div class="sec-header hotdeal-header">
+      <div>
+        <div class="sec-label">🔥 Limited Time</div>
+        <div class="sec-title" style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+          Hot Deals
+          <div class="timer-chips">
+            <span class="timer-chip" id="t-hr">05</span>
+            <span class="timer-sep">:</span>
+            <span class="timer-chip" id="t-min">42</span>
+            <span class="timer-sep">:</span>
+            <span class="timer-chip" id="t-sec">18</span>
+          </div>
+        </div>
+      </div>
+      <a href="/products" class="sec-link">View All <i class="fa-solid fa-arrow-right" style="font-size:0.75rem;"></i></a>
+    </div>
+    <div class="product-grid">
+      <% hotDeals.slice(0, 8).forEach(product => { %>
+        <div class="product_item">
+          <% if (product.oldPrice && product.oldPrice > product.price) { %>
+            <% const disc = Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100); %>
+            <div class="sale-badge">-<%= disc %>%</div>
+          <% } %>
+          <% if (product.isFreeDelivery) { %>
+            <div class="free-delivery-badge"><i class="fa-solid fa-truck-fast"></i> Free Delivery</div>
+          <% } %>
+          <div class="pro_img">
+            <a href="/products/<%= product.id %>"><img src="<%= product.imageUrl %>" alt="<%= product.title %>" loading="lazy"></a>
+          </div>
+          <div class="pro_des">
+            <div class="pro_name"><a href="/products/<%= product.id %>"><%= product.title %></a></div>
+            <div class="pro_price">
+              <span>৳ <%= product.price %></span>
+              <% if (product.oldPrice) { %><del>৳ <%= product.oldPrice %></del><% } %>
+            </div>
+          </div>
+          <div class="pro_btn">
+            <form action="/cart" method="POST">
+              <input type="hidden" name="productId" value="<%= product.id %>">
+              <button type="submit">🛒 Order Now</button>
+            </form>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  </section>
+  <% } %>
+
+  <% if (typeof categoriesList !== 'undefined' && categoriesList.length > 0) { %>
+    <% categoriesList.forEach(cat => { %>
+      <% const catProds = prods.filter(p => p.category === cat.name).slice(0, 4); %>
+      <% if (catProds.length > 0) { %>
+      <section class="cat-section">
+        <div class="sec-header">
+          <div><div class="sec-label">Collection</div><div class="sec-title"><%= cat.name %></div></div>
+          <a href="/products?category=<%= encodeURIComponent(cat.name) %>" class="sec-link">View More <i class="fa-solid fa-arrow-right" style="font-size:0.75rem;"></i></a>
+        </div>
+        <div class="product-grid">
+          <% catProds.forEach(product => { %>
+            <div class="product_item">
+              <% if (product.oldPrice && product.oldPrice > product.price) { %>
+                <% const d = Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100); %>
+                <div class="sale-badge">-<%= d %>%</div>
+              <% } %>
+              <% if (product.isFreeDelivery) { %>
+                <div class="free-delivery-badge"><i class="fa-solid fa-truck-fast"></i> Free Delivery</div>
+              <% } %>
+              <div class="pro_img">
+                <a href="/products/<%= product.id %>"><img src="<%= product.imageUrl %>" alt="<%= product.title %>" loading="lazy"></a>
+              </div>
+              <div class="pro_des">
+                <div class="pro_name"><a href="/products/<%= product.id %>"><%= product.title %></a></div>
+                <div class="pro_price">
+                  <span>৳ <%= product.price %></span>
+                  <% if (product.oldPrice) { %><del>৳ <%= product.oldPrice %></del><% } %>
+                </div>
+              </div>
+              <div class="pro_btn">
+                <form action="/cart" method="POST">
+                  <input type="hidden" name="productId" value="<%= product.id %>">
+                  <button type="submit">🛒 Order Now</button>
+                </form>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      </section>
+      <% } %>
+    <% }); %>
+  <% } %>
+
+</main>
+<script>
+  let heroIdx = 0;
+  const heroSlides = document.querySelectorAll('.hero-slide');
+  const heroDots   = document.querySelectorAll('.hero-dot');
+  function heroUpdate() {
+    heroSlides.forEach((s, i) => s.classList.toggle('active', i === heroIdx));
+    heroDots.forEach((d, i)   => d.classList.toggle('active', i === heroIdx));
+    document.getElementById('heroSlides').style.transform = 'translateX(-' + (heroIdx * 100) + '%)';
+  }
+  function heroMove(dir) { heroIdx = (heroIdx + dir + heroSlides.length) % heroSlides.length; heroUpdate(); }
+  function heroSet(i) { heroIdx = i; heroUpdate(); }
+  setInterval(() => heroMove(1), 4500);
+  (function() {
+    let secs = 20538;
+    function tick() {
+      if (secs <= 0) secs = 86400; secs--;
+      const h = Math.floor(secs / 3600), m = Math.floor((secs % 3600) / 60), s = secs % 60;
+      const hr = document.getElementById('t-hr'), min = document.getElementById('t-min'), sec = document.getElementById('t-sec');
+      if (hr)  hr.textContent  = String(h).padStart(2,'0');
+      if (min) min.textContent = String(m).padStart(2,'0');
+      if (sec) sec.textContent = String(s).padStart(2,'0');
+    }
+    setInterval(tick, 1000);
+  })();
+</script>
+<%- include('../includes/end.ejs') %>

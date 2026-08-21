@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ক্যাটাগরি ম্যানেজমেন্ট - Backend Admin Portal</title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-body">
+
+    <%- include('../includes/admin-navigation.ejs') %>
+
+    <div class="admin-wrapper">
+        <div class="admin-content-box">
+            <div class="box-header">
+                <div>
+                    <h2>🏷️ ক্যাটাগরি তালিকা (Category Management)</h2>
+                    <p style="color: var(--text-subtle); font-size: 0.88rem; margin-top: 0.2rem;">স্টোরের সকল প্রোডাক্ট ক্যাটাগরি গ্রুপ</p>
+                </div>
+            </div>
+
+            <div style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); display: grid; gap: 1.5rem;">
+                <% categories.forEach(cat => { %>
+                    <div style="background: rgba(11, 15, 25, 0.6); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.5rem; text-align: center; display: flex; flex-direction: column; align-items: center;">
+                        <img src="<%= cat.img %>" alt="<%= cat.name %>" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; border: 2px solid var(--accent-blue);">
+                        <h3 style="font-size: 1.15rem; font-weight: 800; color: white; margin-bottom: 0.3rem;"><%= cat.name %></h3>
+                        <p style="color: var(--accent-blue); font-weight: 700; font-size: 0.88rem; margin-bottom: 1rem;"><%= cat.count %> টি প্রোডাক্ট যুক্ত</p>
+                        <a href="/products?category=<%= encodeURIComponent(cat.name) %>" target="_blank" class="btn-edit" style="width: 100%; text-align: center;">
+                            ভিউ ক্যাটাগরি ↗
+                        </a>
+                    </div>
+                <% }); %>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

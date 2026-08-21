@@ -1,0 +1,752 @@
+<%- include('../includes/head.ejs') %>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+    body {
+        background-color: #fafafa;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .main-details-wrapper {
+        max-width: 1320px;
+        margin: 1.5rem auto 4rem;
+        padding: 0 1rem;
+    }
+
+    /* Product Main Card */
+    .product-hero-card {
+        background: #ffffff;
+        border-radius: 24px;
+        padding: 2.25rem;
+        border: 1px solid #f1f5f9;
+        box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.05);
+        display: grid;
+        grid-template-columns: 1fr 1.1fr;
+        gap: 2.5rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .gallery-box {
+        position: relative;
+        display: flex;
+        gap: 1rem;
+    }
+
+    .thumb-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+    .thumb-item {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 2px solid #e2e8f0;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .thumb-item.active, .thumb-item:hover {
+        border-color: #e11d48;
+        box-shadow: 0 4px 12px rgba(225, 29, 72, 0.2);
+    }
+
+    .thumb-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .main-image-viewport {
+        position: relative;
+        flex: 1;
+        aspect-ratio: 1 / 1;
+        max-height: 440px;
+        border-radius: 18px;
+        overflow: hidden;
+        background: #f8fafc;
+        border: 1px solid #f1f5f9;
+        cursor: crosshair;
+    }
+
+    .main-image-viewport img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    /* Target Box Lens on Main Image */
+    .zoom-target-lens {
+        position: absolute;
+        width: 140px;
+        height: 140px;
+        background: rgba(225, 29, 72, 0.16);
+        border: 2px solid #e11d48;
+        pointer-events: none;
+        display: none;
+        z-index: 10;
+        border-radius: 10px;
+        box-shadow: 0 0 14px rgba(225, 29, 72, 0.3);
+    }
+
+    /* Right-Side Floating Zoom Preview Box */
+    .zoom-preview-box {
+        position: absolute;
+        top: 0;
+        left: calc(100% + 1.25rem);
+        width: 500px;
+        height: 500px;
+        border-radius: 20px;
+        background: #ffffff;
+        border: 2px solid #e2e8f0;
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
+        z-index: 999;
+        display: none;
+        overflow: hidden;
+        background-repeat: no-repeat;
+        background-color: #ffffff;
+    }
+
+    @media (max-width: 1100px) {
+        .zoom-preview-box {
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    .detail-disc-badge {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+        color: white;
+        padding: 0.35rem 0.85rem;
+        border-radius: 50px;
+        font-weight: 800;
+        font-size: 0.78rem;
+        z-index: 5;
+        box-shadow: 0 4px 14px rgba(225, 29, 72, 0.35);
+    }
+
+    .breadcrumb-trail {
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-bottom: 0.85rem;
+        font-weight: 500;
+    }
+
+    .breadcrumb-trail a { color: #64748b; text-decoration: none; }
+    .breadcrumb-trail a:hover { color: #e11d48; }
+
+    .product-title-heading {
+        font-size: clamp(1.3rem, 2.5vw, 1.7rem);
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.35;
+        margin-bottom: 1rem;
+        letter-spacing: -0.4px;
+    }
+
+    .price-display-box {
+        display: flex;
+        align-items: baseline;
+        gap: 0.85rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .strikethrough-old-price {
+        font-size: 1.15rem;
+        color: #94a3b8;
+        text-decoration: line-through;
+        font-weight: 500;
+    }
+
+    .large-bold-new-price {
+        font-size: 2.1rem;
+        font-weight: 900;
+        color: #e11d48;
+        letter-spacing: -0.5px;
+    }
+
+    .code-pill-tag {
+        display: inline-block;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        padding: 0.3rem 0.85rem;
+        border-radius: 50px;
+        font-size: 0.82rem;
+        color: #475569;
+        font-weight: 600;
+        margin-bottom: 1.25rem;
+    }
+
+    .qty-counter-row {
+        display: flex;
+        align-items: center;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 12px;
+        width: fit-content;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .qty-btn-inc {
+        width: 40px;
+        height: 40px;
+        background: #f8fafc;
+        border: none;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        color: #0f172a;
+        transition: background 0.2s;
+    }
+
+    .qty-btn-inc:hover { background: #e2e8f0; }
+
+    .qty-val-input {
+        width: 48px;
+        height: 40px;
+        border: none;
+        text-align: center;
+        font-weight: 800;
+        font-size: 1rem;
+        outline: none;
+        background: #ffffff;
+        color: #0f172a;
+    }
+
+    .action-buttons-flex {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .btn-order-now-lg {
+        flex: 1.2;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: white;
+        border: none;
+        padding: 0.9rem 1.25rem;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-weight: 800;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-order-now-lg:hover {
+        background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+        box-shadow: 0 6px 20px rgba(225, 29, 72, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .btn-add-cart-lg {
+        flex: 1;
+        background: #ffffff;
+        color: #0f172a;
+        border: 1.5px solid #0f172a;
+        padding: 0.9rem 1.25rem;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-weight: 800;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-add-cart-lg:hover {
+        border-color: #e11d48;
+        color: #e11d48;
+        background: rgba(225, 29, 72, 0.04);
+        transform: translateY(-2px);
+    }
+
+    .green-call-hotline-btn {
+        width: 100%;
+        background: #10b981;
+        color: white;
+        border: none;
+        padding: 0.85rem;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        text-decoration: none;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+        transition: all 0.25s;
+    }
+
+    .green-call-hotline-btn:hover { background: #059669; transform: translateY(-1px); }
+
+    .delivery-notice-box {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 14px;
+        padding: 1.1rem;
+        font-size: 0.85rem;
+        color: #166534;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.85rem;
+        line-height: 1.65;
+    }
+
+    .middle-details-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.75rem;
+        margin-bottom: 3.5rem;
+    }
+
+    .section-card-white {
+        background: #ffffff;
+        border-radius: 24px;
+        padding: 2rem;
+        border: 1px solid #f1f5f9;
+        box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.04);
+    }
+
+    .sec-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #e11d48; margin-bottom: 0.35rem; }
+
+    /* Hidden on desktop — shown only on mobile */
+    .mobile-sticky-bar { display: none; }
+
+    /* ── MOBILE OPTIMIZED PRODUCT DETAIL RESPONSIVE STYLES ── */
+    @media (max-width: 768px) {
+        .main-details-wrapper {
+            margin: 0.75rem auto 2.5rem;
+            padding: 0 0.65rem;
+        }
+
+        .product-hero-card {
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+            padding: 1rem;
+            border-radius: 18px;
+            margin-bottom: 1.5rem;
+        }
+
+        .gallery-box {
+            flex-direction: column-reverse;
+            gap: 0.75rem;
+        }
+
+        .thumb-list {
+            flex-direction: row;
+            justify-content: flex-start;
+            overflow-x: auto;
+            gap: 0.5rem;
+        }
+
+        .thumb-item {
+            width: 52px;
+            height: 52px;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+
+        .main-image-viewport {
+            max-height: 340px;
+            border-radius: 14px;
+        }
+
+        .zoom-preview-box,
+        .zoom-target-lens {
+            display: none !important;
+        }
+
+        .product-title-heading {
+            font-size: 1.25rem;
+            line-height: 1.4;
+            margin-bottom: 0.75rem;
+        }
+
+        .large-bold-new-price {
+            font-size: 1.7rem;
+        }
+
+        .strikethrough-old-price {
+            font-size: 1rem;
+        }
+
+        .action-buttons-flex {
+            flex-direction: column;
+            gap: 0.65rem;
+        }
+
+        .btn-order-now-lg,
+        .btn-add-cart-lg {
+            width: 100%;
+            padding: 0.85rem;
+            font-size: 0.92rem;
+            border-radius: 10px;
+        }
+
+        .green-call-hotline-btn {
+            padding: 0.8rem;
+            font-size: 0.92rem;
+            border-radius: 10px;
+        }
+
+        .delivery-notice-box {
+            padding: 0.85rem;
+            font-size: 0.8rem;
+            border-radius: 12px;
+        }
+
+        .middle-details-grid {
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-card-white {
+            padding: 1.25rem;
+            border-radius: 18px;
+        }
+
+        .sec-title {
+            font-size: 1.2rem;
+        }
+
+        /* ── PREMIUM MOBILE STICKY BOTTOM BAR ── */
+        @keyframes slideUpBar {
+            from { transform: translateY(100%); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+        }
+
+        .mobile-sticky-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.97);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+            box-shadow: 0 -2px 0 #f1f5f9, 0 -8px 32px rgba(15, 23, 42, 0.12);
+            z-index: 1500;
+            animation: slideUpBar 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+
+        .sticky-product-thumb {
+            width: 46px;
+            height: 46px;
+            border-radius: 10px;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 2px solid #f1f5f9;
+        }
+
+        .sticky-info-col {
+            display: flex;
+            flex-direction: column;
+            flex: 0 0 auto;
+        }
+
+        .sticky-price-label {
+            font-size: 0.6rem;
+            color: #94a3b8;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .sticky-price-val {
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: #e11d48;
+            line-height: 1.2;
+        }
+
+        .sticky-order-btn {
+            flex: 1;
+            background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+            color: white;
+            border: none;
+            padding: 0.78rem 1rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            box-shadow: 0 4px 18px rgba(225, 29, 72, 0.38);
+            transition: transform 0.1s, box-shadow 0.18s;
+            white-space: nowrap;
+            letter-spacing: 0.2px;
+        }
+
+        .sticky-order-btn:active {
+            transform: scale(0.96);
+            box-shadow: 0 2px 8px rgba(225, 29, 72, 0.28);
+        }
+
+        /* Hide main Order Now on mobile — sticky bar handles it */
+        .btn-order-now-lg {
+            display: none !important;
+        }
+
+        main.main-details-wrapper {
+            padding-bottom: 5.5rem !important;
+        }
+    }
+</style>
+</head>
+<body>
+<%- include('../includes/navigation.ejs') %>
+<main class="main-details-wrapper">
+
+    <!-- Top Product Hero Card -->
+    <div class="product-hero-card">
+        <!-- Gallery -->
+        <div class="gallery-box">
+            <div class="thumb-list">
+                <div class="thumb-item active" onclick="document.getElementById('main-preview-img').src='<%= product.imageUrl %>'">
+                    <img src="<%= product.imageUrl %>" alt="<%= product.title %>">
+                </div>
+            </div>
+            <div class="main-image-viewport">
+                <% if (product.oldPrice && product.oldPrice > product.price) { %>
+                    <% const discount = Math.round(((product.oldPrice - product.price) * 100) / product.oldPrice); %>
+                    <div class="detail-disc-badge">-<%= discount %>% OFF</div>
+                <% } %>
+                <% if (product.isFreeDelivery) { %>
+                    <div class="free-delivery-badge"><i class="fa-solid fa-truck-fast"></i> Free Delivery</div>
+                <% } %>
+                <img id="main-preview-img" src="<%= product.imageUrl %>" alt="<%= product.title %>">
+                <div class="zoom-target-lens" id="zoomTargetLens"></div>
+            </div>
+
+            <!-- Right-Side Floating Zoom Preview Box -->
+            <div class="zoom-preview-box" id="zoomPreviewBox"></div>
+        </div>
+
+        <!-- Right Buy Section -->
+        <div>
+            <div class="breadcrumb-trail">
+                <a href="/">Home</a> &nbsp;/&nbsp; <a href="/products?category=<%= encodeURIComponent(product.category) %>"><%= product.category %></a>
+            </div>
+
+            <h1 class="product-title-heading"><%= product.title %></h1>
+
+            <div class="price-display-box">
+                <span class="large-bold-new-price">৳ <%= product.price %></span>
+                <% if (product.oldPrice) { %>
+                    <span class="strikethrough-old-price">৳ <%= product.oldPrice %></span>
+                <% } %>
+            </div>
+
+            <div>
+                <span class="code-pill-tag">Product Code : <strong>P04<%= product.id %></strong></span>
+                <% if (product.isFreeDelivery) { %>
+                    <span class="code-pill-tag" style="background:#d1fae5; color:#047857; border:1px solid #6ee7b7;"><i class="fa-solid fa-truck-fast"></i> <strong>Free Delivery</strong></span>
+                <% } %>
+            </div>
+
+            <!-- Quantity & Actions -->
+            <form action="/cart" method="POST">
+                <input type="hidden" name="productId" value="<%= product.id %>">
+
+                <div class="qty-counter-row">
+                    <button type="button" class="qty-btn-inc" onclick="let input = document.getElementById('qty-counter'); if(parseInt(input.value) > 1) input.value = parseInt(input.value) - 1;">-</button>
+                    <input type="text" id="qty-counter" name="quantity" value="1" class="qty-val-input" readonly>
+                    <button type="button" class="qty-btn-inc" onclick="let input = document.getElementById('qty-counter'); input.value = parseInt(input.value) + 1;">+</button>
+                </div>
+
+                <div class="action-buttons-flex">
+                    <button type="submit" name="action" value="order_now" class="btn-order-now-lg">
+                        <i class="fa-solid fa-bag-shopping"></i> Order Now
+                    </button>
+                    <button type="submit" name="action" value="add_to_cart" class="btn-add-cart-lg">
+                        <i class="fa-solid fa-cart-plus"></i> Add to Cart
+                    </button>
+                </div>
+            </form>
+
+            <a href="tel:<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.phone) ? siteSettings.phone : '01700000000' %>" class="green-call-hotline-btn">
+                <i class="fa-solid fa-phone"></i> Order via Call: <%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.phone) ? siteSettings.phone : '01700000000' %>
+            </a>
+
+            <div class="delivery-notice-box">
+                <i class="fa-solid fa-truck-fast" style="font-size: 1.3rem; color: #16a34a; margin-top: 2px;"></i>
+                <div>
+                    <strong>Inside Dhaka: ৳<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.delivery_inside) ? siteSettings.delivery_inside : 60 %></strong> &nbsp;|&nbsp; 
+                    <strong>Outside Dhaka: ৳<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.delivery_outside) ? siteSettings.delivery_outside : 120 %></strong><br>
+                    Cash on Delivery Nationwide. 7-Day Easy Return Guarantee.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Description & Details Section -->
+    <div class="middle-details-grid">
+        <div class="section-card-white">
+            <div style="margin-bottom: 1.25rem;">
+                <div class="sec-label">Overview</div>
+                <div class="sec-title">Product Description</div>
+            </div>
+            <div style="line-height: 1.8; color: #334155; font-size: 0.95rem;">
+                <p><%= product.description %></p>
+                <ul style="list-style: none; padding-left: 0; margin-top: 1rem; line-height: 2;">
+                    <li>✓ High quality authentic product</li>
+                    <li>✓ 100% Satisfaction Guarantee</li>
+                    <li>✓ Fast Home Delivery across Bangladesh</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section-card-white">
+            <div style="margin-bottom: 1.25rem;">
+                <div class="sec-label">Support</div>
+                <div class="sec-title">Customer Trust</div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 1rem; font-size: 0.88rem; color: #334155;">
+                <div style="display:flex; align-items:center; gap:0.75rem;">
+                    <i class="fa-solid fa-shield-halved" style="color:#e11d48; font-size:1.2rem;"></i>
+                    <div><strong>Guaranteed Quality</strong><br><span style="font-size:0.8rem; color:#64748b;">100% Genuine Items</span></div>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.75rem;">
+                    <i class="fa-solid fa-headset" style="color:#2563eb; font-size:1.2rem;"></i>
+                    <div><strong>24/7 Helpline</strong><br><span style="font-size:0.8rem; color:#64748b;"><%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.phone) ? siteSettings.phone : '01700000000' %></span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dynamic Related Products Section -->
+    <% if (typeof relatedProducts !== 'undefined' && relatedProducts.length > 0) { %>
+    <section style="margin-bottom: 3.5rem;">
+        <div style="margin-bottom: 1.75rem; padding-bottom: 1rem; border-bottom: 1.5px solid #f1f5f9; display: flex; align-items: flex-end; justify-content: space-between;">
+            <div>
+                <div class="sec-label">Recommended</div>
+                <div class="sec-title">Related Products</div>
+            </div>
+            <a href="/products" style="font-size: 0.875rem; font-weight: 600; color: #64748b; text-decoration: none;">View All <i class="fa-solid fa-arrow-right" style="font-size:0.75rem;"></i></a>
+        </div>
+
+        <div class="product-grid">
+            <% relatedProducts.forEach(prod => { %>
+                <div class="product_item">
+                    <% if (prod.oldPrice && prod.oldPrice > prod.price) { %>
+                        <% const disc = Math.round(((prod.oldPrice - prod.price) / prod.oldPrice) * 100); %>
+                        <div class="sale-badge">-<%= disc %>%</div>
+                    <% } %>
+                    <% if (prod.isFreeDelivery) { %>
+                        <div class="free-delivery-badge"><i class="fa-solid fa-truck-fast"></i> Free Delivery</div>
+                    <% } %>
+                    <div class="pro_img">
+                        <a href="/products/<%= prod.id %>"><img src="<%= prod.imageUrl %>" alt="<%= prod.title %>" loading="lazy"></a>
+                    </div>
+                    <div class="pro_des">
+                        <div class="pro_name"><a href="/products/<%= prod.id %>"><%= prod.title %></a></div>
+                        <div class="pro_price">
+                            <span>৳ <%= prod.price %></span>
+                            <% if (prod.oldPrice) { %><del>৳ <%= prod.oldPrice %></del><% } %>
+                        </div>
+                    </div>
+                    <div class="pro_btn">
+                        <form action="/cart" method="POST">
+                            <input type="hidden" name="productId" value="<%= prod.id %>">
+                            <button type="submit">🛒 Order Now</button>
+                        </form>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+    </section>
+    <% } %>
+    <!-- ── Premium Mobile Sticky Bottom Buy Bar ── -->
+    <div class="mobile-sticky-bar">
+        <img src="<%= product.imageUrl %>" alt="<%= product.title %>" class="sticky-product-thumb">
+        <div class="sticky-info-col">
+            <span class="sticky-price-label">Price</span>
+            <span class="sticky-price-val">৳ <%= product.price %></span>
+        </div>
+        <form action="/cart" method="POST" style="flex:1; display:flex;">
+            <input type="hidden" name="productId" value="<%= product.id %>">
+            <input type="hidden" name="quantity" value="1">
+            <button type="submit" name="action" value="order_now" class="sticky-order-btn">
+                <i class="fa-solid fa-bolt"></i> Order Now
+            </button>
+        </form>
+    </div>
+
+</main>
+<script>
+    (function() {
+        const viewport = document.querySelector('.main-image-viewport');
+        const img = document.getElementById('main-preview-img');
+        const lens = document.getElementById('zoomTargetLens');
+        const previewBox = document.getElementById('zoomPreviewBox');
+
+        if (!viewport || !img || !lens || !previewBox) return;
+
+        const zoomRatio = 3; // 3x HD Magnified View
+
+        function updateZoomPreview(e) {
+            const rect = viewport.getBoundingClientRect();
+            let x = e.clientX - rect.left;
+            let y = e.clientY - rect.top;
+
+            const halfW = lens.offsetWidth / 2;
+            const halfH = lens.offsetHeight / 2;
+
+            // Clamp lens position inside image container bounds
+            if (x < halfW) x = halfW;
+            if (x > rect.width - halfW) x = rect.width - halfW;
+            if (y < halfH) y = halfH;
+            if (y > rect.height - halfH) y = rect.height - halfH;
+
+            lens.style.left = (x - halfW) + 'px';
+            lens.style.top = (y - halfH) + 'px';
+
+            const bgX = ((x - halfW) / (rect.width - lens.offsetWidth)) * 100;
+            const bgY = ((y - halfH) / (rect.height - lens.offsetHeight)) * 100;
+
+            previewBox.style.backgroundImage = `url("${img.src}")`;
+            previewBox.style.backgroundSize = `${rect.width * zoomRatio}px ${rect.height * zoomRatio}px`;
+            previewBox.style.backgroundPosition = `${bgX}% ${bgY}%`;
+        }
+
+        viewport.addEventListener('mouseenter', function(e) {
+            lens.style.display = 'block';
+            previewBox.style.display = 'block';
+            updateZoomPreview(e);
+        });
+
+        viewport.addEventListener('mousemove', updateZoomPreview);
+
+        viewport.addEventListener('mouseleave', function() {
+            lens.style.display = 'none';
+            previewBox.style.display = 'none';
+        });
+    })();
+</script>
+
+<%- include('../includes/end.ejs') %>

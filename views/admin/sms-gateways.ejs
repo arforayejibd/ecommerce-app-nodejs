@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle %> - Rosedrape Admin</title>
+    <link rel="stylesheet" href="/backEnd/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/backEnd/assets/css/icons.min.css">
+    <link rel="stylesheet" href="/backEnd/assets/css/app.min.css">
+    <link rel="stylesheet" href="/backEnd/assets/css/sidebar-modern.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        [data-theme="dark"] body {
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .content-page {
+            margin-top: 85px !important;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+        .hero-banner-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 24px 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            margin-bottom: 24px;
+        }
+        [data-theme="dark"] .hero-banner-card {
+            background: #1e293b !important;
+            border-color: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.2);
+        }
+        .api-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+            transition: all 0.25s ease;
+        }
+        [data-theme="dark"] .api-card {
+            background: #1e293b;
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+        .api-logo-badge {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .form-label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #475569;
+            margin-bottom: 6px;
+        }
+        [data-theme="dark"] .form-label {
+            color: #94a3b8;
+        }
+        .form-control {
+            border-radius: 10px;
+            border: 1px solid #cbd5e1;
+            padding: 10px 14px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        [data-theme="dark"] .form-control {
+            background: #0f172a;
+            border-color: rgba(255, 255, 255, 0.12);
+            color: #f8fafc;
+        }
+        .form-control:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+        .btn-indigo {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: #ffffff;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 24px;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+            transition: all 0.2s ease;
+        }
+        .btn-indigo:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
+            color: #ffffff;
+        }
+        .toggle-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.2s ease;
+        }
+        [data-theme="dark"] .toggle-box {
+            background: #0f172a;
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+        .form-check-input:checked {
+            background-color: #6366f1;
+            border-color: #6366f1;
+        }
+    </style>
+</head>
+<body>
+
+    <%- include('../includes/admin-navigation.ejs') %>
+
+    <div class="content-page">
+        <div class="container-fluid">
+            
+            <!-- Hero Header Banner -->
+            <div class="hero-banner-card d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="api-logo-badge" style="background: rgba(236, 72, 153, 0.12); color: #ec4899;">
+                        <i class="fe-message-square"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold m-0" style="color: #0f172a;">SMS Gateway Configuration</h3>
+                        <p class="text-muted m-0 font-13">Configure bulk SMS API credentials and automated SMS notifications for customer orders & OTPs.</p>
+                    </div>
+                </div>
+                <div>
+                    <button type="submit" form="sms-form" class="btn btn-theme-primary"><i class="fe-save me-1"></i> Save SMS Gateway</button>
+                </div>
+            </div>
+
+            <!-- Main Form Card -->
+            <div class="api-card">
+                <form id="sms-form" action="/admin/smsgeteway/update" method="POST">
+                    
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label">SMS Provider API URL *</label>
+                            <input type="text" class="form-control" name="url" value="<%= sms ? sms.url : 'https://api.sms.net.bd/sendsms' %>" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">API Key / Token *</label>
+                            <input type="text" class="form-control" name="api_key" value="<%= sms ? sms.api_key : 'sms_net_bd_api_key_83749102' %>" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Sender ID *</label>
+                            <input type="text" class="form-control" name="serderid" value="<%= sms ? sms.serderid : 'ROSEDRAPE' %>" required>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold mb-3" style="color: #6366f1;"><i class="fe-bell me-2"></i>Automated SMS Triggers & Status</h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="toggle-box d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="fw-bold font-14">Gateway Status</div>
+                                    <span class="font-12 text-muted">Enable/Disable SMS</span>
+                                </div>
+                                <div class="form-check form-switch fs-4">
+                                    <input class="form-check-input" type="checkbox" name="status" <%= sms && sms.status ? 'checked' : '' %>>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="toggle-box d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="fw-bold font-14">Order Confirm SMS</div>
+                                    <span class="font-12 text-muted">Send SMS on checkout</span>
+                                </div>
+                                <div class="form-check form-switch fs-4">
+                                    <input class="form-check-input" type="checkbox" name="order" <%= sms && sms.order ? 'checked' : '' %>>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="toggle-box d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="fw-bold font-14">Forgot Password SMS</div>
+                                    <span class="font-12 text-muted">Send OTP for reset</span>
+                                </div>
+                                <div class="form-check form-switch fs-4">
+                                    <input class="form-check-input" type="checkbox" name="forget_pass" <%= sms && sms.forget_pass ? 'checked' : '' %>>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="toggle-box d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="fw-bold font-14">Password Gen SMS</div>
+                                    <span class="font-12 text-muted">Send auto password</span>
+                                </div>
+                                <div class="form-check form-switch fs-4">
+                                    <input class="form-check-input" type="checkbox" name="password_g" <%= sms && sms.password_g ? 'checked' : '' %>>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-indigo px-5"><i class="fe-check-circle me-1"></i> Update SMS Settings</button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="/backEnd/assets/js/vendor.min.js"></script>
+    <script src="/backEnd/assets/js/app.min.js"></script>
+</body>
+</html>

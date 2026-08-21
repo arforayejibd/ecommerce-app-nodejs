@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= editing ? 'Edit Product' : 'Create Product' %> - Rosedrape Admin</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    
+    <style>
+        body {
+            background-color: #f1f5f9 !important;
+            font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;
+            color: #0f172a;
+        }
+
+        .dashboard-page-container {
+            max-width: 1380px;
+            margin: 0 auto 3rem;
+        }
+
+        /* Dashboard Card Match - 100% Uniform Cards */
+        .dash-card {
+            background: #ffffff;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        .dash-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .dash-card-title-box {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .icon-circle-box {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            flex-shrink: 0;
+        }
+
+        .dash-title {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.2;
+        }
+
+        .dash-subtitle {
+            margin: 0.2rem 0 0;
+            font-size: 0.82rem;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .btn-view-all-pill {
+            background: #e0e7ff;
+            color: #4f46e5 !important;
+            padding: 0.5rem 1.2rem;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-view-all-pill:hover {
+            background: #4f46e5;
+            color: #ffffff !important;
+        }
+
+        /* Proportional Slim Sidebar 2-Column Layout */
+        .dash-row-form {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 350px;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .form-group {
+            margin-bottom: 1.15rem;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: #334155;
+            margin-bottom: 0.45rem;
+        }
+
+        .form-control-custom {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            color: #0f172a;
+            font-size: 0.92rem;
+            font-weight: 600;
+            font-family: inherit;
+            outline: none;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        .form-control-custom:focus {
+            border-color: #fe5200;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(254, 82, 0, 0.12);
+        }
+
+        .checkbox-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 0.95rem 1.1rem;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .checkbox-card:hover {
+            border-color: #cbd5e1;
+            background: #ffffff;
+        }
+
+        .checkbox-card input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #fe5200;
+            cursor: pointer;
+        }
+
+        .btn-submit-dash {
+            background: linear-gradient(135deg, #fe5200 0%, #eb3b5a 100%);
+            color: #ffffff;
+            border: none;
+            padding: 0.85rem 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 800;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(254, 82, 0, 0.3);
+            cursor: pointer;
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-submit-dash:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(254, 82, 0, 0.45);
+        }
+
+        .image-preview-frame {
+            width: 100%;
+            height: 170px;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 0.85rem;
+        }
+
+        .image-preview-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        @media (max-width: 1100px) {
+            .dash-row-form {
+                grid-template-columns: minmax(0, 1fr) !important;
+            }
+        }
+    </style>
+</head>
+<body class="admin-body">
+
+    <%- include('../includes/admin-navigation.ejs') %>
+
+    <div class="content-page">
+        <div class="dashboard-page-container">
+            
+            <!-- Top Header Card -->
+            <div class="dash-card" style="margin-bottom: 1.5rem;">
+                <div class="dash-card-header" style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">
+                    <div class="dash-card-title-box">
+                        <div class="icon-circle-box" style="background: rgba(254,82,0,0.12); color: #fe5200;">
+                            <i class="<%= editing ? 'fa-solid fa-pen-to-square' : 'fa-solid fa-plus' %>"></i>
+                        </div>
+                        <div>
+                            <h3 class="dash-title"><%= editing ? 'EDIT PRODUCT' : 'CREATE PRODUCT' %></h3>
+                            <p class="dash-subtitle"><%= editing ? 'Update product specifications, prices, and gallery images' : 'Add new product entry to store catalog and gallery' %></p>
+                        </div>
+                    </div>
+                    <div>
+                        <a href="/admin/product-list" class="btn-view-all-pill">
+                            <i class="fa-solid fa-arrow-left"></i> Back to Manage Products
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Proportional 2-Column Form Layout -->
+            <form action="/admin/<%= editing ? 'edit-product' : 'add-product' %>" method="POST">
+                
+                <% if (editing) { %>
+                    <input type="hidden" value="<%= product.id %>" name="productId">
+                <% } %>
+
+                <div class="dash-row-form">
+                    
+                    <!-- LEFT COLUMN (Main Content) -->
+                    <div>
+                        
+                        <!-- Card 1: Title & Description -->
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <div class="dash-card-title-box">
+                                    <div class="icon-circle-box" style="background: #e0e7ff; color: #4f46e5;">
+                                        <i class="fa-solid fa-heading"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="dash-title">Product Title & Description</h3>
+                                        <p class="dash-subtitle">Enter main product title and full specification</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Product Title *</label>
+                                <input type="text" name="title" class="form-control-custom" value="<%= editing ? product.title : '' %>" placeholder="e.g. Shaonobazar Nosepin Special" required>
+                            </div>
+
+                            <div class="form-group" style="margin-top: 1.25rem;">
+                                <label class="form-label">Product Description *</label>
+                                <textarea name="description" rows="8" class="form-control-custom" placeholder="Write detailed product specifications, quality, and usage details..." required><%= editing ? product.description : '' %></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Pricing & Stock -->
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <div class="dash-card-title-box">
+                                    <div class="icon-circle-box" style="background: #d1fae5; color: #059669;">
+                                        <i class="fa-solid fa-bangladeshi-taka-sign"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="dash-title">Pricing & Stock Inventory</h3>
+                                        <p class="dash-subtitle">Set cost price, sale price, and inventory stock</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                                <div class="form-group">
+                                    <label class="form-label">Purchase Cost (৳) *</label>
+                                    <input type="number" name="purchasePrice" class="form-control-custom" value="450" placeholder="e.g. 450" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Stock Quantity *</label>
+                                    <input type="number" name="stock" class="form-control-custom" value="50" placeholder="e.g. 50" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Old Regular Price (৳)</label>
+                                    <input type="number" name="oldPrice" class="form-control-custom" value="<%= editing && product.oldPrice ? product.oldPrice : '1190' %>" placeholder="e.g. 1190">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Sale Price (৳) *</label>
+                                    <input type="number" name="price" class="form-control-custom" value="<%= editing ? product.price : '750' %>" placeholder="e.g. 750" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Video & Options -->
+                        <div class="dash-card" style="margin-bottom: 0;">
+                            <div class="dash-card-header">
+                                <div class="dash-card-title-box">
+                                    <div class="icon-circle-box" style="background: #cff4fc; color: #0891b2;">
+                                        <i class="fa-solid fa-video"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="dash-title">Video & Variant Options</h3>
+                                        <p class="dash-subtitle">Embed product demo video and select size/color options</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                                <div class="form-group">
+                                    <label class="form-label">Video Embed URL (YouTube)</label>
+                                    <input type="text" name="videoUrl" class="form-control-custom" placeholder="https://www.youtube.com/embed/xyz">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Size Options</label>
+                                    <select name="sizes" class="form-control-custom">
+                                        <option value="Free Size" selected>Free Size</option>
+                                        <option value="S, M, L, XL">S, M, L, XL</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label class="form-label">Color Options</label>
+                                    <select name="colors" class="form-control-custom">
+                                        <option value="Golden, Silver" selected>Golden, Silver</option>
+                                        <option value="Rose Gold">Rose Gold</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- RIGHT SIDEBAR COLUMN -->
+                    <div>
+                        
+                        <!-- Sidebar Card 1: Publish Action -->
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <div class="dash-card-title-box">
+                                    <div class="icon-circle-box" style="background: rgba(254,82,0,0.12); color: #fe5200;">
+                                        <i class="fa-solid fa-paper-plane"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="dash-title">Publish Action</h3>
+                                        <p class="dash-subtitle">Save or update catalog entry</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn-submit-dash">
+                                <i class="<%= editing ? 'fa-solid fa-floppy-disk' : 'fa-solid fa-circle-plus' %>"></i> <%= editing ? 'Update Product' : 'Save Product' %>
+                            </button>
+                        </div>
+
+                        <!-- Sidebar Card 2: Primary Cover Image & Multiple Gallery -->
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <div class="dash-card-title-box">
+                                    <div class="icon-circle-box" style="background: #cff4fc; color: #0891b2;">
+                                        <i class="fa-solid fa-images"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="dash-title">Product Media & Gallery</h3>
+                                        <p class="dash-subtitle">Cover & multiple gallery images</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Primary Image Input -->
+                            <div class="form-group">
+                                <label class="form-label">Primary Cover Image *</label>
+                                <input type="hidden" id="imageUrlInput" name="imageUrl" value="<%= editing ? product.imageUrl : '' %>" required>
+                                <div style="display: flex; gap: 1.25rem; align-items: center; background: #ffffff; padding: 0.85rem 1rem; border-radius: 14px; border: 1px solid #e2e8f0;">
+                                    <div class="image-preview-frame" style="margin: 0; width: 90px; height: 90px; min-width: 90px; border-radius: 12px; overflow: hidden; border: 1px solid #cbd5e1; background: #f8fafc; display: flex; align-items: center; justify-content: center;">
+                                        <img id="sidebarImgPreview" src="<%= editing && product.imageUrl ? product.imageUrl : 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'90\' height=\'90\' fill=\'%23f8fafc\'><rect width=\'100%\' height=\'100%\' fill=\'%23f8fafc\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%2394a3b8\' font-family=\'sans-serif\' font-size=\'11\'>No Cover</text></svg>' %>" alt="Cover Image Preview" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'90\' height=\'90\' fill=\'%23f8fafc\'><rect width=\'100%\' height=\'100%\' fill=\'%23f8fafc\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%2394a3b8\' font-family=\'sans-serif\' font-size=\'11\'>No Image</text></svg>';">
+                                    </div>
+                                    <div>
+                                        <button type="button" class="btn-add-new-product" onclick="openMediaPicker(url => { document.getElementById('imageUrlInput').value = url; updateImagePreview(url); })" style="border: none; white-space: nowrap; font-size: 0.84rem; padding: 0.6rem 1.1rem; border-radius: 10px;">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right:0.35rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg> Browse Image
+                                        </button>
+                                        <p style="margin: 0.4rem 0 0 0; font-size: 0.78rem; color: #64748b;">Select or upload cover image</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Multiple Gallery Images Component -->
+                            <div style="margin-top: 1.4rem; padding-top: 1.2rem; border-top: 1px solid #f1f5f9;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem;">
+                                    <label class="form-label" style="margin-bottom: 0; font-size: 0.85rem;">Gallery Images (Multiple)</label>
+                                    <button type="button" onclick="openMediaPicker(url => { addGalleryImageInput(url); })" style="background: linear-gradient(135deg, #fe5200 0%, #eb3b5a 100%); color: #ffffff; font-size: 0.78rem; font-weight: 800; padding: 0.4rem 0.9rem; border-radius: 20px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.38rem; box-shadow: 0 2px 8px rgba(254,82,0,0.3); transition: all 0.2s ease;">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg> Add Gallery Image
+                                    </button>
+                                </div>
+
+                                <div id="galleryInputsContainer" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                    <!-- Filled dynamically -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sidebar Card 3: Organization -->
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <div class="dash-card-title-box">
+                                    <div class="icon-circle-box" style="background: #fef3c7; color: #d97706;">
+                                        <i class="fa-solid fa-folder-tree"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="dash-title">Organization</h3>
+                                        <p class="dash-subtitle">Category and brand assignment</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Category *</label>
+                                <select name="category" class="form-control-custom" required>
+                                    <option value="">Select Category..</option>
+                                    <option value="Nosepin" <%= editing && product.category === 'Nosepin' ? 'selected' : '' %>>Nosepin</option>
+                                    <option value="Ring" <%= editing && product.category === 'Ring' ? 'selected' : '' %>>Ring</option>
+                                    <option value="Home Appliances" <%= editing && product.category === 'Home Appliances' ? 'selected' : '' %>>Home Appliances</option>
+                                    <option value="Health Appliances" <%= editing && product.category === 'Health Appliances' ? 'selected' : '' %>>Health Appliances</option>
+                                    <option value="General" <%= editing && product.category === 'General' ? 'selected' : '' %>>General</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" style="margin-top: 1rem;">
+                                <label class="form-label">SubCategory</label>
+                                <select name="subcategory" class="form-control-custom">
+                                    <option value="">Select Subcategory..</option>
+                                    <option value="Gold Plated">Gold Plated</option>
+                                    <option value="Silver Plated">Silver Plated</option>
+                                    <option value="Diamond Cut">Diamond Cut</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" style="margin-top: 1rem;">
+                                <label class="form-label">Brand</label>
+                                <select name="brand" class="form-control-custom">
+                                    <option value="">Select Brand..</option>
+                                    <option value="One Commerce Signature">One Commerce Signature</option>
+                                    <option value="Shaonobazar">Shaonobazar</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Sidebar Card 4: Offers & Featured -->
+                        <div class="dash-card" style="margin-bottom: 0;">
+                            <div class="dash-card-header">
+                                <div class="dash-card-title-box">
+                                    <div class="icon-circle-box" style="background: rgba(239,68,68,0.12); color: #ef4444;">
+                                        <i class="fa-solid fa-bolt"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="dash-title">Offers & Featured</h3>
+                                        <p class="dash-subtitle">Special discount & home visibility</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+                                <label class="checkbox-card">
+                                    <input type="checkbox" name="isHotDeal" value="true" <%= editing && product.isHotDeal ? 'checked' : '' %>>
+                                    <div>
+                                        <strong style="color: #fe5200; font-size: 0.9rem; display: block;">Hot Deal Offer</strong>
+                                        <span style="font-size: 0.78rem; color: #64748b;">Special discount section</span>
+                                    </div>
+                                </label>
+
+                                <label class="checkbox-card">
+                                    <input type="checkbox" name="isFreeDelivery" value="true" <%= editing && product.isFreeDelivery ? 'checked' : '' %>>
+                                    <div>
+                                        <strong style="color: #059669; font-size: 0.9rem; display: block;">Free Delivery</strong>
+                                        <span style="font-size: 0.78rem; color: #64748b;">Zero shipping cost for this product</span>
+                                    </div>
+                                </label>
+
+                                <label class="checkbox-card">
+                                    <input type="checkbox" name="isFeatured" value="true" checked>
+                                    <div>
+                                        <strong style="color: #0ea5e9; font-size: 0.9rem; display: block;">Featured Product</strong>
+                                        <span style="font-size: 0.78rem; color: #64748b;">Homepage recommendations</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <script>
+        const defaultSvgPlaceholder = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' fill='%23f8fafc'><rect width='100%' height='100%' fill='%23f8fafc'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-family='sans-serif' font-size='14'>No Image</text></svg>";
+        const thumbSvgPlaceholder = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='42' height='42' fill='%23f8fafc'><rect width='100%' height='100%' fill='%23f8fafc'/></svg>";
+
+        function updateImagePreview(url) {
+            const preview = document.getElementById('sidebarImgPreview');
+            if (url && url.trim() !== '') {
+                preview.src = url;
+            } else {
+                preview.src = defaultSvgPlaceholder;
+            }
+        }
+
+        function addGalleryImageInput(url = '') {
+            const container = document.getElementById('galleryInputsContainer');
+            const div = document.createElement('div');
+            div.className = 'gallery-input-row';
+            div.style.cssText = 'display: flex; gap: 0.75rem; align-items: center; background: #ffffff; padding: 0.6rem 0.75rem; border-radius: 12px; border: 1px solid #e2e8f0;';
+            div.innerHTML = `
+                <input type="hidden" name="galleryImages[]" value="${url}">
+                <div style="width: 48px; height: 48px; min-width: 48px; border-radius: 10px; overflow: hidden; border: 1px solid #cbd5e1; background: #f8fafc; display: flex; align-items: center; justify-content: center;">
+                    <img class="gallery-thumb-preview" src="${url || thumbSvgPlaceholder}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='${thumbSvgPlaceholder}';">
+                </div>
+                <button type="button" onclick="openMediaPicker(u => { const row = this.closest('.gallery-input-row'); row.querySelector('input[type=hidden]').value = u; updateGalleryRowPreview(row, u); })" style="background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; padding: 0.45rem 0.85rem; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg> ${url ? 'Change Image' : 'Browse'}
+                </button>
+                <button type="button" onclick="removeGalleryInput(this)" title="Remove Image" style="background: rgba(239, 68, 68, 0.12); color: #ef4444; border: none; width: 34px; height: 34px; min-width: 34px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-left: auto;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeGalleryInput(btn) {
+            const row = btn.closest('.gallery-input-row');
+            if (row) row.remove();
+        }
+
+        function updateGalleryRowPreview(row, url) {
+            if (row) {
+                const img = row.querySelector('.gallery-thumb-preview');
+                if (img) {
+                    img.src = url && url.trim() !== '' ? url : thumbSvgPlaceholder;
+                }
+            }
+        }
+    </script>
+</body>
+</html>

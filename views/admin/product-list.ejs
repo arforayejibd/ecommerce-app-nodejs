@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Products - Rosedrape Admin Backend</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    
+    <style>
+        body {
+            background-color: #f1f5f9 !important;
+            font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .products-page-container {
+            max-width: 1380px;
+            margin: 0 auto 3rem;
+        }
+
+        /* Top Header Card */
+        .products-header-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 1.25rem 1.75rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .products-title-box {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .count-pill-badge {
+            background: rgba(254, 82, 0, 0.12);
+            color: #fe5200;
+            padding: 0.3rem 0.85rem;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 0.88rem;
+        }
+
+        .btn-add-new-product {
+            background: linear-gradient(135deg, #fe5200 0%, #eb3b5a 100%);
+            color: #ffffff !important;
+            padding: 0.65rem 1.4rem;
+            border-radius: 30px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            box-shadow: 0 4px 15px rgba(254, 82, 0, 0.35);
+            transition: all 0.2s ease;
+        }
+
+        .btn-add-new-product:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(254, 82, 0, 0.5);
+        }
+
+        /* Category & Status Filter Navigation Tabs */
+        .status-tabs-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+            overflow-x: auto;
+            padding-bottom: 0.4rem;
+            scrollbar-width: thin;
+        }
+
+        .status-tab-item {
+            padding: 0.55rem 1.2rem;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+            color: #64748b;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s ease;
+        }
+
+        .status-tab-item:hover {
+            background: #f8fafc;
+            color: #0f172a;
+        }
+
+        .status-tab-item.active {
+            background: linear-gradient(135deg, #fe5200 0%, #eb3b5a 100%);
+            color: #ffffff;
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(254, 82, 0, 0.3);
+        }
+
+        /* Action & Search Bar Card */
+        .toolbar-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 1rem 1.25rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .action-buttons-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .action-pill-btn {
+            padding: 0.48rem 1.15rem;
+            border-radius: 25px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .action-pill-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-act-assign { background: #10b981; color: white; }
+        .btn-act-status { background: #4a81d4; color: white; }
+        .btn-act-print { background: #00acc1; color: white; }
+        .btn-act-steadfast { background: #f7b84b; color: #0f172a; }
+        .btn-act-delete { background: #ef4444; color: white; }
+
+        .search-box-custom {
+            display: flex;
+            align-items: center;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 30px;
+            padding: 0.3rem 0.4rem 0.3rem 1rem;
+            width: 270px;
+            transition: all 0.2s ease;
+        }
+
+        .search-box-custom:focus-within {
+            border-color: #fe5200;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(254, 82, 0, 0.12);
+        }
+
+        .search-input-field {
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #0f172a;
+            width: 100%;
+        }
+
+        .btn-search-trigger {
+            background: #fe5200;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        /* Products Data Table Card */
+        .products-table-card {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .products-data-table {
+            min-width: 1100px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .products-data-table th {
+            background: #f8fafc;
+            padding: 0.95rem 1rem;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e2e8f0;
+            white-space: nowrap;
+        }
+
+        .products-data-table td {
+            padding: 1rem 1.1rem;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.88rem;
+            vertical-align: middle;
+        }
+
+        .products-data-table tr:hover {
+            background: #f8fafc;
+        }
+
+        /* Category Tag Badge */
+        .category-badge-tag {
+            background: rgba(14, 165, 233, 0.1);
+            color: #0284c7;
+            font-weight: 700;
+            font-size: 0.8rem;
+            padding: 0.35rem 0.85rem;
+            border-radius: 20px;
+            border: 1px solid rgba(14, 165, 233, 0.25);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            white-space: nowrap;
+        }
+
+        /* Stock Tag Badge */
+        .stock-badge-tag {
+            background: rgba(16, 185, 129, 0.12);
+            color: #059669;
+            font-weight: 800;
+            font-size: 0.78rem;
+            padding: 0.35rem 0.85rem;
+            border-radius: 20px;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+        }
+
+        /* Hot Deal Toggle Badge */
+        .deal-toggle-badge {
+            padding: 0.35rem 0.85rem;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            transition: all 0.2s ease;
+            border: none;
+            white-space: nowrap;
+        }
+
+        .deal-toggle-badge.active-deal {
+            background: rgba(254, 82, 0, 0.12);
+            color: #fe5200;
+            border: 1px solid rgba(254, 82, 0, 0.3);
+        }
+
+        .deal-toggle-badge.inactive-deal {
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #cbd5e1;
+        }
+
+        .deal-toggle-badge:hover {
+            transform: scale(1.04);
+        }
+
+        /* Status Badge */
+        .status-badge-tag {
+            background: rgba(16, 185, 129, 0.12);
+            color: #059669;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            font-weight: 800;
+            font-size: 0.78rem;
+            padding: 0.35rem 0.85rem;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            white-space: nowrap;
+        }
+
+        /* Action Buttons in Table */
+        .custom-btn-list {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .db-action-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 0.92rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-action-view { background: rgba(0, 172, 193, 0.12); color: #00acc1; }
+        .btn-action-edit { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+        .btn-action-delete { background: rgba(239, 68, 68, 0.12); color: #ef4444; }
+
+        .btn-action-view:hover { background: #00acc1; color: white; transform: translateY(-1px); }
+        .btn-action-edit:hover { background: #10b981; color: white; transform: translateY(-1px); }
+        .btn-action-delete:hover { background: #ef4444; color: white; transform: translateY(-1px); }
+
+        /* Modals Styling */
+        .admin-modal-backdrop {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .admin-modal-content {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 1.75rem;
+            width: 90%;
+            max-width: 520px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 1px solid #e2e8f0;
+            color: #0f172a;
+        }
+
+        /* Mobile & Tablet Responsiveness */
+        @media (max-width: 991px) {
+            .products-page-container {
+                padding: 0;
+            }
+            .products-header-card {
+                padding: 1rem;
+                border-radius: 12px;
+            }
+            .toolbar-card {
+                padding: 0.85rem;
+                border-radius: 12px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-box-custom {
+                width: 100% !important;
+                box-sizing: border-box;
+            }
+            .action-buttons-group {
+                width: 100%;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                padding-bottom: 0.4rem;
+                -webkit-overflow-scrolling: touch;
+            }
+            .action-pill-btn {
+                white-space: nowrap;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .products-header-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .btn-add-new-product {
+                width: 100%;
+                justify-content: center;
+                box-sizing: border-box;
+            }
+            .products-title-box {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body class="admin-body">
+
+    <%- include('../includes/admin-navigation.ejs') %>
+
+    <div class="content-page">
+        <div class="products-page-container">
+            
+            <!-- 1. Header Title Banner Card -->
+            <div class="products-header-card">
+                <div class="products-title-box">
+                    <h3 style="margin: 0; font-size: 1.35rem; font-weight: 900; color: #0f172a;">
+                        📦 MANAGE PRODUCTS
+                    </h3>
+                    <span class="count-pill-badge"><%= typeof filteredCount !== 'undefined' ? filteredCount : prods.length %> Products Total</span>
+                </div>
+                <div>
+                    <a href="/admin/add-product" class="btn-add-new-product">
+                        <i class="fe-plus"></i> Add New Product
+                    </a>
+                </div>
+            </div>
+
+            <!-- 2. Category & Status Filter Navigation Tabs -->
+            <div class="status-tabs-container">
+                <% const currentCat = typeof categoryFilter !== 'undefined' ? categoryFilter : 'all'; %>
+                <a href="/admin/product-list?category=all" class="status-tab-item <%= currentCat === 'all' ? 'active' : '' %>">
+                    <i class="fe-grid"></i> All Products
+                </a>
+                <a href="/admin/product-list?category=deals" class="status-tab-item <%= currentCat === 'deals' ? 'active' : '' %>">
+                    <i class="fe-zap"></i> Hot Deals
+                </a>
+                <% if (typeof categoriesList !== 'undefined' && categoriesList.length > 0) { %>
+                    <% categoriesList.forEach(cat => { %>
+                        <a href="/admin/product-list?category=<%= encodeURIComponent(cat) %>" class="status-tab-item <%= currentCat.toLowerCase() === cat.toLowerCase() ? 'active' : '' %>">
+                            <i class="fe-tag"></i> <%= cat %>
+                        </a>
+                    <% }); %>
+                <% } else { %>
+                    <a href="/admin/product-list?category=Nosepin" class="status-tab-item <%= currentCat.toLowerCase() === 'nosepin' ? 'active' : '' %>">
+                        <i class="fe-tag"></i> Nosepin
+                    </a>
+                    <a href="/admin/product-list?category=Ring" class="status-tab-item <%= currentCat.toLowerCase() === 'ring' ? 'active' : '' %>">
+                        <i class="fe-tag"></i> Ring
+                    </a>
+                    <a href="/admin/product-list?category=Home Appliances" class="status-tab-item <%= currentCat.toLowerCase() === 'home appliances' ? 'active' : '' %>">
+                        <i class="fe-tag"></i> Home Appliances
+                    </a>
+                    <a href="/admin/product-list?category=Health Appliances" class="status-tab-item <%= currentCat.toLowerCase() === 'health appliances' ? 'active' : '' %>">
+                        <i class="fe-tag"></i> Health Appliances
+                    </a>
+                <% } %>
+            </div>
+
+            <!-- 3. Bulk Action Buttons & Search Toolbar -->
+            <div class="toolbar-card">
+                <div class="action-buttons-group">
+                    <button type="button" onclick="bulkToggleDeals(true)" class="action-pill-btn btn-act-assign" title="Set Hot Deal Active for Selected">
+                        <i class="fe-zap"></i> Deal Active
+                    </button>
+                    <button type="button" onclick="bulkToggleDeals(false)" class="action-pill-btn btn-act-steadfast" title="Set Hot Deal Inactive for Selected">
+                        <i class="fe-zap"></i> Deal Inactive
+                    </button>
+                    <button type="button" onclick="bulkToggleStatus(true)" class="action-pill-btn btn-act-status" title="Set Status Active for Selected">
+                        <i class="fe-check-circle"></i> Active
+                    </button>
+                    <button type="button" onclick="bulkToggleStatus(false)" class="action-pill-btn btn-act-steadfast" title="Set Status Inactive for Selected">
+                        <i class="fe-x-circle"></i> Inactive
+                    </button>
+                    <a href="/admin/products/price-edit" class="action-pill-btn btn-act-print" title="Quick Price Edit Tool">
+                        <i class="fe-edit-3"></i> Quick Price Edit
+                    </a>
+                    <button type="button" onclick="deleteSelectedProducts()" class="action-pill-btn btn-act-delete" title="Delete Selected Products">
+                        <i class="fe-trash-2"></i> Delete Selected
+                    </button>
+                </div>
+
+                <div>
+                    <form action="/admin/product-list" method="GET">
+                        <input type="hidden" name="category" value="<%= currentCat %>">
+                        <div class="search-box-custom">
+                            <input type="text" name="keyword" id="product-search-input" class="search-input-field" placeholder="Search products, category..." value="<%= typeof keyword !== 'undefined' ? keyword : '' %>">
+                            <button type="submit" class="btn-search-trigger" title="Search">
+                                <i class="fe-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 4. Products Master Data Table -->
+            <div class="products-table-card">
+                <div style="overflow-x: auto;">
+                    <table class="products-data-table" id="products-main-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px; text-align: center;">
+                                    <input type="checkbox" id="checkall" class="form-check-input" onchange="toggleCheckAll(this)">
+                                </th>
+                                <th style="width: 45px; text-align: center;">SL</th>
+                                <th style="width: 125px; text-align: center;">Action</th>
+                                <th style="min-width: 280px;">Product Details</th>
+                                <th style="width: 160px;">Category</th>
+                                <th style="width: 120px;">Price</th>
+                                <th style="width: 120px; text-align: center;">Stock</th>
+                                <th style="width: 140px; text-align: center;">Deal & Feature</th>
+                                <th style="width: 110px; text-align: center;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (hasProducts && prods && prods.length > 0) { %>
+                                <% prods.forEach((product, index) => { %>
+                                    <tr id="product-row-<%= product.id %>">
+                                        <td style="text-align: center;">
+                                            <input type="checkbox" class="product-checkbox form-check-input" value="<%= product.id %>">
+                                        </td>
+                                        <td style="text-align: center;"><strong><%= index + 1 %></strong></td>
+                                        
+                                        <!-- Action Column (3 icons: Quick Preview Modal, Edit Product, Delete Product) -->
+                                        <td style="text-align: center;">
+                                            <div class="custom-btn-list" style="justify-content: center;">
+                                                <button type="button" class="db-action-btn btn-action-view" title="Quick Preview" onclick="openProductModal('<%= product.id %>', '<%= product.title.replace(/'/g, "\\'") %>', '<%= product.category %>', '<%= product.price %>', '<%= product.oldPrice || '' %>', '<%= product.imageUrl %>', <%= product.isHotDeal ? 'true' : 'false' %>)">
+                                                    <i class="fe-eye"></i>
+                                                </button>
+                                                <a href="/admin/edit-product/<%= product.id %>" class="db-action-btn btn-action-edit" title="Edit Product">
+                                                    <i class="fe-edit"></i>
+                                                </a>
+                                                <button type="button" onclick="deleteSingleProduct('<%= product.id %>')" class="db-action-btn btn-action-delete" title="Delete Product">
+                                                    <i class="fe-trash-2"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                        
+                                        <!-- Product Image + Details -->
+                                        <td>
+                                            <div style="display: flex; align-items: center; gap: 0.9rem;">
+                                                <div style="width: 52px; height: 52px; min-width: 52px; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; background: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+                                                    <img src="<%= product.imageUrl %>" alt="<%= product.title %>" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'52\' height=\'52\' fill=\'%23f1f5f9\'><rect width=\'100%\' height=\'100%\' fill=\'%23f1f5f9\'/></svg>';">
+                                                </div>
+                                                <div style="max-width: 320px;">
+                                                    <a href="/admin/edit-product/<%= product.id %>" style="color: #0f172a; font-weight: 700; text-decoration: none; font-size: 0.92rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35;" title="<%= product.title %>">
+                                                        <%= product.title %>
+                                                    </a>
+                                                    <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600; margin-top: 0.2rem; display: block;">SKU: #PRD-<%= product.id %></span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        
+                                        <!-- Category Tag Badge -->
+                                        <td>
+                                            <span class="category-badge-tag">
+                                                <i class="fe-tag"></i> <%= product.category || 'General' %>
+                                            </span>
+                                        </td>
+
+                                        <!-- Price -->
+                                        <td>
+                                            <strong style="color: #fe5200; font-size: 1.05rem; font-weight: 900; display: block;">৳ <%= product.price %></strong>
+                                            <% if (product.oldPrice) { %>
+                                                <span style="font-size: 0.78rem; text-decoration: line-through; color: #94a3b8; font-weight: 600; display: block;">৳ <%= product.oldPrice %></span>
+                                            <% } %>
+                                        </td>
+
+                                        <!-- Stock Badge -->
+                                        <td style="text-align: center;">
+                                            <span class="stock-badge-tag">
+                                                45 In Stock
+                                            </span>
+                                        </td>
+
+                                        <!-- Hot Deal & Feature Status -->
+                                        <td style="text-align: center;">
+                                            <button type="button" id="deal-badge-<%= product.id %>" class="deal-toggle-badge <%= product.isHotDeal ? 'active-deal' : 'inactive-deal' %>" onclick="toggleHotDealSingle('<%= product.id %>')">
+                                                <i class="fe-zap"></i> <%= product.isHotDeal ? 'Deals: Yes' : 'Deals: No' %>
+                                            </button>
+                                        </td>
+
+                                        <!-- Status Badge -->
+                                        <td style="text-align: center;">
+                                            <span class="status-badge-tag">
+                                                <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span> ✓ Active
+                                            </span>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="9" style="text-align: center; color: #64748b; padding: 3.5rem 1rem;">
+                                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📦</div>
+                                        <strong style="font-size: 1rem; color: #0f172a;">No products found in inventory.</strong>
+                                        <p style="margin: 0.3rem 0 0; font-size: 0.85rem;">Try adjusting your category filter or search query.</p>
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Quick Preview Product Modal -->
+    <div id="productModal" class="admin-modal-backdrop">
+        <div class="admin-modal-content">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+                <h4 style="margin: 0; font-weight: 800; font-size: 1.15rem; color: #0f172a;" id="modalProductTitle">Product Details</h4>
+                <button type="button" onclick="closeProductModal()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #64748b;"><i class="fe-x"></i></button>
+            </div>
+            
+            <div style="display: flex; gap: 1.25rem; align-items: flex-start; margin-bottom: 1.25rem;">
+                <div style="width: 110px; height: 110px; min-width: 110px; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; background: #f8fafc;">
+                    <img id="modalProductImage" src="" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <div>
+                    <span id="modalProductCategory" class="category-badge-tag" style="margin-bottom: 0.4rem;">Category</span>
+                    <div style="font-size: 1.3rem; font-weight: 900; color: #fe5200;" id="modalProductPrice">৳ 0</div>
+                    <div style="font-size: 0.85rem; color: #94a3b8; text-decoration: line-through;" id="modalProductOldPrice"></div>
+                    <div style="margin-top: 0.5rem;" id="modalProductDeal"></div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1.5rem;">
+                <button type="button" class="action-pill-btn" style="background: #e2e8f0; color: #334155;" onclick="closeProductModal()">Close</button>
+                <a id="modalEditLink" href="#" class="action-pill-btn btn-act-assign"><i class="fe-edit"></i> Edit Product</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Frontend Interactive Scripts -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (window.feather) {
+                feather.replace();
+            }
+        });
+
+        function toggleCheckAll(master) {
+            const checkboxes = document.querySelectorAll('.product-checkbox');
+            checkboxes.forEach(cb => cb.checked = master.checked);
+        }
+
+        function getSelectedProductIds() {
+            const checkboxes = document.querySelectorAll('.product-checkbox:checked');
+            return Array.from(checkboxes).map(cb => cb.value);
+        }
+
+        function deleteSingleProduct(productId) {
+            if (!confirm("Are you sure you want to delete this product?")) return;
+            
+            fetch('/admin/delete-product', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ productId: productId })
+            })
+            .then(() => {
+                const row = document.getElementById('product-row-' + productId);
+                if (row) row.remove();
+            })
+            .catch(err => alert("Error deleting product: " + err.message));
+        }
+
+        function deleteSelectedProducts() {
+            const ids = getSelectedProductIds();
+            if (ids.length === 0) {
+                alert("Please select at least one product to delete.");
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to delete ${ids.length} selected product(s)?`)) return;
+
+            fetch('/admin/products/delete-bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productIds: ids })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    ids.forEach(id => {
+                        const row = document.getElementById('product-row-' + id);
+                        if (row) row.remove();
+                    });
+                } else {
+                    alert("Failed to delete products: " + data.message);
+                }
+            })
+            .catch(err => alert("Error: " + err.message));
+        }
+
+        function bulkToggleDeals(isHotDeal) {
+            const ids = getSelectedProductIds();
+            if (ids.length === 0) {
+                alert("Please select at least one product.");
+                return;
+            }
+
+            fetch('/admin/products/toggle-deals', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productIds: ids, isHotDeal: isHotDeal })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert("Failed: " + data.message);
+                }
+            })
+            .catch(err => alert("Error: " + err.message));
+        }
+
+        function bulkToggleStatus(status) {
+            const ids = getSelectedProductIds();
+            if (ids.length === 0) {
+                alert("Please select at least one product.");
+                return;
+            }
+
+            fetch('/admin/products/toggle-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productIds: ids, status: status })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert("Failed: " + data.message);
+                }
+            })
+            .catch(err => alert("Error: " + err.message));
+        }
+
+        function toggleHotDealSingle(productId) {
+            fetch('/admin/products/toggle-single-deal', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId: productId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const badge = document.getElementById('deal-badge-' + productId);
+                    if (badge) {
+                        if (data.isHotDeal) {
+                            badge.className = "deal-toggle-badge active-deal";
+                            badge.innerHTML = `<i class="fe-zap"></i> Deals: Yes`;
+                        } else {
+                            badge.className = "deal-toggle-badge inactive-deal";
+                            badge.innerHTML = `<i class="fe-zap"></i> Deals: No`;
+                        }
+                        if (window.feather) feather.replace();
+                    }
+                }
+            })
+            .catch(err => alert("Error: " + err.message));
+        }
+
+        function openProductModal(id, title, category, price, oldPrice, imageUrl, isHotDeal) {
+            document.getElementById('modalProductTitle').innerText = title;
+            document.getElementById('modalProductCategory').innerText = category || 'General';
+            document.getElementById('modalProductPrice').innerText = '৳ ' + price;
+            document.getElementById('modalProductOldPrice').innerText = oldPrice ? '৳ ' + oldPrice : '';
+            document.getElementById('modalProductImage').src = imageUrl;
+            document.getElementById('modalEditLink').href = '/admin/edit-product/' + id;
+            document.getElementById('modalProductDeal').innerHTML = isHotDeal 
+                ? '<span style="color: #fe5200; font-weight: 800; font-size: 0.85rem;">Hot Deal Active</span>' 
+                : '<span style="color: #64748b; font-weight: 700; font-size: 0.85rem;">Regular Product</span>';
+
+            document.getElementById('productModal').style.display = 'flex';
+        }
+
+        function closeProductModal() {
+            document.getElementById('productModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

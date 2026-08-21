@@ -1,0 +1,707 @@
+/* ============================================
+   DARK THEME STYLES
+   ============================================ */
+
+:root[data-theme="dark"] {
+    /* Background Colors (Slate Dark Navy palette matching Topbar Header) */
+    --bg-primary: #0b1120;
+    --bg-secondary: #0f172a;
+    --bg-tertiary: #1e293b;
+    --bg-hover: rgba(255, 255, 255, 0.06);
+
+    /* Text Colors */
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --text-inverse: #0f172a;
+
+    /* Border Colors */
+    --border-color: rgba(255, 255, 255, 0.08);
+    --border-light: rgba(255, 255, 255, 0.12);
+    --border-dark: rgba(0, 0, 0, 0.4);
+
+    /* Accent Colors */
+    --accent-primary: #6366f1;
+    --accent-primary-hover: #4f46e5;
+    --accent-secondary: #10b981;
+    --accent-secondary-hover: #059669;
+
+    /* Status Colors */
+    --success: #10b981;
+    --success-bg: rgba(16, 185, 129, 0.15);
+    --warning: #f59e0b;
+    --warning-bg: rgba(245, 158, 11, 0.15);
+    --danger: #ef4444;
+    --danger-bg: rgba(239, 68, 68, 0.15);
+    --info: #0ea5e9;
+    --info-bg: rgba(14, 165, 233, 0.15);
+
+    /* Shadow */
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.45);
+    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.55);
+}
+
+/* Dark Theme Body */
+body[data-theme="dark"] {
+    background-color: #0b1120 !important;
+    color: var(--text-primary);
+}
+
+/* Dark Theme Cards */
+[data-theme="dark"] .card {
+    background-color: #1e293b !important;
+    border-color: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2) !important;
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .card-header {
+    background-color: #1e293b !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+    color: var(--text-primary);
+}
+
+/* Dark Theme Tables */
+[data-theme="dark"] .table {
+    color: var(--text-primary);
+    border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+[data-theme="dark"] .table thead th {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    border-color: rgba(255, 255, 255, 0.06) !important;
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .table tbody tr {
+    border-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+[data-theme="dark"] .table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+[data-theme="dark"] .table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(255, 255, 255, 0.01) !important;
+}
+
+/* Dark Theme Forms */
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+    background-color: var(--bg-secondary);
+    border-color: var(--accent-primary);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 3px rgba(0, 97, 255, 0.1);
+}
+
+[data-theme="dark"] .form-control::placeholder {
+    color: var(--text-muted);
+}
+
+[data-theme="dark"] .form-label {
+    color: var(--text-secondary);
+}
+
+/* Dark Theme Buttons */
+[data-theme="dark"] .btn-primary {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: #ffffff;
+}
+
+[data-theme="dark"] .btn-primary:hover {
+    background-color: var(--accent-primary-hover);
+    border-color: var(--accent-primary-hover);
+}
+
+[data-theme="dark"] .btn-secondary {
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+    background-color: var(--bg-hover);
+}
+
+[data-theme="dark"] .btn-light {
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn-outline-primary {
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+[data-theme="dark"] .btn-outline-primary:hover {
+    background-color: var(--accent-primary);
+    color: #ffffff;
+}
+
+/* Dark Theme Navbar */
+[data-theme="dark"] .navbar-custom {
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .navbar-custom .nav-link {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .navbar-custom .nav-link:hover {
+    color: var(--text-primary);
+}
+
+/* Dark Theme Sidebar */
+[data-theme="dark"] .left-side-menu {
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .left-side-menu .side-nav .side-nav-link {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .left-side-menu .side-nav .side-nav-link:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .left-side-menu .side-nav .side-nav-link.active {
+    background-color: var(--bg-tertiary);
+    color: var(--accent-primary);
+}
+
+/* Dark Theme Dropdowns */
+[data-theme="dark"] .dropdown-menu {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .dropdown-item {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .dropdown-divider {
+    border-top-color: var(--border-color);
+}
+
+/* Dark Theme Modals */
+[data-theme="dark"] .modal-content {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .modal-header {
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .modal-footer {
+    border-top-color: var(--border-color);
+}
+
+[data-theme="dark"] .modal-title {
+    color: var(--text-primary);
+}
+
+/* Dark Theme Badges */
+[data-theme="dark"] .badge-soft-primary {
+    background-color: rgba(0, 97, 255, 0.15);
+    color: var(--accent-primary);
+}
+
+[data-theme="dark"] .badge-soft-success {
+    background-color: var(--success-bg);
+    color: var(--success);
+}
+
+[data-theme="dark"] .badge-soft-warning {
+    background-color: var(--warning-bg);
+    color: var(--warning);
+}
+
+[data-theme="dark"] .badge-soft-danger {
+    background-color: var(--danger-bg);
+    color: var(--danger);
+}
+
+/* Dark Theme Alerts */
+[data-theme="dark"] .alert-primary {
+    background-color: rgba(0, 97, 255, 0.1);
+    border-color: rgba(0, 97, 255, 0.2);
+    color: var(--accent-primary);
+}
+
+[data-theme="dark"] .alert-success {
+    background-color: var(--success-bg);
+    border-color: rgba(16, 185, 129, 0.2);
+    color: var(--success);
+}
+
+[data-theme="dark"] .alert-warning {
+    background-color: var(--warning-bg);
+    border-color: rgba(245, 158, 11, 0.2);
+    color: var(--warning);
+}
+
+[data-theme="dark"] .alert-danger {
+    background-color: var(--danger-bg);
+    border-color: rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+}
+
+/* Dark Theme Pagination */
+[data-theme="dark"] .pagination .page-link {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .pagination .page-link:hover {
+    background-color: var(--bg-hover);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .pagination .page-item.active .page-link {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+/* Dark Theme Breadcrumb */
+[data-theme="dark"] .breadcrumb {
+    background-color: transparent;
+}
+
+[data-theme="dark"] .breadcrumb-item {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .breadcrumb-item.active {
+    color: var(--text-primary);
+}
+
+/* Dark Theme Content Page */
+[data-theme="dark"] .content-page {
+    background-color: var(--bg-primary);
+}
+
+/* Dark Theme Footer */
+[data-theme="dark"] .footer {
+    background-color: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+/* Dark Theme Text Colors */
+[data-theme="dark"] .text-muted {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .text-dark {
+    color: var(--text-primary) !important;
+}
+
+/* Dark Theme Borders */
+[data-theme="dark"] .border {
+    border-color: var(--border-color) !important;
+}
+
+/* Dark Theme List Groups */
+[data-theme="dark"] .list-group-item {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .list-group-item:hover {
+    background-color: var(--bg-hover);
+}
+
+/* ============================================================
+   GLOBAL DASHBOARD STYLE OVERRIDES FOR ALL ADMIN PAGES (DARK MODE)
+   ============================================================ */
+
+/* 1. Global Card Overrides */
+[data-theme="dark"] .card {
+    background-color: #1e293b !important;
+    border-color: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2) !important;
+}
+[data-theme="dark"] .card-header {
+    background-color: #1e293b !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+/* 2. Global Table Overrides */
+[data-theme="dark"] .table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    width: 100% !important;
+    color: #cbd5e1 !important;
+}
+[data-theme="dark"] .card-body thead {
+    background: transparent !important;
+}
+[data-theme="dark"] .table thead th {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    border-color: rgba(255, 255, 255, 0.06) !important;
+    color: #64748b !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.06em !important;
+    padding: 0.75rem 1rem !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-top: none !important;
+}
+[data-theme="dark"] .table tbody tr {
+    background-color: transparent !important;
+    transition: background 0.2s ease !important;
+}
+[data-theme="dark"] .table tbody tr:hover td {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+}
+[data-theme="dark"] .table tbody td {
+    padding: 0.7rem 1rem !important;
+    vertical-align: middle !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+    color: #cbd5e1 !important;
+    font-size: 0.875rem !important;
+}
+[data-theme="dark"] .table-striped tbody tr:nth-of-type(odd) td {
+    background-color: rgba(255, 255, 255, 0.005) !important;
+}
+
+/* 3. Global Badge to modern db-status-badge mapping */
+[data-theme="dark"] .badge {
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    padding: 0.3rem 0.75rem !important;
+    border-radius: 50px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+}
+[data-theme="dark"] .bg-soft-success,
+[data-theme="dark"] .text-success,
+[data-theme="dark"] .bg-success-light {
+    background-color: rgba(16, 185, 129, 0.12) !important;
+    color: #10b981 !important;
+}
+[data-theme="dark"] .bg-soft-danger,
+[data-theme="dark"] .text-danger,
+[data-theme="dark"] .bg-danger-light {
+    background-color: rgba(239, 68, 68, 0.12) !important;
+    color: #ef4444 !important;
+}
+[data-theme="dark"] .bg-soft-warning,
+[data-theme="dark"] .text-warning,
+[data-theme="dark"] .bg-warning-light {
+    background-color: rgba(245, 158, 11, 0.12) !important;
+    color: #f59e0b !important;
+}
+[data-theme="dark"] .bg-soft-info,
+[data-theme="dark"] .text-info,
+[data-theme="dark"] .bg-info-light {
+    background-color: rgba(14, 165, 233, 0.12) !important;
+    color: #0ea5e9 !important;
+}
+[data-theme="dark"] .bg-soft-secondary,
+[data-theme="dark"] .text-secondary,
+[data-theme="dark"] .bg-secondary-light {
+    background-color: rgba(148, 163, 184, 0.12) !important;
+    color: #94a3b8 !important;
+}
+
+/* 4. Global Action Buttons Overrides inside .button-list */
+[data-theme="dark"] .button-list .btn {
+    width: 32px !important;
+    height: 32px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    padding: 0 !important;
+    margin: 0 2px !important;
+    line-height: 1 !important;
+    border: none !important;
+    transition: all 0.2s ease !important;
+}
+[data-theme="dark"] .button-list .btn i {
+    font-size: 15px !important;
+    color: inherit !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+}
+[data-theme="dark"] .button-list .btn-success,
+[data-theme="dark"] .button-list .btn-primary {
+    color: #34d399 !important;
+    background: rgba(52, 211, 153, 0.15) !important;
+}
+[data-theme="dark"] .button-list .btn-success:hover,
+[data-theme="dark"] .button-list .btn-primary:hover {
+    color: #ffffff !important;
+    background: #10b981 !important;
+}
+[data-theme="dark"] .button-list .btn-secondary,
+[data-theme="dark"] .button-list .btn-dark,
+[data-theme="dark"] .button-list .btn-info {
+    color: #60a5fa !important;
+    background: rgba(96, 165, 250, 0.15) !important;
+}
+[data-theme="dark"] .button-list .btn-secondary:hover,
+[data-theme="dark"] .button-list .btn-dark:hover,
+[data-theme="dark"] .button-list .btn-info:hover {
+    color: #ffffff !important;
+    background: #3b82f6 !important;
+}
+[data-theme="dark"] .button-list .btn-danger,
+[data-theme="dark"] .button-list .btn-warning {
+    color: #f87171 !important;
+    background: rgba(248, 113, 113, 0.15) !important;
+}
+[data-theme="dark"] .button-list .btn-danger:hover,
+[data-theme="dark"] .button-list .btn-warning:hover {
+    color: #ffffff !important;
+    background: #ef4444 !important;
+}
+
+/* 5. Custom Search Form Input Override */
+[data-theme="dark"] form.custom_form input {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #cbd5e1 !important;
+}
+[data-theme="dark"] form.custom_form input:focus {
+    border-color: #6366f1 !important;
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 6. Pagination Overrides */
+[data-theme="dark"] .pagination .page-item .page-link {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    border-color: rgba(255, 255, 255, 0.06) !important;
+    color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination .page-item.active .page-link {
+    background-color: #6366f1 !important;
+    border-color: #6366f1 !important;
+    color: #ffffff !important;
+}
+[data-theme="dark"] .pagination .page-item.disabled .page-link {
+    background-color: rgba(255, 255, 255, 0.01) !important;
+    border-color: rgba(255, 255, 255, 0.04) !important;
+    color: #475569 !important;
+}
+[data-theme="dark"] .pagination .page-item .page-link:hover {
+    background-color: rgba(99, 102, 241, 0.15) !important;
+    color: #a5b4fc !important;
+}
+
+/* ============================================================
+   SELECT2 DARK MODE
+   ============================================================ */
+[data-theme="dark"] .select2-container--default .select2-selection--single,
+[data-theme="dark"] .select2-container--default .select2-selection--multiple {
+    background-color: #1e293b !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #cbd5e1 !important;
+}
+[data-theme="dark"] .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #cbd5e1 !important;
+    background-color: transparent !important;
+}
+[data-theme="dark"] .select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: #64748b transparent transparent transparent !important;
+}
+[data-theme="dark"] .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+    border-color: transparent transparent #64748b transparent !important;
+}
+[data-theme="dark"] .select2-dropdown {
+    background-color: #1e293b !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+[data-theme="dark"] .select2-container--default .select2-results__option {
+    color: #cbd5e1 !important;
+    background-color: #1e293b !important;
+}
+[data-theme="dark"] .select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #6366f1 !important;
+    color: #ffffff !important;
+}
+[data-theme="dark"] .select2-container--default .select2-results__option[aria-selected=true] {
+    background-color: rgba(99, 102, 241, 0.2) !important;
+    color: #a5b4fc !important;
+}
+[data-theme="dark"] .select2-search--dropdown .select2-search__field {
+    background-color: #0f172a !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #cbd5e1 !important;
+}
+[data-theme="dark"] .select2-container--default .select2-selection--multiple .select2-selection__choice {
+    background-color: rgba(99, 102, 241, 0.25) !important;
+    border-color: rgba(99, 102, 241, 0.4) !important;
+    color: #a5b4fc !important;
+}
+
+/* ============================================================
+   NATIVE SELECT / INPUT-GROUP DARK MODE
+   ============================================================ */
+[data-theme="dark"] select.form-control,
+[data-theme="dark"] select {
+    background-color: #1e293b !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #cbd5e1 !important;
+}
+[data-theme="dark"] select option {
+    background-color: #1e293b !important;
+    color: #cbd5e1 !important;
+}
+[data-theme="dark"] .input-group-text {
+    background-color: #0f172a !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #94a3b8 !important;
+}
+
+/* ============================================================
+   FILE INPUT DARK MODE
+   ============================================================ */
+[data-theme="dark"] input[type="file"].form-control,
+[data-theme="dark"] input[type="file"] {
+    background-color: #1e293b !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #cbd5e1 !important;
+}
+[data-theme="dark"] input[type="file"]::file-selector-button {
+    background-color: #334155 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #cbd5e1 !important;
+}
+[data-theme="dark"] input[type="file"]::file-selector-button:hover {
+    background-color: #475569 !important;
+}
+
+/* ============================================================
+   SUMMERNOTE EDITOR DARK MODE
+   ============================================================ */
+[data-theme="dark"] .note-editor.note-frame,
+[data-theme="dark"] .note-editor {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: #1e293b !important;
+}
+[data-theme="dark"] .note-toolbar {
+    background-color: #0f172a !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+[data-theme="dark"] .note-toolbar .note-btn {
+    background-color: #1e293b !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: #94a3b8 !important;
+}
+[data-theme="dark"] .note-toolbar .note-btn:hover {
+    background-color: #334155 !important;
+    color: #f8fafc !important;
+}
+[data-theme="dark"] .note-toolbar .btn-group > .btn,
+[data-theme="dark"] .note-toolbar .note-dropdown-menu {
+    background-color: #1e293b !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: #94a3b8 !important;
+}
+[data-theme="dark"] .note-dropdown-menu {
+    background-color: #1e293b !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+[data-theme="dark"] .note-dropdown-menu .dropdown-item {
+    color: #cbd5e1 !important;
+}
+[data-theme="dark"] .note-dropdown-menu .dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    color: #f8fafc !important;
+}
+[data-theme="dark"] .note-editable {
+    background-color: #1e293b !important;
+    color: #cbd5e1 !important;
+}
+[data-theme="dark"] .note-editable * {
+    background-color: transparent !important;
+    color: #cbd5e1 !important;
+}
+[data-theme="dark"] .note-statusbar {
+    background-color: #0f172a !important;
+    border-top-color: rgba(255, 255, 255, 0.06) !important;
+}
+[data-theme="dark"] .note-placeholder {
+    color: #64748b !important;
+}
+[data-theme="dark"] .note-toolbar .note-color-select,
+[data-theme="dark"] .note-toolbar .note-para .dropdown-menu {
+    background-color: #1e293b !important;
+}
+[data-theme="dark"] .note-color-palette .note-color-btn {
+    border-color: rgba(255, 255, 255, 0.05) !important;
+}
+[data-theme="dark"] .note-toolbar .note-select select {
+    background-color: #0f172a !important;
+    color: #94a3b8 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ============================================================
+   DROPIFY / CUSTOM FILE UPLOAD DARK MODE
+   ============================================================ */
+[data-theme="dark"] .dropify-wrapper {
+    background-color: #1e293b !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #94a3b8 !important;
+}
+[data-theme="dark"] .dropify-wrapper .dropify-message p {
+    color: #64748b !important;
+}
+[data-theme="dark"] .dropify-wrapper:hover {
+    background-image: repeating-linear-gradient(
+        -45deg,
+        rgba(255,255,255,0.03),
+        rgba(255,255,255,0.03) 25px,
+        transparent 25px,
+        transparent 50px
+    ) !important;
+}
+
+/* ============================================================
+   LABEL, HR, TEXT IN DARK FORMS
+   ============================================================ */
+[data-theme="dark"] label {
+    color: #94a3b8 !important;
+}
+[data-theme="dark"] hr {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+[data-theme="dark"] h1, [data-theme="dark"] h2,
+[data-theme="dark"] h3, [data-theme="dark"] h4,
+[data-theme="dark"] h5, [data-theme="dark"] h6 {
+    color: #f1f5f9 !important;
+}
+[data-theme="dark"] p {
+    color: #94a3b8;
+}
+

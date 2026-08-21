@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= (statusFilter || 'all').toUpperCase() %> Orders - Rosedrape Admin</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    
+    <style>
+        body {
+            background-color: #f1f5f9 !important;
+            font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .orders-page-container {
+            max-width: 1320px;
+            margin: 0 auto 3rem;
+        }
+
+        /* Top Header Card */
+        .orders-header-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 1.25rem 1.75rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .orders-title-box {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .count-pill-badge {
+            background: rgba(254, 82, 0, 0.12);
+            color: #fe5200;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 0.9rem;
+        }
+
+        .btn-add-new-order {
+            background: linear-gradient(135deg, #fe5200 0%, #eb3b5a 100%);
+            color: #ffffff !important;
+            padding: 0.65rem 1.4rem;
+            border-radius: 30px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            box-shadow: 0 4px 15px rgba(254, 82, 0, 0.35);
+            transition: all 0.2s ease;
+        }
+
+        .btn-add-new-order:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(254, 82, 0, 0.5);
+        }
+
+        /* Status Filter Navigation Tabs */
+        .status-tabs-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+            overflow-x: auto;
+            padding-bottom: 0.4rem;
+            scrollbar-width: thin;
+        }
+
+        .status-tab-item {
+            padding: 0.55rem 1.2rem;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+            color: #64748b;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s ease;
+        }
+
+        .status-tab-item:hover {
+            background: #f8fafc;
+            color: #0f172a;
+        }
+
+        .status-tab-item.active {
+            background: linear-gradient(135deg, #fe5200 0%, #eb3b5a 100%);
+            color: #ffffff;
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(254, 82, 0, 0.3);
+        }
+
+        /* Action & Search Bar Card */
+        .toolbar-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 1rem 1.25rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .action-buttons-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .action-pill-btn {
+            padding: 0.45rem 1.1rem;
+            border-radius: 25px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s ease;
+        }
+
+        .action-pill-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-act-assign { background: #10b981; color: white; }
+        .btn-act-status { background: #4a81d4; color: white; }
+        .btn-act-print { background: #00acc1; color: white; }
+        .btn-act-steadfast { background: #f7b84b; color: #0f172a; }
+        .btn-act-pathao { background: #0284c7; color: white; }
+        .btn-act-delete { background: #ef4444; color: white; }
+
+        .search-box-custom {
+            display: flex;
+            align-items: center;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 30px;
+            padding: 0.3rem 0.4rem 0.3rem 1rem;
+            width: 260px;
+            transition: all 0.2s ease;
+        }
+
+        .search-box-custom:focus-within {
+            border-color: #fe5200;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(254, 82, 0, 0.12);
+        }
+
+        .search-input-field {
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #0f172a;
+            width: 100%;
+        }
+
+        .btn-search-trigger {
+            background: #fe5200;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        /* Orders Data Table Card */
+        .orders-table-card {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .orders-data-table {
+            min-width: 1050px;
+            width: 100%;
+        }
+
+        /* Mobile & Tablet Responsiveness */
+        @media (max-width: 991px) {
+            .orders-page-container {
+                padding: 0;
+            }
+            .orders-header-card {
+                padding: 1rem;
+                border-radius: 12px;
+            }
+            .toolbar-card {
+                padding: 0.85rem;
+                border-radius: 12px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-box-custom {
+                width: 100% !important;
+                box-sizing: border-box;
+            }
+            .action-buttons-group {
+                width: 100%;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                padding-bottom: 0.4rem;
+                -webkit-overflow-scrolling: touch;
+            }
+            .action-pill-btn {
+                white-space: nowrap;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .orders-header-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .btn-add-new-order {
+                width: 100%;
+                justify-content: center;
+                box-sizing: border-box;
+            }
+            .orders-title-box {
+                flex-wrap: wrap;
+            }
+        }
+
+        .orders-data-table th {
+            background: #f8fafc;
+            padding: 0.9rem 1rem;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .orders-data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.88rem;
+            vertical-align: middle;
+        }
+
+        .orders-data-table tr:hover {
+            background: #f8fafc;
+        }
+
+        /* Action Buttons in Table (Exact 3 options: View, Edit, Delete) */
+        .custom-btn-list {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .db-action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 0.9rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-action-view { background: rgba(0, 172, 193, 0.12); color: #00acc1; }
+        .btn-action-edit { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+        .btn-action-delete { background: rgba(239, 68, 68, 0.12); color: #ef4444; }
+
+        .btn-action-view:hover { background: #00acc1; color: white; }
+        .btn-action-edit:hover { background: #10b981; color: white; }
+        .btn-action-delete:hover { background: #ef4444; color: white; }
+
+        .btn-fraud-check {
+            padding: 0.3rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.76rem;
+            font-weight: 800;
+            color: #d97706;
+            border: 1px solid #fcd34d;
+            background: #fffbeb;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-fraud-check:hover {
+            background: #f59e0b;
+            color: white;
+            border-color: #f59e0b;
+        }
+
+        /* Modals Styling */
+        .admin-modal-backdrop {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .admin-modal-content {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 1.75rem;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 1px solid #e2e8f0;
+            color: #0f172a;
+        }
+    </style>
+</head>
+<body class="admin-body">
+
+    <%- include('../includes/admin-navigation.ejs') %>
+
+    <div class="content-page">
+        <div class="orders-page-container">
+            
+            <!-- 1. Header Title Banner Card -->
+            <div class="orders-header-card">
+                <div class="orders-title-box">
+                    <h3 style="margin: 0; font-size: 1.35rem; font-weight: 900; color: #0f172a;">
+                        <%= (statusFilter || 'all').toUpperCase() %> ORDERS
+                    </h3>
+                    <span class="count-pill-badge"><%= orders ? orders.length : 0 %> Orders Total</span>
+                </div>
+                <div>
+                    <a href="/admin/order/create" class="btn-add-new-order">
+                        <i class="fe-plus"></i> Add New Order
+                    </a>
+                </div>
+            </div>
+
+
+            <!-- 3. Bulk Action Buttons & Search Toolbar -->
+            <div class="toolbar-card">
+                <div class="action-buttons-group">
+                    <button type="button" onclick="openAssignModal()" class="action-pill-btn btn-act-assign">
+                        <i class="fe-user-plus"></i> Assign User
+                    </button>
+                    <button type="button" onclick="openStatusModal()" class="action-pill-btn btn-act-status">
+                        <i class="fe-check-circle"></i> Change Status
+                    </button>
+                    <button type="button" onclick="printSelectedInvoices()" class="action-pill-btn btn-act-print">
+                        <i class="fe-printer"></i> Print Invoices
+                    </button>
+                    <button type="button" onclick="sendToSteadfastCourier()" class="action-pill-btn btn-act-steadfast">
+                        <i class="fe-truck"></i> Steadfast
+                    </button>
+                    <button type="button" onclick="openPathaoModal()" class="action-pill-btn btn-act-pathao">
+                        <i class="fe-send"></i> Pathao
+                    </button>
+                    <button type="button" onclick="deleteSelectedOrders()" class="action-pill-btn btn-act-delete">
+                        <i class="fe-trash-2"></i> Delete Selected
+                    </button>
+                </div>
+
+                <div>
+                    <form action="/admin/orders" method="GET">
+                        <input type="hidden" name="status" value="<%= statusFilter %>">
+                        <div class="search-box-custom">
+                            <input type="text" name="keyword" id="order-search-input" class="search-input-field" placeholder="Search orders, phone..." value="<%= typeof keyword !== 'undefined' ? keyword : '' %>">
+                            <button type="submit" class="btn-search-trigger" title="Search">
+                                <i class="fe-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 4. Orders Master Table -->
+            <div class="orders-table-card">
+                <div style="overflow-x: auto;">
+                    <table class="orders-data-table" id="orders-main-table">
+                        <thead>
+                            <tr>
+                                <th style="width:2%; text-align: center;">
+                                    <input type="checkbox" id="checkall" class="form-check-input" onchange="toggleCheckAll(this)">
+                                </th>
+                                <th style="width:3%; text-align: center;">SL</th>
+                                <th style="width:8%; text-align: center;">Action</th>
+                                <th style="width:9%;">Invoice</th>
+                                <th style="width:11%;">Date & Time</th>
+                                <th style="width:18%;">Customer Details</th>
+                                <th style="width:11%;">Phone</th>
+                                <th style="width:9%; text-align: center;">Fraud Check</th>
+                                <th style="width:10%;">Assigned To</th>
+                                <th style="width:9%; text-align: right;">Amount</th>
+                                <th style="width:10%; text-align: center;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (orders && orders.length > 0) { %>
+                                <% orders.forEach((order, index) => { %>
+                                    <% const orderTotal = order.products && order.products.length > 0 ? order.products.reduce((acc, p) => acc + (p.price * (p.orderItem ? p.orderItem.quantity : 1)), 0) + (parseInt(order.area) || 60) - (order.discount || 0) : (order.amount || 750); %>
+                                    <tr id="order-row-<%= order.id %>">
+                                        <td style="text-align: center;"><input type="checkbox" class="order-checkbox form-check-input" value="<%= order.id %>"></td>
+                                        <td style="text-align: center;"><strong><%= index + 1 %></strong></td>
+                                        
+                                        <!-- Action Column (Exactly 3 buttons: View Invoice, Edit, Delete) -->
+                                        <td style="text-align: center;">
+                                            <div class="custom-btn-list" style="justify-content: center;">
+                                                <a href="/admin/order/invoice/<%= order.id %>" class="db-action-btn btn-action-view" title="Invoice" target="_blank"><i class="fe-eye"></i></a>
+                                                <a href="/admin/order/edit/<%= order.id %>" class="db-action-btn btn-action-edit" title="Edit Order"><i class="fe-edit"></i></a>
+                                                <button type="button" onclick="deleteSingleOrder('<%= order.id %>')" class="db-action-btn btn-action-delete" title="Delete Order"><i class="fe-trash-2"></i></button>
+                                            </div>
+                                        </td>
+                                        
+                                        <td>
+                                            <a href="/admin/order/edit/<%= order.id %>" style="color: #fe5200; font-weight: 800; text-decoration: none; font-size: 0.92rem;">
+                                                #INV-<%= order.id %>
+                                            </a>
+                                        </td>
+                                        
+                                        <td>
+                                            <span style="font-weight: 700; color: #0f172a;"><%= new Date(order.createdAt).toLocaleDateString('en-GB') %></span><br>
+                                            <span style="font-size: 0.75rem; color: #94a3b8;"><%= new Date(order.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) %></span>
+                                        </td>
+
+                                        <td>
+                                            <strong style="color: #0f172a; font-size: 0.9rem; display: block;"><%= order.name || 'Customer' %></strong>
+                                            <span style="font-size: 0.78rem; color: #64748b; line-height: 1.3; display: block; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                <i class="fe-map-pin me-1"></i><%= order.address || 'Dhaka, Bangladesh' %>
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <span style="font-weight: 700; color: #334155;">
+                                                <i class="fe-phone me-1 text-muted"></i><%= order.phone || '01700000000' %>
+                                            </span>
+                                        </td>
+
+                                        <td style="text-align: center;">
+                                            <button type="button" class="btn-fraud-check" onclick="triggerFraudCheck('<%= order.phone || '01700000000' %>')">
+                                                <i class="fe-shield"></i> Check
+                                            </button>
+                                        </td>
+
+                                        <td>
+                                            <span style="font-size: 0.82rem; color: #475569; font-weight: 700; background: #f1f5f9; padding: 2px 10px; border-radius: 12px; display: inline-block;">
+                                                <%= order.assignee || 'Super Admin' %>
+                                            </span>
+                                        </td>
+
+                                        <td style="text-align: right;">
+                                            <strong style="color: #fe5200; font-size: 0.98rem; font-weight: 900;">৳<%= orderTotal %></strong>
+                                        </td>
+
+                                        <td style="text-align: center;">
+                                            <% const st = (order.status || 'Pending').toLowerCase(); %>
+                                            <% let badgeStyle = 'background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3);'; %>
+                                            <% let dotColor = '#f59e0b'; %>
+                                            <% if (st === 'completed' || st === 'confirm') { badgeStyle = 'background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3);'; dotColor = '#10b981'; } %>
+                                            <% if (st === 'processing' || st === 'in-courier') { badgeStyle = 'background: rgba(14, 165, 233, 0.15); color: #0284c7; border: 1px solid rgba(14, 165, 233, 0.3);'; dotColor = '#0ea5e9'; } %>
+                                            <% if (st === 'cancelled') { badgeStyle = 'background: rgba(239, 68, 68, 0.15); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.3);'; dotColor = '#ef4444'; } %>
+                                            
+                                            <span style="<%= badgeStyle %> padding: 4px 12px; border-radius: 20px; font-weight: 800; font-size: 0.78rem; display: inline-flex; align-items: center;">
+                                                <span style="width: 7px; height: 7px; border-radius: 50%; background: <%= dotColor %>; display: inline-block; margin-right: 6px;"></span>
+                                                <%= order.status || 'Pending' %>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="11" style="text-align: center; color: #94a3b8; padding: 3.5rem 1rem;">
+                                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📦</div>
+                                        <h5 style="color: #475569; font-weight: 700; margin: 0 0 0.25rem 0;">No Orders Found</h5>
+                                        <p style="font-size: 0.85rem; margin: 0;">No orders matching your selected status or search query.</p>
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal 1: Assign User Modal -->
+    <div class="admin-modal-backdrop" id="modal-assign">
+        <div class="admin-modal-content">
+            <h5 style="margin-bottom: 1rem; font-weight: 800; color: #0f172a;">Assign User</h5>
+            <div style="margin-bottom: 1.25rem;">
+                <select id="select-assignee-user" class="form-control-custom" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #cbd5e1;">
+                    <option value="">Select Staff User..</option>
+                    <% if (typeof users !== 'undefined' && users && users.length > 0) { %>
+                        <% users.forEach(u => { %>
+                            <option value="<%= u.name %>"><%= u.name %></option>
+                        <% }); %>
+                    <% } else { %>
+                        <option value="Super Admin">Super Admin</option>
+                    <% } %>
+                </select>
+            </div>
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                <button type="button" class="btn" onclick="closeModal('modal-assign')" style="padding: 0.55rem 1.25rem; border-radius: 20px; border: none; background: #e2e8f0; color: #334155; font-weight: 700; cursor: pointer;">Close</button>
+                <button type="button" class="btn" onclick="submitAssignUser()" style="padding: 0.55rem 1.25rem; border-radius: 20px; border: none; background: #10b981; color: white; font-weight: 700; cursor: pointer;">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Change Status Modal -->
+    <div class="admin-modal-backdrop" id="modal-status">
+        <div class="admin-modal-content">
+            <h5 style="margin-bottom: 1rem; font-weight: 800; color: #0f172a;">Change Order Status</h5>
+            <div style="margin-bottom: 1.25rem;">
+                <select id="select-order-status" class="form-control-custom" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #cbd5e1;">
+                    <option value="">Select Status..</option>
+                    <option value="Pending">🟡 Pending</option>
+                    <option value="Processing">🔵 Processing</option>
+                    <option value="Confirm">🟢 Confirm</option>
+                    <option value="In-Courier">🚚 In-Courier</option>
+                    <option value="Completed">✅ Completed</option>
+                    <option value="Cancelled">🔴 Cancelled</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                <button type="button" class="btn" onclick="closeModal('modal-status')" style="padding: 0.55rem 1.25rem; border-radius: 20px; border: none; background: #e2e8f0; color: #334155; font-weight: 700; cursor: pointer;">Close</button>
+                <button type="button" class="btn" onclick="submitStatusChange()" style="padding: 0.55rem 1.25rem; border-radius: 20px; border: none; background: #fe5200; color: white; font-weight: 700; cursor: pointer;">Submit Status</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 3: Pathao Courier Modal -->
+    <div class="admin-modal-backdrop" id="modal-pathao">
+        <div class="admin-modal-content">
+            <h5 style="margin-bottom: 1rem; font-weight: 800; color: #0f172a;">Send Orders to Pathao Courier</h5>
+            <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 1.25rem;">Are you sure you want to send selected order(s) to Pathao Courier API?</p>
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                <button type="button" class="btn" onclick="closeModal('modal-pathao')" style="padding: 0.55rem 1.25rem; border-radius: 20px; border: none; background: #e2e8f0; color: #334155; font-weight: 700; cursor: pointer;">Cancel</button>
+                <button type="button" class="btn" onclick="submitPathaoCourier()" style="padding: 0.55rem 1.25rem; border-radius: 20px; border: none; background: #0284c7; color: white; font-weight: 700; cursor: pointer;">Confirm Pathao Shipment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 4: Fraud Check Modal -->
+    <div class="admin-modal-backdrop" id="modal-fraud">
+        <div class="admin-modal-content" style="max-width: 440px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+                <h5 style="margin: 0; font-weight: 800; color: #0f172a;"><i class="fe-shield text-warning me-1"></i> Fraud Courier History</h5>
+                <button type="button" onclick="closeModal('modal-fraud')" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+            <div id="fraud-modal-body">
+                <!-- Loaded via AJAX -->
+            </div>
+            <div style="text-align: right; margin-top: 1.25rem;">
+                <button type="button" onclick="closeModal('modal-fraud')" style="padding: 0.45rem 1.2rem; border-radius: 20px; border: none; background: #cbd5e1; color: #334155; font-weight: 700; cursor: pointer;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleCheckAll(source) {
+            const checkboxes = document.querySelectorAll('.order-checkbox');
+            checkboxes.forEach(cb => cb.checked = source.checked);
+        }
+
+        function getCheckedOrderIds() {
+            const checkboxes = document.querySelectorAll('.order-checkbox:checked');
+            return Array.from(checkboxes).map(cb => cb.value);
+        }
+
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function openAssignModal() {
+            const ids = getCheckedOrderIds();
+            if (ids.length === 0) return alert('Please Select An Order First !');
+            openModal('modal-assign');
+        }
+
+        function submitAssignUser() {
+            const ids = getCheckedOrderIds();
+            const user = document.getElementById('select-assignee-user').value;
+            if (!user) return alert('Please select a user!');
+
+            fetch('/admin/orders/assign-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderIds: ids, assignee: user })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Assign user updated successfully');
+                    location.reload();
+                }
+            });
+        }
+
+        function openStatusModal() {
+            const ids = getCheckedOrderIds();
+            if (ids.length === 0) return alert('Please Select An Order First !');
+            openModal('modal-status');
+        }
+
+        function submitStatusChange() {
+            const ids = getCheckedOrderIds();
+            const status = document.getElementById('select-order-status').value;
+            if (!status) return alert('Please select a status!');
+
+            fetch('/admin/orders/change-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderIds: ids, status: status })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Order status change successfully');
+                    location.reload();
+                }
+            });
+        }
+
+        function deleteSelectedOrders() {
+            const ids = getCheckedOrderIds();
+            if (ids.length === 0) return alert('Please Select An Order First !');
+            if (confirm('Are you sure you want to delete selected ' + ids.length + ' order(s)?')) {
+                fetch('/admin/orders/delete-bulk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderIds: ids })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    alert('Order delete successfully');
+                    location.reload();
+                });
+            }
+        }
+
+        function deleteSingleOrder(id) {
+            if (confirm('Are you sure you want to delete Order #INV-' + id + '?')) {
+                fetch('/admin/orders/delete-bulk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderIds: [id] })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    alert('Order delete success successfully');
+                    location.reload();
+                });
+            }
+        }
+
+        function printSelectedInvoices() {
+            const ids = getCheckedOrderIds();
+            if (ids.length === 0) return alert('Please Select Atleast One Order!');
+            window.open('/admin/order/invoice/' + ids[0], '_blank');
+        }
+
+        function sendToSteadfastCourier() {
+            const ids = getCheckedOrderIds();
+            if (ids.length === 0) return alert('Please Select An Order First !');
+            fetch('/admin/orders/steadfast-courier', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderIds: ids })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message || 'Orders sent to Steadfast Courier');
+                location.reload();
+            });
+        }
+
+        function openPathaoModal() {
+            const ids = getCheckedOrderIds();
+            if (ids.length === 0) return alert('Please Select An Order First !');
+            openModal('modal-pathao');
+        }
+
+        function submitPathaoCourier() {
+            const ids = getCheckedOrderIds();
+            fetch('/admin/orders/pathao-courier', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderIds: ids })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message || 'Orders sent to Pathao Courier');
+                location.reload();
+            });
+        }
+
+        function triggerFraudCheck(phone) {
+            const modalBody = document.getElementById('fraud-modal-body');
+            modalBody.innerHTML = `
+                <div style="text-align: center; padding: 2rem 0;">
+                    <div style="font-size: 2rem; color: #10b981; margin-bottom: 0.5rem;"><i class="fa-solid fa-spinner fa-spin"></i></div>
+                    <p style="color: #64748b; margin: 0; font-weight: 500;">Fetching Fraud Status via Steadfast API (${phone})...</p>
+                </div>
+            `;
+            openModal('modal-fraud');
+
+            fetch('/admin/orders/fraud-check?phone=' + encodeURIComponent(phone))
+                .then(res => res.json())
+                .then(res => {
+                    if (res.status === 'success') {
+                        const d = res.data;
+                        const total = d.total_parcels || 0;
+                        const delivered = d.total_delivered || 0;
+                        const cancelled = d.total_cancelled || 0;
+                        const ratio = d.success_ratio || '0%';
+                        const ratioNum = parseInt(ratio) || 0;
+
+                        let badgeBg = '#10b981';
+                        let riskText = 'Low Risk';
+                        if (total === 0) { badgeBg = '#64748b'; riskText = 'No History'; }
+                        else if (ratioNum < 50) { badgeBg = '#ef4444'; riskText = 'High Risk'; }
+                        else if (ratioNum < 75) { badgeBg = '#f59e0b'; riskText = 'Medium Risk'; }
+
+                        modalBody.innerHTML = `
+                            <div style="text-align: center; margin-bottom: 1.25rem;">
+                                <div style="font-size: 0.82rem; color: #64748b; font-weight: 600;">Customer Phone Number</div>
+                                <h3 style="margin: 0.2rem 0 0.5rem; color: #0f172a; font-weight: 800;"><i class="fe-phone me-1 text-primary"></i> ${res.phone}</h3>
+                                <span style="background: ${badgeBg}; color: white; padding: 4px 16px; border-radius: 20px; font-weight: 800; font-size: 0.82rem; display: inline-block;">${riskText}</span>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; text-align: center; margin-bottom: 1.25rem;">
+                                <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.75rem; border-radius: 10px;">
+                                    <span style="display: block; font-size: 0.75rem; color: #64748b; font-weight: 600;">Total Parcels</span>
+                                    <strong style="font-size: 1.2rem; color: #4a81d4;">${total}</strong>
+                                </div>
+                                <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.75rem; border-radius: 10px;">
+                                    <span style="display: block; font-size: 0.75rem; color: #64748b; font-weight: 600;">Delivered</span>
+                                    <strong style="font-size: 1.2rem; color: #10b981;">${delivered}</strong>
+                                </div>
+                                <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.75rem; border-radius: 10px;">
+                                    <span style="display: block; font-size: 0.75rem; color: #64748b; font-weight: 600;">Cancelled</span>
+                                    <strong style="font-size: 1.2rem; color: #f1556c;">${cancelled}</strong>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.3rem;">
+                                    <span>Success Rate</span>
+                                    <span style="color: #10b981;">${ratio}</span>
+                                </div>
+                                <div style="height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden;">
+                                    <div style="width: ${ratioNum}%; height: 100%; background: ${badgeBg};"></div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(err => {
+                    modalBody.innerHTML = `<div style="color: #f1556c; text-align: center; padding: 1rem;">Failed to fetch fraud status.</div>`;
+                });
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            if (typeof feather !== 'undefined') {
+                feather.replace();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle %> - Rosedrape Admin</title>
+    <link rel="stylesheet" href="/backEnd/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/backEnd/assets/css/icons.min.css">
+    <link rel="stylesheet" href="/backEnd/assets/css/app.min.css">
+    <link rel="stylesheet" href="/backEnd/assets/css/sidebar-modern.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        [data-theme="dark"] body {
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .content-page {
+            margin-top: 85px !important;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+        .hero-banner-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 24px 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            margin-bottom: 24px;
+        }
+        [data-theme="dark"] .hero-banner-card {
+            background: #1e293b !important;
+            border-color: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.2);
+        }
+        .api-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+            transition: all 0.25s ease;
+        }
+        [data-theme="dark"] .api-card {
+            background: #1e293b;
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+        .api-logo-badge {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .form-label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #475569;
+            margin-bottom: 6px;
+        }
+        [data-theme="dark"] .form-label {
+            color: #94a3b8;
+        }
+        .form-control {
+            border-radius: 10px;
+            border: 1px solid #cbd5e1;
+            padding: 10px 14px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        [data-theme="dark"] .form-control {
+            background: #0f172a;
+            border-color: rgba(255, 255, 255, 0.12);
+            color: #f8fafc;
+        }
+        .form-control:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+        .btn-indigo {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: #ffffff;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 24px;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+            transition: all 0.2s ease;
+        }
+        .btn-indigo:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
+            color: #ffffff;
+        }
+        .form-check-input:checked {
+            background-color: #6366f1;
+            border-color: #6366f1;
+        }
+    </style>
+</head>
+<body>
+
+    <%- include('../includes/admin-navigation.ejs') %>
+
+    <div class="content-page">
+        <div class="container-fluid">
+            
+            <!-- Hero Header Banner -->
+            <div class="hero-banner-card d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="api-logo-badge" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;">
+                        <i class="fe-tag"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold m-0" style="color: #0f172a;">Google Tag Manager (GTM)</h3>
+                        <p class="text-muted m-0 font-13">Inject Google Tag Manager container script automatically across store head & body tags.</p>
+                    </div>
+                </div>
+                <div>
+                    <button type="submit" form="gtm-form" class="btn btn-indigo"><i class="fe-save me-1"></i> Save GTM Settings</button>
+                </div>
+            </div>
+
+            <!-- Main Form Card -->
+            <div class="api-card">
+                <form id="gtm-form" action="/admin/tag-manager/update" method="POST">
+                    
+                    <div class="row g-4 align-items-center mb-4">
+                        <div class="col-md-8">
+                            <label class="form-label">Google Tag Manager Container ID / Script Code *</label>
+                            <input type="text" class="form-control" name="code" value="<%= gtm ? gtm.code : 'GTM-N6589XX' %>" placeholder="e.g. GTM-XXXXXXX" required>
+                            <span class="font-12 text-muted mt-1 d-block">Enter your GTM Container ID (e.g., GTM-K893J4) to activate tracking.</span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded-3 bg-light d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="fw-bold font-14">GTM Integration Status</div>
+                                    <span class="font-12 text-muted">Enable/Disable Google Tag Manager</span>
+                                </div>
+                                <div class="form-check form-switch fs-4 ms-3">
+                                    <input class="form-check-input" type="checkbox" name="status" <%= gtm && gtm.status ? 'checked' : '' %>>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-indigo px-5"><i class="fe-check-circle me-1"></i> Update GTM Config</button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="/backEnd/assets/js/vendor.min.js"></script>
+    <script src="/backEnd/assets/js/app.min.js"></script>
+</body>
+</html>

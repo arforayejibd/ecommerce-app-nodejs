@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "category_id": 1,
+    "category_name": "Main Slider Banner",
+    "link": "/products",
+    "image": "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1400&q=80",
+    "status": 1
+  },
+  {
+    "id": 2,
+    "category_id": 1,
+    "category_name": "Main Slider Banner",
+    "link": "/products",
+    "image": "/uploads/1787065691AdibaCoverN_1787301114532.jpg",
+    "status": 1
+  },
+  {
+    "id": 3,
+    "category_id": 1,
+    "category_name": "Main Slider Banner",
+    "link": "/products",
+    "image": "/uploads/1787065596Shaonobazar_1787301180353.jpg",
+    "status": 1
+  }
+]

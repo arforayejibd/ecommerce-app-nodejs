@@ -1,0 +1,48 @@
+﻿<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>হট ডিল ও ব্যানার সেটিং - Backend Admin Portal</title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-body">
+
+    <%- include('../includes/admin-navigation.ejs') %>
+
+    <div class="admin-wrapper">
+        <div style="max-width: 750px; margin: 0 auto;">
+            <div class="admin-content-box">
+                <div class="box-header">
+                    <div>
+                        <h2>🔥 হট ডিল ও স্লাইডার ব্যানার সেটিং</h2>
+                        <p style="color: var(--text-subtle); font-size: 0.88rem; margin-top: 0.2rem;">হোম পেজের হিরো ব্যানার এবং হট ডিল টাইমার কনফিগার করুন</p>
+                    </div>
+                </div>
+
+                <form onsubmit="event.preventDefault(); alert('অফার ও ব্যানার সেটিং সফলভাবে আপডেট হয়েছে!');">
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; font-weight: 800; color: white; margin-bottom: 0.5rem;">হিরো স্লাইডার ব্যানার ১ (URL)</label>
+                        <input type="url" class="form-control" value="https://www.onecommercebd.com/uploads/banner/1787065596Shaonobazar.com F.jpg" style="width: 100%; padding: 0.8rem; background: #111827; border: 1px solid var(--border-color); color: white; border-radius: 8px;">
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; font-weight: 800; color: white; margin-bottom: 0.5rem;">হিরো স্লাইডার ব্যানার ২ (URL)</label>
+                        <input type="url" class="form-control" value="https://www.onecommercebd.com/uploads/banner/1787065691One Commerce Cover N.jpg" style="width: 100%; padding: 0.8rem; background: #111827; border: 1px solid var(--border-color); color: white; border-radius: 8px;">
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; font-weight: 800; color: white; margin-bottom: 0.5rem;">হট ডিল টাইমার (ঘণ্টা:মিনিট)</label>
+                        <input type="text" value="05:42:18" style="width: 100%; padding: 0.8rem; background: #111827; border: 1px solid var(--border-color); color: var(--accent-amber); font-weight: 800; border-radius: 8px;">
+                    </div>
+
+                    <button type="submit" class="btn-edit" style="width: 100%; text-align: center; background: linear-gradient(135deg, var(--accent-rose), #f43f5e); color: white; border: none; padding: 0.85rem; font-weight: 900; border-radius: 10px; cursor: pointer;">
+                        ✓ সেটিং আপডেট করুন
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

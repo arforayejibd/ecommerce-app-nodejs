@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "name": "Main Slider Banner",
+    "status": 1
+  },
+  {
+    "id": 2,
+    "name": "Popup Ad Banner",
+    "status": 1
+  },
+  {
+    "id": 3,
+    "name": "Sidebar Promo Banner",
+    "status": 1
+  },
+  {
+    "id": 4,
+    "name": "Footer Banner",
+    "status": 1
+  }
+]

@@ -1,0 +1,66 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customers List - Rosedrape Admin Backend</title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-body">
+
+    <%- include('../includes/admin-navigation.ejs') %>
+
+    <div class="admin-wrapper">
+        <div class="admin-content-box">
+            <div class="box-header">
+                <div>
+                    <h2>👥 Customers List</h2>
+                    <p style="color: var(--text-subtle); font-size: 0.88rem; margin-top: 0.2rem;">Registered customers, contact numbers, and purchase history</p>
+                </div>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Customer ID</th>
+                            <th>Customer Name</th>
+                            <th>Email Address</th>
+                            <th>Joined Date</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (customers && customers.length > 0) { %>
+                            <% customers.forEach(cust => { %>
+                                <tr>
+                                    <td><strong style="color: var(--brand-coral);">#CUST-00<%= cust.id %></strong></td>
+                                    <td>
+                                        <div style="font-weight: 800; color: var(--text-heading);"><%= cust.name || 'Customer' %></div>
+                                    </td>
+                                    <td><%= cust.email %></td>
+                                    <td><%= new Date(cust.createdAt).toLocaleDateString() %></td>
+                                    <td>
+                                        <span class="badge-tag" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
+                                            ✓ Verified Active
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn-edit" onclick="alert('Viewing customer details for <%= cust.name %>')">View Orders</button>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">No registered customers found.</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

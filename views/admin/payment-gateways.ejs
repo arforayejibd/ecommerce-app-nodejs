@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle %> - Rosedrape Admin</title>
+    <link rel="stylesheet" href="/backEnd/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/backEnd/assets/css/icons.min.css">
+    <link rel="stylesheet" href="/backEnd/assets/css/app.min.css">
+    <link rel="stylesheet" href="/backEnd/assets/css/sidebar-modern.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        [data-theme="dark"] body {
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .content-page {
+            margin-top: 85px !important;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+        .hero-banner-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 24px 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            margin-bottom: 24px;
+        }
+        [data-theme="dark"] .hero-banner-card {
+            background: #1e293b !important;
+            border-color: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.2);
+        }
+        .api-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+            height: 100%;
+            transition: all 0.25s ease;
+        }
+        [data-theme="dark"] .api-card {
+            background: #1e293b;
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+        .api-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+        [data-theme="dark"] .api-card-header {
+            border-bottom-color: rgba(255, 255, 255, 0.08);
+        }
+        .api-logo-badge {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .form-label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #475569;
+            margin-bottom: 6px;
+        }
+        [data-theme="dark"] .form-label {
+            color: #94a3b8;
+        }
+        .form-control {
+            border-radius: 10px;
+            border: 1px solid #cbd5e1;
+            padding: 10px 14px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        [data-theme="dark"] .form-control {
+            background: #0f172a;
+            border-color: rgba(255, 255, 255, 0.12);
+            color: #f8fafc;
+        }
+        .form-control:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+        .btn-indigo {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: #ffffff;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+            transition: all 0.2s ease;
+        }
+        .btn-indigo:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
+            color: #ffffff;
+        }
+        .form-check-input:checked {
+            background-color: #6366f1;
+            border-color: #6366f1;
+        }
+    </style>
+</head>
+<body>
+
+    <%- include('../includes/admin-navigation.ejs') %>
+
+    <div class="content-page">
+        <div class="container-fluid">
+            
+            <!-- Hero Header Banner -->
+            <div class="hero-banner-card d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="api-logo-badge" style="background: rgba(99, 102, 241, 0.12); color: #6366f1;">
+                        <i class="fe-credit-card"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold m-0 text-slate-900" style="color: #0f172a;">Payment Gateways</h3>
+                        <p class="text-muted m-0 font-13">Configure bKash Merchant API & Shurjopay payment gateway credentials for online checkout.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid Layout -->
+            <div class="row g-4">
+                
+                <!-- bKash Merchant Gateway -->
+                <div class="col-lg-6">
+                    <div class="api-card d-flex flex-column justify-content-between">
+                        <form id="bkash-form" action="/admin/paymentgeteway/update" method="POST">
+                            <input type="hidden" name="type" value="bkash">
+                            <div class="api-card-header">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="api-logo-badge" style="background: rgba(226, 19, 110, 0.12); color: #e2136e;">
+                                        <i class="fe-smartphone"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="fw-bold m-0" style="color: #e2136e;">bKash Tokenized API</h4>
+                                        <span class="font-12 text-muted">Direct merchant checkout API integration</span>
+                                    </div>
+                                </div>
+                                <div class="form-check form-switch fs-5">
+                                    <input class="form-check-input" type="checkbox" id="bkash_status" name="status" <%= bkash && bkash.status ? 'checked' : '' %>>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Gateway Icon / Logo *</label>
+                                <div class="d-flex align-items-center gap-3 p-3" style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px;">
+                                    <img id="bkash_preview_img" src="<%= bkash && bkash.logo ? bkash.logo : 'https://raw.githubusercontent.com/tahmid-ul/bkash-logo/main/bkash-logo.png' %>" alt="bKash Preview" style="height: 48px; width: 48px; object-fit: contain; border-radius: 10px; border: 1px solid #cbd5e1; padding: 4px; background: #ffffff;">
+                                    <div class="flex-grow-1">
+                                        <input type="hidden" id="bkash_logo_input" name="logo" value="<%= bkash && bkash.logo ? bkash.logo : 'https://raw.githubusercontent.com/tahmid-ul/bkash-logo/main/bkash-logo.png' %>">
+                                        <button type="button" class="btn btn-theme-secondary btn-sm" onclick="openMediaPicker(url => { document.getElementById('bkash_logo_input').value = url; document.getElementById('bkash_preview_img').src = url; })"><i class="fe-image me-1"></i> Browse</button>
+                                        <div class="font-12 text-muted mt-1">Select PNG, JPG, WebP or SVG icon</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">bKash Username *</label>
+                                <input type="text" class="form-control" name="username" value="<%= bkash ? bkash.username : '01700000000' %>" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">App Key *</label>
+                                <input type="text" class="form-control" name="app_key" value="<%= bkash ? bkash.app_key : 'bkash_app_key_837492810' %>" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">App Secret *</label>
+                                <input type="password" class="form-control" name="app_secret" value="<%= bkash ? bkash.app_secret : 'bkash_secret_739201948' %>" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Base URL *</label>
+                                <input type="text" class="form-control" name="base_url" value="<%= bkash ? bkash.base_url : 'https://tokenized.pay.bKash.com/v1.2.0-beta' %>" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Password *</label>
+                                <input type="password" class="form-control" name="password" value="<%= bkash ? bkash.password : 'bkash_password_92841' %>" required>
+                            </div>
+
+                            <button type="submit" class="btn btn-theme-primary w-100 mt-3"><i class="fe-save me-1"></i> Save bKash Settings</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Shurjopay Gateway -->
+                <div class="col-lg-6">
+                    <div class="api-card d-flex flex-column justify-content-between">
+                        <form id="shurjopay-form" action="/admin/paymentgeteway/update" method="POST">
+                            <input type="hidden" name="type" value="shurjopay">
+                            <div class="api-card-header">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="api-logo-badge" style="background: rgba(14, 165, 233, 0.12); color: #0ea5e9;">
+                                        <i class="fe-globe"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="fw-bold m-0" style="color: #0ea5e9;">Shurjopay Gateway</h4>
+                                        <span class="font-12 text-muted">Multi-card & MFS merchant payment gateway</span>
+                                    </div>
+                                </div>
+                                <div class="form-check form-switch fs-5">
+                                    <input class="form-check-input" type="checkbox" id="shurjopay_status" name="status" <%= shurjopay && shurjopay.status ? 'checked' : '' %>>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Gateway Icon / Logo *</label>
+                                <div class="d-flex align-items-center gap-3 p-3" style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px;">
+                                    <img id="shurjopay_preview_img" src="<%= shurjopay && shurjopay.logo ? shurjopay.logo : 'https://shurjopay.com/favicon.ico' %>" alt="Shurjopay Preview" style="height: 48px; width: 48px; object-fit: contain; border-radius: 10px; border: 1px solid #cbd5e1; padding: 4px; background: #ffffff;">
+                                    <div class="flex-grow-1">
+                                        <input type="hidden" id="shurjopay_logo_input" name="logo" value="<%= shurjopay && shurjopay.logo ? shurjopay.logo : 'https://shurjopay.com/favicon.ico' %>">
+                                        <button type="button" class="btn btn-theme-secondary btn-sm" onclick="openMediaPicker(url => { document.getElementById('shurjopay_logo_input').value = url; document.getElementById('shurjopay_preview_img').src = url; })"><i class="fe-image me-1"></i> Browse</button>
+                                        <div class="font-12 text-muted mt-1">Select PNG, JPG, WebP or SVG icon</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Base URL *</label>
+                                <input type="text" class="form-control" name="base_url" value="<%= shurjopay ? shurjopay.base_url : 'https://shurjopay.com' %>" required>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Merchant Username *</label>
+                                    <input type="text" class="form-control" name="username" value="<%= shurjopay ? shurjopay.username : 'sp_merchant_user' %>" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Password *</label>
+                                    <input type="password" class="form-control" name="password" value="<%= shurjopay ? shurjopay.password : 'sp_password_83749' %>" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Order Prefix</label>
+                                <input type="text" class="form-control" name="prefix" value="<%= shurjopay ? shurjopay.prefix : 'NO' %>">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Return / Success URL</label>
+                                <input type="text" class="form-control" name="success_url" value="<%= shurjopay ? shurjopay.success_url : 'http://127.0.0.1:3000/payment/shurjopay/success' %>">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Cancel URL</label>
+                                <input type="text" class="form-control" name="return_url" value="<%= shurjopay ? shurjopay.return_url : 'http://127.0.0.1:3000/payment/shurjopay/cancel' %>">
+                            </div>
+
+                            <button type="submit" class="btn btn-theme-primary w-100 mt-3"><i class="fe-save me-1"></i> Save Shurjopay Settings</button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <%- include('../includes/media-picker-modal.ejs') %>
+
+    <script src="/backEnd/assets/js/vendor.min.js"></script>
+    <script src="/backEnd/assets/js/app.min.js"></script>
+</body>
+</html>

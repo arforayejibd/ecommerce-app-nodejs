@@ -1,0 +1,15 @@
+{
+  "steadfast": {
+    "api_key": "st_live_key_938472910",
+    "secret_key": "st_secret_key_83749102",
+    "url": "https://portal.packzy.com/api/v1",
+    "status": true
+  },
+  "pathao": {
+    "url": "https://api-hermes.pathao.com",
+    "api_key": "pathao_client_id_83749",
+    "secret_key": "pathao_client_secret_938471",
+    "token": "bearer_token_pathao_live_93847291",
+    "status": true
+  }
+}

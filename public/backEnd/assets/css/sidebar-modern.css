@@ -1,0 +1,850 @@
+/* ==========================================================================
+   GLOBAL STANDARDIZED BUTTON DESIGN SYSTEM (ROSEDRAPE ADMIN)
+   ========================================================================== */
+.btn-theme-primary,
+.btn-indigo,
+.btn-primary-gradient,
+.btn-custom-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 9px 20px !important;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3) !important;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    text-decoration: none !important;
+}
+
+.btn-theme-primary:hover,
+.btn-indigo:hover,
+.btn-primary-gradient:hover,
+.btn-custom-primary:hover {
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%) !important;
+    color: #ffffff !important;
+    transform: translateY(-1.5px) !important;
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.42) !important;
+}
+
+.btn-theme-secondary {
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    font-weight: 600 !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 10px !important;
+    padding: 8px 18px !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    text-decoration: none !important;
+}
+
+[data-theme="dark"] .btn-theme-secondary {
+    background: #1e293b !important;
+    color: #cbd5e1 !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.btn-theme-secondary:hover {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+}
+
+.btn-theme-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 9px 20px !important;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3) !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    text-decoration: none !important;
+}
+
+.btn-theme-danger:hover {
+    transform: translateY(-1.5px) !important;
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4) !important;
+    color: #ffffff !important;
+}
+
+.btn-theme-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 9px 20px !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3) !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    text-decoration: none !important;
+}
+
+.btn-theme-success:hover {
+    transform: translateY(-1.5px) !important;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
+    color: #ffffff !important;
+}
+
+/* ============================================================
+   BRAND-NEW FUTURISTIC SIDEBAR SYSTEM (2026 UI)
+   ============================================================ */
+
+/* ============================================================
+   THEME-AWARE LOGO SWITCHING
+   Dark mode  → show white_logo  (.logo-for-dark)
+   Light mode → show dark_logo   (.logo-for-light)
+   ============================================================ */
+
+/* Default: show dark-mode logo (white), hide light-mode logo */
+.logo-for-dark  { display: inline-block; }
+.logo-for-light { display: none; }
+
+/* When theme is light: swap */
+[data-theme="light"] .logo-for-dark  { display: none; }
+[data-theme="light"] .logo-for-light { display: inline-block; }
+
+/* 1. Sidebar Container Base */
+.left-side-menu {
+    width: 260px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    max-height: 100vh !important;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), left 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease !important;
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.05) !important;
+    z-index: 1000 !important;
+}
+
+[data-theme="dark"] .left-side-menu {
+    background-color: #0f172a !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.25) !important;
+}
+
+[data-theme="light"] .left-side-menu {
+    background-color: #ffffff !important;
+    border-right: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+/* 2. Desktop Condensed Mode (70px) */
+@media (min-width: 992px) {
+    body[data-leftbar-size="condensed"] .left-side-menu {
+        width: 70px !important;
+    }
+
+    body[data-leftbar-size="condensed"] .left-side-menu .sidebar-user-card,
+    body[data-leftbar-size="condensed"] .left-side-menu .menu-title,
+    body[data-leftbar-size="condensed"] .left-side-menu .sidebar-footer {
+        display: none !important;
+    }
+
+    body[data-leftbar-size="condensed"] .left-side-menu #side-menu > li > a {
+        padding: 12px !important;
+        justify-content: center !important;
+    }
+
+    body[data-leftbar-size="condensed"] .left-side-menu #side-menu > li > a .menu-text,
+    body[data-leftbar-size="condensed"] .left-side-menu #side-menu > li > a .menu-arrow {
+        display: none !important;
+    }
+}
+
+/* 3. Mobile Sidebar Drawer Overlay (290px Wide) */
+@media (max-width: 991.98px) {
+    .left-side-menu,
+    body[data-leftbar-size="condensed"] .left-side-menu {
+        width: 290px !important;
+        min-width: 290px !important;
+        max-width: 290px !important;
+        position: fixed !important;
+        top: 70px !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        height: calc(100vh - 70px) !important;
+        z-index: 1050 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.35) !important;
+    }
+
+    body.sidebar-enable .left-side-menu {
+        transform: translateX(0) !important;
+    }
+
+    /* Force all text labels, arrows, and badges visible on mobile (Never Icon-Only) */
+    .left-side-menu #sidebar-menu span,
+    .left-side-menu #side-menu span,
+    .left-side-menu .menu-text,
+    .left-side-menu .menu-arrow,
+    .left-side-menu .menu-title,
+    .left-side-menu .badge,
+    body[data-leftbar-size="condensed"] .left-side-menu #sidebar-menu span,
+    body[data-leftbar-size="condensed"] .left-side-menu #side-menu span,
+    body[data-leftbar-size="condensed"] .left-side-menu .menu-text,
+    body[data-leftbar-size="condensed"] .left-side-menu .menu-arrow,
+    body[data-leftbar-size="condensed"] .left-side-menu .menu-title,
+    body[data-leftbar-size="condensed"] .left-side-menu .badge {
+        display: inline-block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        width: auto !important;
+        height: auto !important;
+    }
+
+    /* NEUTRALISE FLOATING WHITE POPUPS ON MOBILE COMPLETELY */
+    body[data-leftbar-size="condensed"] .left-side-menu #sidebar-menu > ul > li:hover > div,
+    body[data-leftbar-size="condensed"] .left-side-menu #sidebar-menu > ul > li:hover > ul,
+    body[data-leftbar-size="condensed"] .left-side-menu #side-menu > li:hover > div,
+    body[data-leftbar-size="condensed"] .left-side-menu #side-menu > li:hover > ul,
+    .left-side-menu #sidebar-menu .collapse,
+    .left-side-menu #side-menu .collapse,
+    .left-side-menu .nav-second-level {
+        position: static !important;
+        float: none !important;
+        left: auto !important;
+        top: auto !important;
+        right: auto !important;
+        width: 100% !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    /* Explicitly control .collapse display on mobile — prevents template CSS fighting jQuery */
+    .left-side-menu #side-menu .collapse:not(.show) {
+        display: none !important;
+    }
+
+    .left-side-menu #side-menu .collapse.show {
+        display: block !important;
+    }
+}
+
+/* 4. Sidebar Top User Profile Card */
+.sidebar-user-card {
+    transition: all 0.3s ease;
+    border-radius: 16px !important;
+}
+
+[data-theme="dark"] .sidebar-user-card {
+    background: rgba(30, 41, 59, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="light"] .sidebar-user-card {
+    background: #f8fafc !important;
+    border: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-theme="dark"] .sidebar-user-name { color: #f8fafc !important; }
+[data-theme="dark"] .sidebar-user-role { color: #94a3b8 !important; }
+[data-theme="light"] .sidebar-user-name { color: #0f172a !important; }
+[data-theme="light"] .sidebar-user-role { color: #64748b !important; }
+
+/* 5. Menu Section Headers */
+#side-menu .menu-title {
+    font-size: 0.6875rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.08em !important;
+    padding: 1.25rem 1rem 0.4rem 1.25rem !important;
+}
+
+[data-theme="dark"] #side-menu .menu-title { color: #64748b !important; }
+[data-theme="light"] #side-menu .menu-title { color: #94a3b8 !important; }
+
+/* 6. Main Menu Items & Icon Containers */
+#sidebar-menu {
+    padding: 0.5rem 0;
+    flex-grow: 1;
+}
+
+#side-menu {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+#side-menu > li {
+    margin: 0 12px 0.35rem;
+}
+
+#side-menu > li > a.sidebar-link {
+    display: flex !important;
+    align-items: center !important;
+    padding: 0.65rem 0.85rem !important;
+    border-radius: 12px !important;
+    font-size: 0.9375rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative;
+    text-decoration: none !important;
+}
+
+.menu-icon-box {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 17px !important;
+    margin-right: 0.85rem !important;
+    flex-shrink: 0 !important;
+    transition: all 0.25s ease !important;
+    line-height: 1 !important;
+}
+
+.menu-icon-box i,
+.menu-icon-box svg {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+/* Vibrant Soft Background Tints for Icons */
+.bg-primary-soft { background: rgba(99, 102, 241, 0.15); color: #6366f1; }
+.bg-success-soft { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.bg-info-soft { background: rgba(14, 165, 233, 0.15); color: #0ea5e9; }
+.bg-warning-soft { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+.bg-danger-soft { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+.bg-purple-soft { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+.bg-pink-soft { background: rgba(236, 72, 153, 0.15); color: #ec4899; }
+.bg-indigo-soft { background: rgba(79, 70, 229, 0.15); color: #4f46e5; }
+.bg-teal-soft { background: rgba(20, 184, 166, 0.15); color: #14b8a6; }
+.bg-cyan-soft { background: rgba(6, 182, 212, 0.15); color: #06b6d4; }
+
+#side-menu > li > a .menu-text {
+    flex: 1;
+}
+
+/* Arrow icon rotation */
+#side-menu > li > a .menu-arrow {
+    font-size: 14px;
+    margin-left: auto;
+    transition: transform 0.25s ease;
+    opacity: 0.7;
+}
+
+#side-menu > li.open > a .menu-arrow,
+#side-menu > li > a[aria-expanded="true"] .menu-arrow {
+    transform: rotate(90deg);
+    opacity: 1;
+}
+
+/* Dark Theme Main Links */
+[data-theme="dark"] #side-menu > li > a.sidebar-link {
+    color: #94a3b8 !important;
+}
+
+[data-theme="dark"] #side-menu > li > a.sidebar-link:hover {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+    backdrop-filter: blur(8px);
+    color: #f8fafc !important;
+    transform: translateX(5px) !important;
+}
+
+[data-theme="dark"] #side-menu > li > a.active,
+[data-theme="dark"] #side-menu > li.active > a,
+[data-theme="dark"] #side-menu > li.open > a,
+[data-theme="dark"] #side-menu > li.has-submenu.open > a {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.38) !important;
+    font-weight: 700 !important;
+    transform: translateX(4px) !important;
+}
+
+[data-theme="dark"] #side-menu > li > a.active .menu-icon-box,
+[data-theme="dark"] #side-menu > li.active > a .menu-icon-box,
+[data-theme="dark"] #side-menu > li.open > a .menu-icon-box,
+[data-theme="dark"] #side-menu > li.has-submenu.open > a .menu-icon-box {
+    background: rgba(255, 255, 255, 0.22) !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] #side-menu > li > a.active .menu-icon-box i,
+[data-theme="dark"] #side-menu > li.active > a .menu-icon-box i,
+[data-theme="dark"] #side-menu > li.open > a .menu-icon-box i,
+[data-theme="dark"] #side-menu > li.has-submenu.open > a .menu-icon-box i {
+    color: #ffffff !important;
+}
+
+/* Light Theme Main Links */
+[data-theme="light"] #side-menu > li > a.sidebar-link {
+    color: #64748b !important;
+}
+
+[data-theme="light"] #side-menu > li > a.sidebar-link:hover {
+    background-color: rgba(99, 102, 241, 0.07) !important;
+    backdrop-filter: blur(8px);
+    color: #4f46e5 !important;
+    transform: translateX(5px) !important;
+}
+
+[data-theme="light"] #side-menu > li > a.active,
+[data-theme="light"] #side-menu > li.active > a,
+[data-theme="light"] #side-menu > li.open > a,
+[data-theme="light"] #side-menu > li.has-submenu.open > a {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35) !important;
+    font-weight: 700 !important;
+    transform: translateX(4px) !important;
+}
+
+[data-theme="light"] #side-menu > li > a.active .menu-icon-box,
+[data-theme="light"] #side-menu > li.active > a .menu-icon-box,
+[data-theme="light"] #side-menu > li.open > a .menu-icon-box,
+[data-theme="light"] #side-menu > li.has-submenu.open > a .menu-icon-box {
+    background: rgba(255, 255, 255, 0.22) !important;
+    color: #ffffff !important;
+}
+
+[data-theme="light"] #side-menu > li > a.active .menu-icon-box i,
+[data-theme="light"] #side-menu > li.active > a .menu-icon-box i,
+[data-theme="light"] #side-menu > li.open > a .menu-icon-box i,
+[data-theme="light"] #side-menu > li.has-submenu.open > a .menu-icon-box i {
+    color: #ffffff !important;
+}
+
+/* 7. Submenu Tree Navigation (Clean & Uncluttered) */
+#side-menu .collapse {
+    display: none;
+}
+
+#side-menu .collapse.show,
+#side-menu .collapse.in,
+#side-menu > li.open > .collapse {
+    display: block;
+}
+
+.nav-second-level {
+    padding: 0.25rem 0 0.35rem 0 !important;
+    margin: 0.25rem 10px 0.5rem 14px !important;
+    list-style: none !important;
+    position: relative !important;
+    border-left: none !important;
+}
+
+.nav-second-level li {
+    margin-bottom: 0.25rem !important;
+    margin-left: 0 !important;
+    position: relative !important;
+}
+
+.nav-second-level li::before {
+    display: none !important;
+}
+
+.nav-second-level li a {
+    display: flex !important;
+    align-items: center !important;
+    padding: 0.65rem 1rem 0.65rem 1.6rem !important;
+    border-radius: 12px !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    text-decoration: none !important;
+    border-left: none !important;
+}
+
+/* Submenu Dark Mode */
+[data-theme="dark"] .nav-second-level li a {
+    color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .nav-second-level li a:hover {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+    color: #f8fafc !important;
+    transform: translateX(4px) !important;
+}
+
+[data-theme="dark"] .nav-second-level li a.active,
+[data-theme="dark"] .nav-second-level li.active > a {
+    background: rgba(99, 102, 241, 0.18) !important;
+    color: #a5b4fc !important;
+    font-weight: 700 !important;
+}
+
+/* Submenu Light Mode */
+[data-theme="light"] .nav-second-level li a {
+    color: #64748b !important;
+}
+
+[data-theme="light"] .nav-second-level li a:hover {
+    background-color: rgba(99, 102, 241, 0.08) !important;
+    color: #6366f1 !important;
+    transform: translateX(4px) !important;
+}
+
+[data-theme="light"] .nav-second-level li a.active,
+[data-theme="light"] .nav-second-level li.active > a {
+    background: rgba(99, 102, 241, 0.14) !important;
+    color: #4f46e5 !important;
+    font-weight: 700 !important;
+}
+
+/* 8. Sidebar Footer Styling */
+.sidebar-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="light"] .sidebar-footer {
+    border-top-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Hide native scrollbar on BOTH the outer .sidebar-content
+   AND simplebar's internal .simplebar-content-wrapper.
+   Do NOT change overflow — SimpleBar manages that itself. */
+
+.left-side-menu .sidebar-content,
+.left-side-menu .simplebar-content-wrapper {
+    scrollbar-width: none !important;     /* Firefox */
+    -ms-overflow-style: none !important;  /* IE / Edge legacy */
+}
+
+.left-side-menu .sidebar-content::-webkit-scrollbar,
+.left-side-menu .simplebar-content-wrapper::-webkit-scrollbar {
+    display: none !important;             /* Chrome / Safari / Edge */
+    width: 0 !important;
+    height: 0 !important;
+}
+
+
+/* ---- SimpleBar custom track ---- */
+.left-side-menu .simplebar-track.simplebar-vertical {
+    width: 5px !important;
+    background: transparent !important;
+    right: 2px !important;
+}
+
+.left-side-menu .simplebar-scrollbar {
+    min-height: 32px;
+}
+
+/* Dark theme thumb */
+.left-side-menu .simplebar-scrollbar::before {
+    background: rgba(99, 102, 241, 0.4) !important;
+    border-radius: 99px !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 2px !important;
+    bottom: 2px !important;
+    transition: background 0.25s ease !important;
+    opacity: 1 !important;
+}
+
+.left-side-menu .simplebar-scrollbar.simplebar-visible::before {
+    background: rgba(99, 102, 241, 0.65) !important;
+    opacity: 1 !important;
+}
+
+/* Light theme thumb */
+[data-theme="light"] .left-side-menu .simplebar-scrollbar::before {
+    background: rgba(99, 102, 241, 0.22) !important;
+}
+[data-theme="light"] .left-side-menu .simplebar-scrollbar.simplebar-visible::before {
+    background: rgba(99, 102, 241, 0.5) !important;
+}
+
+/* ============================================================
+   10. Modern Dashboard Component Styles (Shared Globally)
+   ============================================================ */
+
+/* Section Cards */
+.db-section-card {
+    border: none !important;
+    border-radius: 20px !important;
+    overflow: hidden;
+}
+[data-theme="dark"] .db-section-card {
+    background: #1e293b !important;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.2) !important;
+}
+[data-theme="light"] .db-section-card {
+    background: #ffffff !important;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06) !important;
+}
+
+/* Section Header */
+.db-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+[data-theme="light"] .db-section-header {
+    border-bottom-color: rgba(0,0,0,0.06);
+}
+
+.db-section-icon {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+.db-section-title {
+    font-size: 1rem;
+    font-weight: 700;
+}
+[data-theme="dark"] .db-section-title { color: #f1f5f9; }
+[data-theme="light"] .db-section-title { color: #0f172a; }
+
+.db-section-subtitle {
+    font-size: 0.75rem;
+}
+[data-theme="dark"] .db-section-subtitle { color: #64748b; }
+[data-theme="light"] .db-section-subtitle { color: #94a3b8; }
+
+.db-section-btn {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    padding: 0.45rem 1rem;
+    border-radius: 50px;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+[data-theme="dark"] .db-section-btn {
+    background: rgba(99,102,241,0.15);
+    color: #818cf8;
+}
+[data-theme="dark"] .db-section-btn:hover {
+    background: rgba(99,102,241,0.3);
+    color: #a5b4fc;
+}
+[data-theme="light"] .db-section-btn {
+    background: rgba(99,102,241,0.1);
+    color: #6366f1;
+}
+[data-theme="light"] .db-section-btn:hover {
+    background: rgba(99,102,241,0.2);
+    color: #4f46e5;
+}
+
+/* Section Body */
+.db-section-body { padding: 0.75rem 1rem; }
+
+/* ---- STATUS BADGES ---- */
+.db-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.3rem 0.75rem;
+    border-radius: 50px;
+    white-space: nowrap;
+}
+.db-status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+.status-success { background: rgba(16,185,129,0.12) !important; color: #10b981 !important; }
+.status-danger  { background: rgba(239,68,68,0.12) !important;  color: #ef4444 !important; }
+.status-info    { background: rgba(14,165,233,0.12) !important; color: #0ea5e9 !important; }
+.status-warning { background: rgba(245,158,11,0.12) !important; color: #f59e0b !important; }
+.status-secondary{ background: rgba(148,163,184,0.12) !important; color: #94a3b8 !important; }
+
+/* ---- EMPTY STATE ---- */
+.db-empty-state {
+    text-align: center;
+    padding: 2.5rem 1rem;
+}
+.db-empty-state i {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 0.75rem;
+}
+[data-theme="dark"] .db-empty-state { color: #475569; }
+[data-theme="light"] .db-empty-state { color: #cbd5e1; }
+.db-empty-state p { margin: 0; font-size: 0.875rem; font-weight: 500; }
+
+/* ---- MODERNISED TABLE ---- */
+.db-table { border-collapse: separate; border-spacing: 0; width: 100%; }
+
+.db-thead tr th {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.75rem 1rem;
+    border-bottom: none;
+    white-space: nowrap;
+}
+[data-theme="dark"] .db-thead tr th {
+    background: rgba(255,255,255,0.04);
+    color: #64748b;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+[data-theme="light"] .db-thead tr th {
+    background: #f8fafc;
+    color: #94a3b8;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.db-tr td {
+    padding: 0.7rem 1rem;
+    vertical-align: middle;
+    border-bottom: none;
+    font-size: 0.875rem;
+}
+[data-theme="dark"] .db-tr td { border-bottom: 1px solid rgba(255,255,255,0.04); }
+[data-theme="light"] .db-tr td { border-bottom: 1px solid rgba(0,0,0,0.045); }
+
+.db-tr:last-child td { border-bottom: none !important; }
+
+[data-theme="dark"] .db-tr:hover td { background: rgba(255,255,255,0.03); }
+[data-theme="light"] .db-tr:hover td { background: rgba(99,102,241,0.04); }
+
+.db-td-num {
+    font-weight: 700;
+    font-size: 0.8125rem;
+}
+[data-theme="dark"] .db-td-num { color: #475569; }
+[data-theme="light"] .db-td-num { color: #cbd5e1; }
+
+.db-product-thumb {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.db-cell-text { font-size: 0.875rem; }
+[data-theme="dark"] .db-cell-text { color: #cbd5e1; }
+[data-theme="light"] .db-cell-text { color: #334155; }
+
+.db-action-btn {
+    width: 32px !important;
+    height: 32px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+}
+.db-action-btn i {
+    color: inherit !important;
+    font-size: 15px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    display: inline-block !important;
+}
+[data-theme="dark"] .db-action-btn { color: #64748b !important; background: rgba(255,255,255,0.05) !important; }
+[data-theme="dark"] .db-action-btn:hover { color: #a5b4fc !important; background: rgba(99,102,241,0.2) !important; }
+[data-theme="light"] .db-action-btn { color: #94a3b8 !important; background: #f1f5f9 !important; }
+[data-theme="light"] .db-action-btn:hover { color: #6366f1 !important; background: rgba(99,102,241,0.1) !important; }
+
+/* Invoice link style */
+.db-order-invoice {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+[data-theme="dark"] .db-order-invoice { color: #a5b4fc; }
+[data-theme="dark"] .db-order-invoice:hover { color: #c7d2fe; }
+[data-theme="light"] .db-order-invoice { color: #6366f1; }
+[data-theme="light"] .db-order-invoice:hover { color: #4f46e5; }
+
+.db-order-amount {
+    font-size: 0.9375rem;
+    font-weight: 700;
+}
+[data-theme="dark"] .db-order-amount { color: #34d399; }
+[data-theme="light"] .db-order-amount { color: #10b981; }
+
+/* Colorized Action Buttons with matching background tints - Brightened for Dark Mode */
+
+/* 1. View Button (Blue / Light-Blue) */
+[data-theme="dark"] .btn-action-view {
+    color: #60a5fa !important;
+    background: rgba(96, 165, 250, 0.18) !important;
+}
+[data-theme="light"] .btn-action-view {
+    color: #1d4ed8 !important;
+    background: rgba(29, 78, 216, 0.08) !important;
+}
+.btn-action-view:hover {
+    color: #ffffff !important;
+    background: #3b82f6 !important;
+}
+
+/* 2. Process Button (Orange / Light-Orange) */
+[data-theme="dark"] .btn-action-process {
+    color: #fbbf24 !important;
+    background: rgba(251, 191, 36, 0.18) !important;
+}
+[data-theme="light"] .btn-action-process {
+    color: #d97706 !important;
+    background: rgba(217, 119, 6, 0.08) !important;
+}
+.btn-action-process:hover {
+    color: #ffffff !important;
+    background: #f59e0b !important;
+}
+
+/* 3. Edit Button (Green / Light-Green) */
+[data-theme="dark"] .btn-action-edit {
+    color: #34d399 !important;
+    background: rgba(52, 211, 153, 0.18) !important;
+}
+[data-theme="light"] .btn-action-edit {
+    color: #059669 !important;
+    background: rgba(5, 150, 105, 0.08) !important;
+}
+.btn-action-edit:hover {
+    color: #ffffff !important;
+    background: #10b981 !important;
+}
+
+/* 4. Delete Button (Red / Light-Red) */
+[data-theme="dark"] .btn-action-delete {
+    color: #f87171 !important;
+    background: rgba(248, 113, 113, 0.18) !important;
+}
+[data-theme="light"] .btn-action-delete {
+    color: #dc2626 !important;
+    background: rgba(220, 38, 38, 0.08) !important;
+}
+.btn-action-delete:hover {
+    color: #ffffff !important;
+    background: #ef4444 !important;
+}

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaigns Management - Rosedrape Admin Backend</title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-body">
+
+    <%- include('../includes/admin-navigation.ejs') %>
+
+    <div class="admin-wrapper">
+        <div class="admin-content-box" style="margin-bottom: 2rem;">
+            <div class="box-header">
+                <div>
+                    <h2>🎯 Landing Page Campaigns</h2>
+                    <p style="color: var(--text-subtle); font-size: 0.88rem; margin-top: 0.2rem;">Create promotional landing pages and countdown discount campaigns</p>
+                </div>
+                <div>
+                    <button class="btn-edit" onclick="alert('Creating new landing campaign...')" style="background: var(--brand-coral-gradient); color: white; border: none; padding: 0.65rem 1.3rem; font-weight: 800; border-radius: 12px;">
+                        ➕ Create New Campaign
+                    </button>
+                </div>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Campaign Title</th>
+                            <th>Product Offer</th>
+                            <th>Offer Price (৳)</th>
+                            <th>Timer Hours</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <strong style="color: var(--text-heading); font-size: 1.05rem;">🔥 Grand Clearance Sale 2026</strong>
+                                <div style="font-size: 0.8rem; color: var(--text-subtle);">URL: /campaign/clearance-sale</div>
+                            </td>
+                            <td>Shaonobazar Nosepin Special</td>
+                            <td><strong style="color: #10b981;">৳ 750</strong> <span style="text-decoration: line-through; color: var(--text-subtle); font-size: 0.85rem;">৳ 1190</span></td>
+                            <td><span class="badge-tag" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">05:42:18</span></td>
+                            <td><span class="badge-tag" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">Active Live</span></td>
+                            <td>
+                                <button class="btn-edit">Edit</button>
+                                <button class="btn-delete" onclick="alert('Campaign deleted!')">Delete</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong style="color: var(--text-heading); font-size: 1.05rem;">💍 Golden Ring Mega Offer</strong>
+                                <div style="font-size: 0.8rem; color: var(--text-subtle);">URL: /campaign/golden-ring</div>
+                            </td>
+                            <td>Premium Designer Ring</td>
+                            <td><strong style="color: #10b981;">৳ 950</strong> <span style="text-decoration: line-through; color: var(--text-subtle); font-size: 0.85rem;">৳ 1500</span></td>
+                            <td><span class="badge-tag" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">12:00:00</span></td>
+                            <td><span class="badge-tag" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">Active Live</span></td>
+                            <td>
+                                <button class="btn-edit">Edit</button>
+                                <button class="btn-delete" onclick="alert('Campaign deleted!')">Delete</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

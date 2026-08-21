@@ -1,0 +1,110 @@
+<% if (typeof gtmConfig !== 'undefined' && gtmConfig && (gtmConfig.status === true || gtmConfig.status == 1) && gtmConfig.code && gtmConfig.code.startsWith('GTM-')) { %>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=<%= gtmConfig.code.trim() %>"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+<% } %>
+<header class="nh-header">
+    <div class="header-container">
+        <!-- Mobile Hamburger Menu Button (Left) -->
+        <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileDrawer()" aria-label="Toggle Menu">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <!-- Logo (Center on mobile, Left on desktop) -->
+        <a href="/" class="nh-logo">
+            <% if (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.white_logo) { %>
+                <img src="<%= siteSettings.white_logo %>" alt="<%= siteSettings.name || 'One Commerce' %>" style="height: 38px; object-fit: contain;" />
+            <% } else { %>
+                <span class="brand-text"><%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.name) ? siteSettings.name : 'One Commerce' %></span>
+            <% } %>
+        </a>
+
+        <!-- Desktop Search Bar -->
+        <div class="nh-search">
+            <form action="/products" method="GET">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" name="search" placeholder="Search products, categories..." value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>">
+                <button type="submit">Search</button>
+            </form>
+        </div>
+
+        <!-- Right Actions: Desktop & Mobile Icons -->
+        <div class="nh-actions">
+            <!-- Mobile Search Icon Button -->
+            <button class="mobile-search-btn" onclick="toggleMobileSearch()" aria-label="Search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+
+            <!-- Desktop Track Order Button -->
+            <a href="/order-track" class="nh-action-btn track-btn">
+                <i class="fa-solid fa-location-dot"></i>
+                <span>Track Order</span>
+            </a>
+
+            <!-- Desktop Cart Button -->
+            <a href="/cart" class="nh-action-btn cart-btn">
+                <i class="fa-solid fa-bag-shopping"></i>
+                <span>Cart</span>
+                <span class="nh-badge"><%= (typeof cartCount !== 'undefined') ? cartCount : 0 %></span>
+            </a>
+
+            <!-- Mobile Cart Icon Button with Green Badge (Matches Screenshot) -->
+            <a href="/cart" class="mobile-cart-btn" aria-label="Cart">
+                <i class="fa-solid fa-cart-shopping"></i>
+                <span class="mobile-cart-badge"><%= (typeof cartCount !== 'undefined') ? cartCount : 0 %></span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Mobile Search Expandable Bar -->
+    <div class="mobile-search-bar" id="mobileSearchBar">
+        <form action="/products" method="GET">
+            <input type="text" name="search" placeholder="Search products..." value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>">
+            <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </form>
+    </div>
+
+    <!-- Desktop Category Navbar -->
+    <nav class="nh-navbar">
+        <ul class="nh-nav-list">
+            <li><a href="/" class="nh-nav-link <%= path === '/' ? 'active' : '' %>">Home</a></li>
+            <li><a href="/products?category=Nosepin" class="nh-nav-link">Nosepin</a></li>
+            <li><a href="/products?category=Ring" class="nh-nav-link">Ring</a></li>
+            <li><a href="/products?category=Home%20Appliances" class="nh-nav-link">Home Appliances</a></li>
+            <li><a href="/products?category=Health%20Appliances" class="nh-nav-link">Health Appliances</a></li>
+            <li><a href="/order-track" class="nh-nav-link <%= path === '/order-track' ? 'active' : '' %>">Track Order</a></li>
+        </ul>
+    </nav>
+</header>
+
+<!-- Mobile Slide-In Navigation Drawer -->
+<div class="mobile-drawer-overlay" id="drawerOverlay" onclick="toggleMobileDrawer()"></div>
+<aside class="mobile-drawer" id="mobileDrawer">
+    <div class="drawer-header">
+        <span class="drawer-title">Menu</span>
+        <button class="drawer-close-btn" onclick="toggleMobileDrawer()">&times;</button>
+    </div>
+    <ul class="drawer-menu-list">
+        <li><a href="/" class="<%= path === '/' ? 'active' : '' %>"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li><a href="/products?category=Nosepin"><i class="fa-solid fa-gem"></i> Nosepin</a></li>
+        <li><a href="/products?category=Ring"><i class="fa-solid fa-ring"></i> Ring</a></li>
+        <li><a href="/products?category=Home%20Appliances"><i class="fa-solid fa-plug"></i> Home Appliances</a></li>
+        <li><a href="/products?category=Health%20Appliances"><i class="fa-solid fa-heart-pulse"></i> Health Appliances</a></li>
+        <li><a href="/order-track" class="<%= path === '/order-track' ? 'active' : '' %>"><i class="fa-solid fa-truck-fast"></i> Track Order</a></li>
+        <li><a href="/cart"><i class="fa-solid fa-cart-shopping"></i> Shopping Cart</a></li>
+    </ul>
+</aside>
+
+<script>
+    function toggleMobileDrawer() {
+        const drawer = document.getElementById('mobileDrawer');
+        const overlay = document.getElementById('drawerOverlay');
+        drawer.classList.toggle('active');
+        overlay.classList.toggle('active');
+    }
+    function toggleMobileSearch() {
+        const searchBar = document.getElementById('mobileSearchBar');
+        searchBar.classList.toggle('active');
+    }
+</script>

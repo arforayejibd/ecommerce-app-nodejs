@@ -1,0 +1,185 @@
+<style>
+    /* Footer inherits 100% exact nav menu (.nh-navbar) background color */
+    .site-footer-wrapper {
+        background-color: var(--brand-secondary, #0f172a) !important;
+        background-image: linear-gradient(90deg, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.2) 100%) !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 3.5rem 1rem 1.5rem;
+        font-size: 0.88rem;
+        color: #ffffff;
+        font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;
+        margin-top: 3rem;
+    }
+
+    .footer-container {
+        max-width: 1320px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1.5fr;
+        gap: 2.5rem;
+        margin-bottom: 2.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .footer-container {
+            grid-template-columns: 1fr;
+            gap: 1.75rem;
+        }
+    }
+
+    .footer-col-title {
+        font-size: 0.92rem;
+        font-weight: 800;
+        color: #ffffff;
+        text-transform: uppercase;
+        margin-bottom: 1.25rem;
+        letter-spacing: 0.5px;
+    }
+
+    .footer-links-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .footer-links-list li {
+        margin-bottom: 0.65rem;
+    }
+
+    .footer-links-list a {
+        color: #94a3b8;
+        text-decoration: none;
+        transition: color 0.2s ease, text-decoration 0.2s ease;
+    }
+
+    .footer-links-list a:hover {
+        color: #ffffff;
+        text-decoration: underline;
+    }
+
+    .bottom-copyright-bar {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 1.5rem;
+        text-align: center;
+        font-size: 0.82rem;
+        color: #94a3b8;
+    }
+
+    /* Floating Fixed Action Buttons */
+    .floating-whatsapp-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        background: #25d366;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        box-shadow: 0 4px 18px rgba(37, 211, 102, 0.4);
+        z-index: 1000;
+        text-decoration: none;
+        transition: transform 0.2s ease;
+    }
+
+    .floating-whatsapp-btn:hover {
+        transform: scale(1.1);
+        color: white;
+    }
+
+    .floating-scroll-top-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 80px;
+        width: 44px;
+        height: 44px;
+        background: #e11d48;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 15px rgba(225, 29, 72, 0.4);
+        z-index: 1000;
+        text-decoration: none;
+        transition: transform 0.2s ease;
+    }
+
+    .floating-scroll-top-btn:hover {
+        transform: scale(1.1);
+        color: white;
+    }
+
+    @media (max-width: 768px) {
+        .floating-whatsapp-btn,
+        .floating-scroll-top-btn {
+            display: none !important;
+        }
+    }
+</style>
+
+<footer class="site-footer-wrapper nh-navbar">
+    <div class="footer-container">
+        <!-- Brand Info Column -->
+        <div>
+            <strong style="font-size: 1.5rem; color: #ffffff; font-weight: 900; display: block; margin-bottom: 0.2rem;"><%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.name) ? siteSettings.name : "One Commerce" %></strong>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.85rem; letter-spacing: 0.5px;">Take Your Best Choice</p>
+            <p style="margin-bottom: 0.4rem; color: #cbd5e1;"><i class="fa-solid fa-location-dot me-1 text-danger"></i> Kazipara Mirpur Dhaka.</p>
+            <p style="font-weight: 900; color: #ffffff; font-size: 1.2rem; margin-top: 0.6rem;">
+                <i class="fa-solid fa-phone me-1 text-danger"></i> <%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.phone) ? siteSettings.phone : '01700000000' %>
+            </p>
+            <div style="display: flex; gap: 0.85rem; margin-top: 1rem;">
+                <a href="#" style="color: #94a3b8; font-size: 1.25rem;"><i class="fa-brands fa-facebook"></i></a>
+                <a href="#" style="color: #94a3b8; font-size: 1.25rem;"><i class="fa-brands fa-twitter"></i></a>
+                <a href="#" style="color: #94a3b8; font-size: 1.25rem;"><i class="fa-brands fa-youtube"></i></a>
+            </div>
+        </div>
+
+        <!-- Useful Links Column -->
+        <div>
+            <h5 class="footer-col-title">USEFUL LINK</h5>
+            <ul class="footer-links-list">
+                <li><a href="/order-track">Order Track</a></li>
+                <li><a href="#">Contact Us</a></li>
+                <li><a href="#">Order procedure</a></li>
+                <li><a href="#">Delivery Rules</a></li>
+                <li><a href="#">Return Policy</a></li>
+            </ul>
+        </div>
+
+        <!-- System Links Column -->
+        <div>
+            <h5 class="footer-col-title">LINK</h5>
+            <ul class="footer-links-list">
+                <li><a href="#">Terms of Service</a></li>
+                <li><a href="#">Privacy Policy</a></li>
+                <li><a href="#">Shipping Policy</a></li>
+            </ul>
+        </div>
+
+        <!-- App Download Column -->
+        <div>
+            <h5 class="footer-col-title">DOWNLOAD APP</h5>
+            <a href="<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.play_store) ? siteSettings.play_store : '#' %>" target="_blank" style="display: inline-block;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play" style="height: 48px; background: rgba(255,255,255,0.08); padding: 2px; border-radius: 6px;">
+            </a>
+        </div>
+    </div>
+
+    <!-- Copyright Sub-Footer -->
+    <div class="bottom-copyright-bar">
+        Copyright © 2026 <%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.name) ? siteSettings.name : "One Commerce" %>. All rights reserved
+    </div>
+</footer>
+
+<!-- Floating WhatsApp & Scroll Top Buttons -->
+<a href="https://wa.me/88<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.phone) ? siteSettings.phone : '01700000000' %>" class="floating-whatsapp-btn" target="_blank" title="Chat on WhatsApp">
+    <i class="fa-brands fa-whatsapp"></i>
+</a>
+<a href="#" class="floating-scroll-top-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'}); return false;" title="Scroll to Top">
+    <i class="fa fa-chevron-up"></i>
+</a>
