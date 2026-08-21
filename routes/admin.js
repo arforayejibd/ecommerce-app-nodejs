@@ -32,6 +32,8 @@ router.post("/orders/assign-user", isAdmin, adminController.postAssignAdminUser)
 router.post("/orders/delete-bulk", isAdmin, adminController.postDeleteOrdersBulk);
 
 // Protected Product & Catalog Management
+router.get("/test-products", adminController.getTestProducts);
+router.get("/products", isAdmin, adminController.getProducts);
 router.get("/product-list", isAdmin, adminController.getProducts);
 router.get("/products/manage", isAdmin, adminController.getProducts);
 router.get("/add-product", isAdmin, adminController.getAddProduct);

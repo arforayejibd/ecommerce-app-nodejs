@@ -1,4 +1,5 @@
 const fs = require("fs");
+const crypto = require("crypto");
 const path = require("path");
 const Product = require("../models/product");
 const Order = require("../models/order");
@@ -9,6 +10,9 @@ const SubCategory = require("../models/subcategory");
 const Sequelize = require('sequelize');
 
 exports.getLogin = (req, res, next) => {
+  if (req.query.reset === '1' && req.session) {
+    delete req.session.isAdminLoggedIn;
+  }
   if (req.session && req.session.isAdminLoggedIn) {
     return res.redirect("/admin/dashboard");
   }
@@ -19,16 +23,30 @@ exports.getLogin = (req, res, next) => {
   });
 };
 
+const SECRET = "onecommerce_secret_session_key_987";
+
+function createAdminToken() {
+  const payload = JSON.stringify({ admin: true, exp: Date.now() + (7 * 24 * 60 * 60 * 1000) });
+  const data = Buffer.from(payload).toString('base64');
+  const signature = crypto.createHmac('sha256', SECRET).update(data).digest('hex');
+  return `${data}.${signature}`;
+}
+
 exports.postLogin = (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
 
   if ((email === "admin@gmail.com" || email === "admin@onecommercebd.com" || email === "admin@test.com") && (password === "admin123" || password === "password")) {
-    req.session.isAdminLoggedIn = true;
-    return req.session.save((err) => {
-      if (err) console.log(err);
-      res.redirect("/admin/dashboard");
+    if (req.session) {
+      req.session.isAdminLoggedIn = true;
+    }
+    const token = createAdminToken();
+    res.cookie('admin_auth', token, {
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      path: '/'
     });
+    return res.redirect("/admin/dashboard");
   }
 
   res.render("admin/login", {
@@ -39,9 +57,9 @@ exports.postLogin = (req, res, next) => {
 };
 
 exports.postLogout = (req, res, next) => {
+  res.clearCookie('admin_auth', { path: '/' });
   if (req.session) {
-    req.session.destroy((err) => {
-      if (err) console.log(err);
+    req.session.destroy(() => {
       res.redirect("/admin/login");
     });
   } else {
@@ -83,7 +101,7 @@ exports.getDashboard = (req, res, next) => {
     Order.sum('advance', { where: { status: { [Op.ne]: 'Cancelled' } } }),
     Order.count({ distinct: true, col: 'phone' }),
     Order.findAll({
-      include: ["products"],
+      include: [{ model: Product }],
       order: [["createdAt", "DESC"]],
       limit: 5
     }),
@@ -173,7 +191,30 @@ exports.getDashboard = (req, res, next) => {
   })
   .catch(err => {
     console.log("Error in getDashboard: ", err);
-    res.redirect("/admin/login");
+    res.render("admin/dashboard", {
+      pageTitle: "Admin Dashboard",
+      path: "/admin/dashboard",
+      productsCount: 0,
+      totalOrders: 0,
+      pendingCount: 0,
+      processingCount: 0,
+      confirmCount: 0,
+      incourierCount: 0,
+      completedCount: 0,
+      cancelledCount: 0,
+      todayOrders: 0,
+      totalRevenue: 0,
+      totalAdvance: 0,
+      uniqueCustomers: 0,
+      recentOrders: [],
+      todayDelivered: 0,
+      weeklyDeliveries: 0,
+      monthlyDeliveries: 0,
+      recentUsers: [],
+      fulfillmentRate: 0,
+      chartLabels: JSON.stringify(past7Days),
+      chartData: JSON.stringify([0,0,0,0,0,0,0])
+    });
   });
 };
 
@@ -183,10 +224,18 @@ exports.getAdminOrders = (req, res, next) => {
   const keyword = (req.query.keyword || '').trim().toLowerCase();
 
   Promise.all([
-    Order.findAll({ include: ["products"], order: [['createdAt', 'DESC']] }),
-    User.findAll()
+    Order.findAll({
+      include: [{ model: Product, required: false }],
+      order: [['createdAt', 'DESC']]
+    }).catch(err => {
+      console.log("Error fetching orders:", err);
+      return [];
+    }),
+    User.findAll().catch(() => [])
   ])
     .then(([orders, users]) => {
+      orders = orders || [];
+      users = users || [];
       let filteredOrders = orders;
       
       // Filter by status if not 'all'
@@ -215,14 +264,153 @@ exports.getAdminOrders = (req, res, next) => {
         users: users
       });
     })
-    .catch(err => console.log("Error in getAdminOrders: ", err));
+    .catch(err => {
+      console.log("Error in getAdminOrders: ", err);
+      res.render("admin/orders", {
+        pageTitle: "Orders Management",
+        path: "/admin/orders",
+        statusFilter: statusFilter || 'all',
+        orders: [],
+        totalOrdersCount: 0,
+        filteredCount: 0,
+        users: []
+      });
+    });
+};
+
+exports.getTestProducts = async (req, res, next) => {
+  try {
+    let products = [];
+    try {
+      products = await Product.findAll({ order: [['id', 'DESC']] });
+    } catch (err1) {
+      products = await Product.findAll({
+        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal'],
+        order: [['id', 'DESC']]
+      });
+    }
+    const categories = await Category.findAll({ order: [['name', 'ASC']] });
+    res.render("admin/product-list", {
+      pageTitle: "Manage Products",
+      path: "/admin/product-list",
+      prods: products,
+      products: products,
+      hasProducts: products.length > 0,
+      totalCount: products.length,
+      filteredCount: products.length,
+      categories: categories,
+      categoriesList: categories.map(c => c.name),
+      categoryFilter: 'all',
+      keyword: ''
+    });
+  } catch (err) {
+    res.status(200).send('<pre style="color:red; font-size:16px;">NAME: ' + err.name + '\nMESSAGE: ' + err.message + '\n\nSTACK:\n' + (err.stack || '') + '</pre>');
+  }
+};
+
+// Product List & Management Handler
+exports.getProducts = async (req, res, next) => {
+  try {
+    let products = [];
+    try {
+      products = await Product.findAll({ order: [['id', 'DESC']] });
+    } catch (dbErr) {
+      console.log("Error querying products with default schema, attempting fallback query:", dbErr.message);
+      try {
+        products = await Product.findAll({
+          attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal'],
+          order: [['id', 'DESC']]
+        });
+      } catch (err2) {
+        console.log("Fallback Product query error:", err2.message);
+        products = [];
+      }
+    }
+
+    let categories = [];
+    try {
+      categories = await Category.findAll({ order: [['name', 'ASC']] });
+    } catch (catErr) {
+      console.log("Error querying categories from DB:", catErr.message);
+      categories = await Category.findAll().catch(() => []);
+    }
+
+    products = products || [];
+    categories = categories || [];
+
+    const categoryFilter = req.query.category || 'all';
+    const keyword = (req.query.keyword || req.query.search || '').trim().toLowerCase();
+
+    let filteredProds = products;
+
+    if (categoryFilter && categoryFilter !== 'all') {
+      if (categoryFilter.toLowerCase() === 'deals') {
+        filteredProds = filteredProds.filter(p => p.hotDeal === true || p.isHotDeal === true || p.deal === true);
+      } else {
+        filteredProds = filteredProds.filter(p => (p.category || '').toLowerCase() === categoryFilter.toLowerCase());
+      }
+    }
+
+    if (keyword) {
+      filteredProds = filteredProds.filter(p => 
+        (p.title || '').toLowerCase().includes(keyword) || 
+        (p.sku || '').toLowerCase().includes(keyword) ||
+        (p.category || '').toLowerCase().includes(keyword)
+      );
+    }
+
+    const categoriesList = Array.from(new Set(categories.map(c => c.name).filter(Boolean)));
+
+    const cleanProds = (filteredProds || []).map(p => {
+      const item = typeof p.get === 'function' ? p.get({ plain: true }) : p;
+      return {
+        ...item,
+        id: item.id || 0,
+        title: (item.title || 'Untitled Product').toString(),
+        category: (item.category || 'General').toString(),
+        imageUrl: (item.imageUrl || 'https://www.onecommercebd.com/uploads/category/thumb/1787182103-Nosepin.jpg').toString(),
+        price: item.price || 0,
+        oldPrice: item.oldPrice || '',
+        isHotDeal: item.isHotDeal === true || item.hotDeal === true || item.deal === true
+      };
+    });
+
+    return res.render("admin/product-list", {
+      pageTitle: "Manage Products",
+      path: "/admin/product-list",
+      prods: cleanProds,
+      products: cleanProds,
+      hasProducts: cleanProds.length > 0,
+      totalCount: products.length,
+      filteredCount: cleanProds.length,
+      categories: categories,
+      categoriesList: categoriesList,
+      categoryFilter: categoryFilter,
+      keyword: keyword
+    });
+  } catch (err) {
+    console.log("Error in getProducts:", err);
+    return res.render("admin/product-list", {
+      pageTitle: "Manage Products",
+      path: "/admin/product-list",
+      prods: [],
+      products: [],
+      hasProducts: false,
+      totalCount: 0,
+      filteredCount: 0,
+      categories: [],
+      categoriesList: [],
+      categoryFilter: 'all',
+      keyword: ''
+    });
+  }
 };
 
 exports.getInvoice = (req, res, next) => {
   const invoiceId = req.params.invoiceId;
   Order.findOne({
     where: { id: invoiceId },
-    include: ["products"]
+    include: [{ model: Product }]
   })
   .then(order => {
     if (!order) {
@@ -247,7 +435,7 @@ exports.getProcessOrder = async (req, res, next) => {
     const invoiceId = req.params.invoiceId;
     const order = await Order.findOne({
       where: { id: invoiceId },
-      include: ["products"]
+      include: [{ model: Product }]
     });
     if (!order) {
       return res.redirect('/admin/orders');
@@ -359,7 +547,7 @@ exports.getFraudCheck = (req, res, next) => {
 exports.postPrintOrders = (req, res, next) => {
   const orderIds = req.body.orderIds;
   const ids = Array.isArray(orderIds) ? orderIds : [orderIds];
-  Order.findAll({ where: { id: ids }, include: ["products"] })
+  Order.findAll({ where: { id: ids }, include: [{ model: Product }] })
     .then(orders => {
       res.json({ success: true, orders: orders });
     })
@@ -465,32 +653,44 @@ exports.postDeleteOrdersBulk = (req, res, next) => {
 // 3. Categories & Subcategories Management Handler
 exports.getCategories = async (req, res, next) => {
   try {
-    const categories = await Category.findAll({
-      include: [{ model: SubCategory }],
+    let categories = await Category.findAll({
+      include: [{ model: SubCategory, required: false }],
       order: [['order', 'ASC'], ['id', 'ASC']]
+    }).catch(async () => {
+      return await Category.findAll({ order: [['order', 'ASC'], ['id', 'ASC']] }).catch(() => []);
     });
 
-    const subcategories = await SubCategory.findAll({
-      include: [{ model: Category }],
+    let subcategories = await SubCategory.findAll({
+      include: [{ model: Category, required: false }],
       order: [['id', 'DESC']]
+    }).catch(async () => {
+      return await SubCategory.findAll({ order: [['id', 'DESC']] }).catch(() => []);
     });
 
-    const products = await Product.findAll({ attributes: ['category', 'subCategory'] });
+    let products = await Product.findAll({ attributes: ['category', 'subCategory'] }).catch(() => []);
+
+    categories = categories || [];
+    subcategories = subcategories || [];
+    products = products || [];
 
     // Calculate product counts for categories
     const categoriesData = categories.map(cat => {
-      const pCount = products.filter(p => p.category && p.category.toLowerCase() === cat.name.toLowerCase()).length;
+      const plainObj = typeof cat.get === 'function' ? cat.get({ plain: true }) : cat;
+      const pCount = products.filter(p => p.category && cat.name && p.category.toLowerCase() === cat.name.toLowerCase()).length;
       return {
-        ...cat.get({ plain: true }),
+        ...plainObj,
+        subcategories: plainObj.subcategories || [],
         productCount: pCount
       };
     });
 
     // Calculate product counts for subcategories
     const subcategoriesData = subcategories.map(sub => {
-      const pCount = products.filter(p => p.subCategory && p.subCategory.toLowerCase() === sub.name.toLowerCase()).length;
+      const plainObj = typeof sub.get === 'function' ? sub.get({ plain: true }) : sub;
+      const pCount = products.filter(p => p.subCategory && sub.name && p.subCategory.toLowerCase() === sub.name.toLowerCase()).length;
       return {
-        ...sub.get({ plain: true }),
+        ...plainObj,
+        category: plainObj.category || null,
         productCount: pCount
       };
     });
@@ -504,7 +704,13 @@ exports.getCategories = async (req, res, next) => {
     });
   } catch (err) {
     console.log("Error in getCategories: ", err);
-    res.redirect("/admin/dashboard");
+    res.render("admin/categories", {
+      pageTitle: "Category & Sub-Category Management",
+      path: "/admin/categories",
+      categories: [],
+      subcategories: [],
+      activeTab: req.query.tab || 'categories'
+    });
   }
 };
 

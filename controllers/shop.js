@@ -23,7 +23,7 @@ exports.getProducts = (req, res, next) => {
 
   Product.findAll({ where: whereCondition })
     .then((products) => {
-      Product.findAll({
+      return Product.findAll({
         attributes: ['category'],
         group: ['category']
       }).then(catResults => {
@@ -38,10 +38,31 @@ exports.getProducts = (req, res, next) => {
           selectedSubCategory: subcategory || "",
           searchQuery: search || ""
         });
+      }).catch(() => {
+        res.render("shop/product-list", {
+          prods: products,
+          pageTitle: "Products",
+          path: "/products",
+          hasProducts: products.length > 0,
+          categories: [],
+          selectedCategory: "All",
+          selectedSubCategory: "",
+          searchQuery: ""
+        });
       });
     })
     .catch((error) => {
       console.log("In shop controller, getProducts: ", error);
+      res.render("shop/product-list", {
+        prods: [],
+        pageTitle: "Products",
+        path: "/products",
+        hasProducts: false,
+        categories: [],
+        selectedCategory: "All",
+        selectedSubCategory: "",
+        searchQuery: ""
+      });
     });
 };
 
@@ -60,9 +81,19 @@ exports.getProduct = (req, res, next) => {
           pageTitle: product.title,
           path: "/products",
         });
+      }).catch(() => {
+        res.render("shop/product-detail", {
+          product: product,
+          relatedProducts: [],
+          pageTitle: product.title,
+          path: "/products",
+        });
       });
     })
-    .catch((error) => console.log("Error in getProduct: ", error));
+    .catch((error) => {
+      console.log("Error in getProduct: ", error);
+      res.redirect("/products");
+    });
 };
 
 const path = require("path");
@@ -85,6 +116,7 @@ const loadBanners = () => {
 exports.getIndex = (req, res, next) => {
   Product.findAll()
     .then((products) => {
+      products = products || [];
       let hotDeals = products.filter(p => p.isHotDeal || (p.oldPrice && p.oldPrice > p.price));
       if (hotDeals.length < 8) {
         const existingIds = new Set(hotDeals.map(p => p.id));
@@ -120,17 +152,22 @@ exports.getIndex = (req, res, next) => {
         hotDeals: hotDeals,
         categoryMap: categoryMap,
         categoriesList: categoriesList,
-        sliderBanners: sliderBanners.length > 0 ? sliderBanners : [
-          { image: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1400&q=80", link: "/products" },
-          { image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1400&q=80", link: "/products" },
-          { image: "https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&w=1400&q=80", link: "/products" }
-        ],
+        sliderBanners: sliderBanners,
         pageTitle: "Home - One Commerce",
         path: "/",
       });
     })
     .catch((error) => {
       console.log("In shop controller, getIndex: ", error);
+      res.render("shop/index", {
+        prods: [],
+        hotDeals: [],
+        categoryMap: {},
+        categoriesList: [],
+        sliderBanners: [],
+        pageTitle: "Home - One Commerce",
+        path: "/",
+      });
     });
 };
 
@@ -139,7 +176,7 @@ exports.getOrderTrack = (req, res, next) => {
   let trackedOrder = null;
   
   if (orderId) {
-    req.user.getOrders({ where: { id: orderId }, include: ['products'] })
+    req.user.getOrders({ where: { id: orderId }, include: [{ model: Product }] })
       .then(orders => {
         if (orders.length > 0) {
           trackedOrder = orders[0];
@@ -152,7 +189,16 @@ exports.getOrderTrack = (req, res, next) => {
           searched: true
         });
       })
-      .catch(err => console.log(err));
+      .catch(err => {
+        console.log(err);
+        res.render('shop/order-track', {
+          path: '/order-track',
+          pageTitle: 'Order Tracking - One Commerce',
+          order: null,
+          orderId: orderId,
+          searched: true
+        });
+      });
   } else {
     res.render('shop/order-track', {
       path: '/order-track',
@@ -259,7 +305,7 @@ exports.postCartUpdateQty = (req, res, next) => {
 
 exports.getOrders = (req, res, next) => {
   req.user
-    .getOrders({include: ['products']})
+    .getOrders({include: [{ model: Product }]})
     .then(orders => {
       res.render('shop/orders', {
         path: '/orders',
@@ -267,7 +313,14 @@ exports.getOrders = (req, res, next) => {
         orders: orders
       });
     })
-    .catch(err => console.log(err));
+    .catch(err => {
+      console.log(err);
+      res.render('shop/orders', {
+        path: '/orders',
+        pageTitle: 'Your Orders',
+        orders: []
+      });
+    });
 };
 
 exports.postOrder = (req, res, next) => {

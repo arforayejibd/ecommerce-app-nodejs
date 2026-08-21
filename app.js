@@ -54,63 +54,84 @@ app.use(
 
 const Setting = require("./models/setting");
 
-app.use(async (req, res, next) => {
-  try {
-    const user = await User.findByPk(1).catch(() => null);
-    req.user = user || null;
-
-    let setting = await Setting.findOne().catch(() => null);
-    if (!setting) {
-      setting = await Setting.create({}).catch(() => null);
+app.use((req, res, next) => {
+  // Timeout safety: if middleware takes > 8 seconds, skip and continue
+  let done = false;
+  const timer = setTimeout(() => {
+    if (!done) {
+      done = true;
+      console.error("⚠️ Middleware timeout (8s) for:", req.url);
+      res.locals.siteSettings = res.locals.siteSettings || {};
+      res.locals.cartCount = res.locals.cartCount || 0;
+      res.locals.globalCategories = res.locals.globalCategories || [];
+      next();
     }
-    res.locals.siteSettings = setting || {};
+  }, 8000);
 
-    // Global Dynamic API Integration Configurations
-    res.locals.bkashConfig = req.app.locals.bkashConfig || { username: '01700000000', app_key: 'bkash_app_key_837492810', app_secret: 'bkash_secret_739201948', base_url: 'https://tokenized.pay.bKash.com/v1.2.0-beta', password: 'bkash_password_92841', logo: 'https://raw.githubusercontent.com/tahmid-ul/bkash-logo/main/bkash-logo.png', status: true };
-    res.locals.shurjopayConfig = req.app.locals.shurjopayConfig || { base_url: 'https://shurjopay.com', username: 'sp_merchant_user', password: 'sp_password_83749', prefix: 'NO', success_url: 'http://127.0.0.1:3000/payment/shurjopay/success', return_url: 'http://127.0.0.1:3000/payment/shurjopay/cancel', logo: 'https://shurjopay.com/favicon.ico', status: true };
-    res.locals.smsConfig = req.app.locals.smsConfig || { url: 'https://api.sms.net.bd/sendsms', api_key: 'sms_net_bd_api_key_83749102', serderid: 'ROSEDRAPE', status: true, order: true, forget_pass: true, password_g: true };
-    
-    const adminController = require("./controllers/admin");
-    const courierConfig = adminController.loadCourierConfig();
-    res.locals.steadfastConfig = courierConfig.steadfast;
-    res.locals.pathaoConfig = courierConfig.pathao;
-    res.locals.gtmConfig = adminController.loadGtmConfig();
-    res.locals.pixelConfig = adminController.loadPixelConfig();
-
-    // Fetch dynamic categories safely with fallback
+  (async () => {
     try {
-      const categories = await Category.findAll({
-        where: { status: true },
-        include: [{ model: SubCategory, required: false }],
-        order: [['order', 'ASC'], ['id', 'ASC']]
-      });
-      res.locals.globalCategories = categories || [];
-    } catch (catErr) {
-      console.log("Error loading global categories:", catErr);
-      res.locals.globalCategories = [];
-    }
+      console.log("📥 Request:", req.method, req.url);
 
-    // Cart Count
-    res.locals.cartCount = 0;
-    if (req.user && typeof req.user.getCart === 'function') {
+      const user = await User.findByPk(1).catch(() => null);
+      req.user = user || null;
+
+      let setting = await Setting.findOne().catch(() => null);
+      if (!setting) {
+        setting = await Setting.create({}).catch(() => null);
+      }
+      res.locals.siteSettings = setting || {};
+
+      // Global Dynamic API Integration Configurations
+      res.locals.bkashConfig = req.app.locals.bkashConfig || { username: '01700000000', app_key: 'bkash_app_key_837492810', app_secret: 'bkash_secret_739201948', base_url: 'https://tokenized.pay.bKash.com/v1.2.0-beta', password: 'bkash_password_92841', logo: 'https://raw.githubusercontent.com/tahmid-ul/bkash-logo/main/bkash-logo.png', status: true };
+      res.locals.shurjopayConfig = req.app.locals.shurjopayConfig || { base_url: 'https://shurjopay.com', username: 'sp_merchant_user', password: 'sp_password_83749', prefix: 'NO', success_url: 'http://127.0.0.1:3000/payment/shurjopay/success', return_url: 'http://127.0.0.1:3000/payment/shurjopay/cancel', logo: 'https://shurjopay.com/favicon.ico', status: true };
+      res.locals.smsConfig = req.app.locals.smsConfig || { url: 'https://api.sms.net.bd/sendsms', api_key: 'sms_net_bd_api_key_83749102', serderid: 'ROSEDRAPE', status: true, order: true, forget_pass: true, password_g: true };
+      
+      const adminController = require("./controllers/admin");
+      const courierConfig = adminController.loadCourierConfig();
+      res.locals.steadfastConfig = courierConfig.steadfast;
+      res.locals.pathaoConfig = courierConfig.pathao;
+      res.locals.gtmConfig = adminController.loadGtmConfig();
+      res.locals.pixelConfig = adminController.loadPixelConfig();
+
+      // Fetch dynamic categories safely with fallback
       try {
-        const cart = await req.user.getCart();
-        if (cart) {
-          const products = await cart.getProducts();
-          res.locals.cartCount = products.reduce((sum, p) => sum + (p.cartItem ? p.cartItem.quantity : 0), 0);
+        const categories = await Category.findAll({
+          where: { status: true },
+          include: [{ model: SubCategory, required: false }],
+          order: [['order', 'ASC'], ['id', 'ASC']]
+        });
+        res.locals.globalCategories = categories || [];
+      } catch (catErr) {
+        console.log("Error loading global categories:", catErr.message);
+        res.locals.globalCategories = [];
+      }
+
+      // Cart Count
+      res.locals.cartCount = 0;
+      if (req.user && typeof req.user.getCart === 'function') {
+        try {
+          const cart = await req.user.getCart();
+          if (cart) {
+            const products = await cart.getProducts();
+            res.locals.cartCount = products.reduce((sum, p) => sum + (p.cartItem ? p.cartItem.quantity : 0), 0);
+          }
+        } catch (cartErr) {
+          res.locals.cartCount = 0;
         }
-      } catch (cartErr) {
-        res.locals.cartCount = 0;
+      }
+    } catch (error) {
+      console.log("Error in App.js middleware:", error.message);
+      res.locals.siteSettings = res.locals.siteSettings || {};
+      res.locals.cartCount = 0;
+      res.locals.globalCategories = res.locals.globalCategories || [];
+    } finally {
+      if (!done) {
+        done = true;
+        clearTimeout(timer);
+        next();
       }
     }
-  } catch (error) {
-    console.log("Error in App.js middleware:", error);
-    res.locals.siteSettings = {};
-    res.locals.cartCount = 0;
-    res.locals.globalCategories = [];
-  } finally {
-    next();
-  }
+  })();
 });
 
 app.use("/admin", adminRoutes);
@@ -148,9 +169,10 @@ User.hasMany(Order);
 
 Order.belongsToMany(Product, { through: OrderItem });
 
-Category.hasMany(SubCategory, { onDelete: "CASCADE" });
-SubCategory.belongsTo(Category);
+Category.hasMany(SubCategory, { foreignKey: 'categoryId', onDelete: "CASCADE" });
+SubCategory.belongsTo(Category, { foreignKey: 'categoryId' });
 
+// Sync database and seed data
 sequelize
   .sync()
   .then((result) => {
@@ -181,9 +203,17 @@ sequelize
     });
   })
   .then(cart => { 
-    const port = process.env.PORT || 3000;
-    app.listen(port, () => {
-      console.log(`Server is running on port ${port}`);
-    });
+    // Only call app.listen() when running directly (not under cPanel Passenger/lsnode)
+    if (!module.parent) {
+      const port = process.env.PORT || 3000;
+      app.listen(port, () => {
+        console.log(`Server is running on port ${port}`);
+      });
+    } else {
+      console.log("Running under Passenger (lsnode), skipping app.listen()");
+    }
   })
   .catch((error) => console.log("APP error:", error));
+
+// Export app for cPanel Passenger (lsnode.js requires this)
+module.exports = app;

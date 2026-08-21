@@ -517,7 +517,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <% if (hasProducts && prods && prods.length > 0) { %>
+                            <% if (typeof hasProducts !== 'undefined' && hasProducts && prods && prods.length > 0) { %>
                                 <% prods.forEach((product, index) => { %>
                                     <tr id="product-row-<%= product.id %>">
                                         <td style="text-align: center;">
@@ -528,7 +528,7 @@
                                         <!-- Action Column (3 icons: Quick Preview Modal, Edit Product, Delete Product) -->
                                         <td style="text-align: center;">
                                             <div class="custom-btn-list" style="justify-content: center;">
-                                                <button type="button" class="db-action-btn btn-action-view" title="Quick Preview" onclick="openProductModal('<%= product.id %>', '<%= product.title.replace(/'/g, "\\'") %>', '<%= product.category %>', '<%= product.price %>', '<%= product.oldPrice || '' %>', '<%= product.imageUrl %>', <%= product.isHotDeal ? 'true' : 'false' %>)">
+                                                <button type="button" class="db-action-btn btn-action-view" title="Quick Preview" data-id="<%= product.id %>" data-title="<%= product.title || '' %>" data-category="<%= product.category || '' %>" data-price="<%= product.price || 0 %>" data-oldprice="<%= product.oldPrice || '' %>" data-image="<%= product.imageUrl || '' %>" data-deal="<%= (product.isHotDeal || product.hotDeal) ? 'true' : 'false' %>" onclick="previewProductBtn(this)">
                                                     <i class="fe-eye"></i>
                                                 </button>
                                                 <a href="/admin/edit-product/<%= product.id %>" class="db-action-btn btn-action-edit" title="Edit Product">
@@ -544,11 +544,11 @@
                                         <td>
                                             <div style="display: flex; align-items: center; gap: 0.9rem;">
                                                 <div style="width: 52px; height: 52px; min-width: 52px; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; background: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
-                                                    <img src="<%= product.imageUrl %>" alt="<%= product.title %>" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'52\' height=\'52\' fill=\'%23f1f5f9\'><rect width=\'100%\' height=\'100%\' fill=\'%23f1f5f9\'/></svg>';">
+                                                    <img src="<%= product.imageUrl || '' %>" alt="<%= product.title || 'Product' %>" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'52\' height=\'52\' fill=\'%23f1f5f9\'><rect width=\'100%\' height=\'100%\' fill=\'%23f1f5f9\'/></svg>';">
                                                 </div>
                                                 <div style="max-width: 320px;">
-                                                    <a href="/admin/edit-product/<%= product.id %>" style="color: #0f172a; font-weight: 700; text-decoration: none; font-size: 0.92rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35;" title="<%= product.title %>">
-                                                        <%= product.title %>
+                                                    <a href="/admin/edit-product/<%= product.id %>" style="color: #0f172a; font-weight: 700; text-decoration: none; font-size: 0.92rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35;" title="<%= product.title || 'Product' %>">
+                                                        <%= product.title || 'Untitled Product' %>
                                                     </a>
                                                     <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600; margin-top: 0.2rem; display: block;">SKU: #PRD-<%= product.id %></span>
                                                 </div>
@@ -767,6 +767,17 @@
                 }
             })
             .catch(err => alert("Error: " + err.message));
+        }
+
+        function previewProductBtn(btn) {
+            const id = btn.getAttribute('data-id');
+            const title = btn.getAttribute('data-title');
+            const category = btn.getAttribute('data-category');
+            const price = btn.getAttribute('data-price');
+            const oldPrice = btn.getAttribute('data-oldprice');
+            const imageUrl = btn.getAttribute('data-image');
+            const isHotDeal = btn.getAttribute('data-deal') === 'true';
+            openProductModal(id, title, category, price, oldPrice, imageUrl, isHotDeal);
         }
 
         function openProductModal(id, title, category, price, oldPrice, imageUrl, isHotDeal) {
