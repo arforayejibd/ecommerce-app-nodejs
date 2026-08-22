@@ -529,13 +529,13 @@
                                         <td style="text-align: center;">
                                             <div class="custom-btn-list" style="justify-content: center;">
                                                 <button type="button" class="db-action-btn btn-action-view" title="Quick Preview" data-id="<%= product.id %>" data-title="<%= product.title || '' %>" data-category="<%= product.category || '' %>" data-price="<%= product.price || 0 %>" data-oldprice="<%= product.oldPrice || '' %>" data-image="<%= product.imageUrl || '' %>" data-deal="<%= (product.isHotDeal || product.hotDeal) ? 'true' : 'false' %>" onclick="previewProductBtn(this)">
-                                                    <i class="fe-eye"></i>
+                                                    <i class="fa-solid fa-eye"></i>
                                                 </button>
                                                 <a href="/admin/edit-product/<%= product.id %>" class="db-action-btn btn-action-edit" title="Edit Product">
-                                                    <i class="fe-edit"></i>
+                                                    <i class="fa-solid fa-pen-to-square"></i>
                                                 </a>
                                                 <button type="button" onclick="deleteSingleProduct('<%= product.id %>')" class="db-action-btn btn-action-delete" title="Delete Product">
-                                                    <i class="fe-trash-2"></i>
+                                                    <i class="fa-solid fa-trash"></i>
                                                 </button>
                                             </div>
                                         </td>
