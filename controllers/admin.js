@@ -90,12 +90,12 @@ exports.getDashboard = (req, res, next) => {
   Promise.all([
     Product.count(),
     Order.count(),
-    Order.count({ where: { status: 'Pending' } }),
-    Order.count({ where: { status: 'Processing' } }),
-    Order.count({ where: { status: 'Confirm' } }),
-    Order.count({ where: { status: 'In Courier' } }),
-    Order.count({ where: { status: 'Completed' } }),
-    Order.count({ where: { status: 'Cancelled' } }),
+    Order.count({ where: { status: { [Op.in]: ['Pending', 'pending'] } } }),
+    Order.count({ where: { status: { [Op.in]: ['Processing', 'processing', 'Process', 'process'] } } }),
+    Order.count({ where: { status: { [Op.in]: ['Confirm', 'confirm', 'Confirmed', 'confirmed'] } } }),
+    Order.count({ where: { status: { [Op.in]: ['In Courier', 'in-courier', 'incourier', 'in_courier', 'shipped', 'courier'] } } }),
+    Order.count({ where: { status: { [Op.in]: ['Completed', 'completed', 'Complete', 'complete', 'delivered'] } } }),
+    Order.count({ where: { status: { [Op.in]: ['Cancelled', 'cancelled', 'Cancel', 'cancel'] } } }),
     Order.count({ where: { createdAt: { [Op.gte]: today } } }),
     Order.sum('amount', { where: { status: { [Op.ne]: 'Cancelled' } } }),
     Order.sum('advance', { where: { status: { [Op.ne]: 'Cancelled' } } }),
@@ -264,7 +264,30 @@ exports.getAdminOrders = async (req, res, next) => {
 
     let filteredOrders = orders;
     if (statusFilter !== 'all') {
-      filteredOrders = orders.filter(o => (o.status || 'pending').toLowerCase() === statusFilter.toLowerCase());
+      const normalizeStatus = s => (s || '').toString().toLowerCase().replace(/[-_ ]/g, '');
+      const targetStatus = normalizeStatus(statusFilter);
+      filteredOrders = orders.filter(o => {
+        const orderSt = normalizeStatus(o.status || 'pending');
+        if (targetStatus === 'incourier' || targetStatus === 'courier') {
+          return orderSt === 'incourier' || orderSt === 'courier' || orderSt === 'shipped';
+        }
+        if (targetStatus === 'pending') {
+          return orderSt === 'pending';
+        }
+        if (targetStatus === 'processing' || targetStatus === 'process') {
+          return orderSt === 'processing' || orderSt === 'process';
+        }
+        if (targetStatus === 'confirm' || targetStatus === 'confirmed') {
+          return orderSt === 'confirm' || orderSt === 'confirmed';
+        }
+        if (targetStatus === 'completed' || targetStatus === 'complete' || targetStatus === 'delivered') {
+          return orderSt === 'completed' || orderSt === 'complete' || orderSt === 'delivered';
+        }
+        if (targetStatus === 'cancelled' || targetStatus === 'cancel') {
+          return orderSt === 'cancelled' || orderSt === 'cancel';
+        }
+        return orderSt === targetStatus;
+      });
     }
 
     if (keyword) {
@@ -1534,9 +1557,14 @@ const findProductById = async (id) => {
   } catch (err) {
     console.log("Fallback findProductById for id:", id, err.message);
     try {
-      return await Product.findByPk(id, {
-        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'subCategory', 'oldPrice', 'isHotDeal', 'isFreeDelivery', 'stock', 'purchasePrice']
+      const prod = await Product.findByPk(id, {
+        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal']
       });
+      if (prod) {
+        prod.stock = prod.stock !== undefined && prod.stock !== null ? prod.stock : 50;
+        prod.purchasePrice = prod.purchasePrice !== undefined && prod.purchasePrice !== null ? prod.purchasePrice : 0;
+      }
+      return prod;
     } catch (err2) {
       console.log("Secondary fallback findProductById failed:", err2.message);
       return null;

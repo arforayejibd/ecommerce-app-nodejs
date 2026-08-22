@@ -392,9 +392,11 @@
 
       <!-- Notifications -->
       <li class="dropdown notification-list topbar-dropdown">
-        <a class="nav-link waves-effect waves-light header-icon-btn position-relative" href="#">
+        <a class="nav-link waves-effect waves-light header-icon-btn position-relative" href="/admin/orders?status=pending" title="Pending Orders">
           <i class="fe-bell noti-icon"></i>
-          <span class="badge bg-danger rounded-circle noti-icon-badge animate-pulse">5</span>
+          <% if (typeof pendingOrdersCount !== 'undefined' && pendingOrdersCount > 0) { %>
+            <span class="badge bg-danger rounded-circle noti-icon-badge animate-pulse"><%= pendingOrdersCount %></span>
+          <% } %>
         </a>
       </li>
 
@@ -468,8 +470,12 @@
         <li class="has-submenu <%= path === '/admin/orders' ? 'open' : '' %>">
           <a href="javascript:void(0);" class="sidebar-link" onclick="toggleSubmenu(this)">
             <div class="menu-icon-box bg-success-soft text-success"><i class="fe-shopping-bag"></i></div>
-            <span class="menu-text">Orders</span>
-            <span class="badge bg-danger rounded-pill px-2 py-1 me-2 font-11">5</span>
+            <span class="menu-text" style="display: inline-flex; align-items: center; gap: 6px;">
+              Orders
+              <% if (typeof pendingOrdersCount !== 'undefined' && pendingOrdersCount > 0) { %>
+                <span class="badge bg-danger rounded-pill px-2 py-1 font-11" style="line-height: 1; font-size: 0.72rem;"><%= pendingOrdersCount %></span>
+              <% } %>
+            </span>
             <i class="fe-chevron-right menu-arrow"></i>
           </a>
           <div class="collapse <%= path === '/admin/orders' ? 'show' : '' %>">

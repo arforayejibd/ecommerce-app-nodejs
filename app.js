@@ -124,6 +124,20 @@ app.use((req, res, next) => {
           res.locals.cartCount = 0;
         }
       }
+
+      // Dynamic Pending Orders Count for Admin Sidebar & Bell Notification Badges
+      res.locals.pendingOrdersCount = 0;
+      try {
+        const Order = require('./models/order');
+        const { Op } = require('sequelize');
+        res.locals.pendingOrdersCount = await Order.count({
+          where: {
+            status: { [Op.in]: ['Pending', 'pending'] }
+          }
+        }).catch(() => 0);
+      } catch (ordErr) {
+        res.locals.pendingOrdersCount = 0;
+      }
     } catch (error) {
       console.log("Error in App.js middleware:", error.message);
       res.locals.siteSettings = res.locals.siteSettings || {};
@@ -182,6 +196,8 @@ sequelize
   .sync()
   .then((result) => {
     sequelize.query("ALTER TABLE products CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;").catch(e => console.log("products table alter utf8mb4 info:", e.message));
+    sequelize.query("ALTER TABLE products ADD COLUMN subCategory VARCHAR(255) NULL;").catch(e => {});
+    sequelize.query("ALTER TABLE products ADD COLUMN isFreeDelivery TINYINT(1) DEFAULT 0;").catch(e => {});
     sequelize.query("ALTER TABLE products ADD COLUMN stock INT DEFAULT 50;").catch(e => {});
     sequelize.query("ALTER TABLE products ADD COLUMN purchasePrice DOUBLE DEFAULT 0;").catch(e => {});
     // Seed default categories if empty

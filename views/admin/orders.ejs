@@ -502,17 +502,17 @@
                                             <strong style="color: #fe5200; font-size: 0.98rem; font-weight: 900;">৳<%= orderTotal %></strong>
                                         </td>
 
-                                        <td style="text-align: center;">
+                                        <td style="text-align: center; white-space: nowrap;">
                                             <% const st = (order.status || 'Pending').toLowerCase(); %>
                                             <% let badgeStyle = 'background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3);'; %>
                                             <% let dotColor = '#f59e0b'; %>
-                                            <% if (st === 'completed' || st === 'confirm') { badgeStyle = 'background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3);'; dotColor = '#10b981'; } %>
-                                            <% if (st === 'processing' || st === 'in-courier') { badgeStyle = 'background: rgba(14, 165, 233, 0.15); color: #0284c7; border: 1px solid rgba(14, 165, 233, 0.3);'; dotColor = '#0ea5e9'; } %>
-                                            <% if (st === 'cancelled') { badgeStyle = 'background: rgba(239, 68, 68, 0.15); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.3);'; dotColor = '#ef4444'; } %>
+                                            <% if (st === 'completed' || st === 'confirm' || st === 'confirmed') { badgeStyle = 'background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3);'; dotColor = '#10b981'; } %>
+                                            <% if (st === 'processing' || st === 'process' || st === 'in-courier' || st === 'incourier' || st === 'in_courier' || st === 'in courier' || st === 'courier' || st === 'shipped') { badgeStyle = 'background: rgba(14, 165, 233, 0.15); color: #0284c7; border: 1px solid rgba(14, 165, 233, 0.3);'; dotColor = '#0ea5e9'; } %>
+                                            <% if (st === 'cancelled' || st === 'cancel') { badgeStyle = 'background: rgba(239, 68, 68, 0.15); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.3);'; dotColor = '#ef4444'; } %>
                                             
-                                            <span style="<%= badgeStyle %> padding: 4px 12px; border-radius: 20px; font-weight: 800; font-size: 0.78rem; display: inline-flex; align-items: center;">
-                                                <span style="width: 7px; height: 7px; border-radius: 50%; background: <%= dotColor %>; display: inline-block; margin-right: 6px;"></span>
-                                                <%= order.status || 'Pending' %>
+                                            <span style="<%= badgeStyle %> padding: 4px 12px; border-radius: 20px; font-weight: 800; font-size: 0.78rem; display: inline-flex; align-items: center; white-space: nowrap;">
+                                                <span style="width: 7px; height: 7px; border-radius: 50%; background: <%= dotColor %>; display: inline-block; margin-right: 6px; flex-shrink: 0;"></span>
+                                                <%= (st === 'incourier' || st === 'in-courier' || st === 'in_courier' || st === 'in courier' || st === 'courier') ? 'In Courier' : (order.status || 'Pending') %>
                                             </span>
                                         </td>
                                     </tr>
