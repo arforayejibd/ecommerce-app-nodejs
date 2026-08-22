@@ -1681,6 +1681,7 @@ exports.postAddProduct = async (req, res, next) => {
                   userId: userIdVal
                 });
               } catch (e6) {
+                lastError = e6;
                 console.log("postAddProduct Attempt 6 failed:", e6.message);
               }
             }
@@ -1689,10 +1690,38 @@ exports.postAddProduct = async (req, res, next) => {
       }
     }
 
+    if (!createdProduct) {
+      const Category = require("../models/category");
+      const SubCategory = require("../models/subcategory");
+      const categories = await Category.findAll({ where: { status: true }, order: [['order', 'ASC']] }).catch(() => []);
+      const subcategories = await SubCategory.findAll({ where: { status: true }, order: [['name', 'ASC']] }).catch(() => []);
+      return res.render("admin/edit-product", {
+        pageTitle: "Create Product",
+        path: "/admin/add-product",
+        editing: false,
+        product: req.body,
+        categories: categories || [],
+        subcategories: subcategories || [],
+        errorMessage: "Unable to save product: " + (lastError ? lastError.message : "Database error")
+      });
+    }
+
     return res.redirect("/admin/product-list");
   } catch (error) {
     console.log("Error in postAddProduct:", error);
-    return res.redirect("/admin/product-list");
+    const Category = require("../models/category");
+    const SubCategory = require("../models/subcategory");
+    const categories = await Category.findAll({ where: { status: true }, order: [['order', 'ASC']] }).catch(() => []);
+    const subcategories = await SubCategory.findAll({ where: { status: true }, order: [['name', 'ASC']] }).catch(() => []);
+    return res.render("admin/edit-product", {
+      pageTitle: "Create Product",
+      path: "/admin/add-product",
+      editing: false,
+      product: req.body,
+      categories: categories || [],
+      subcategories: subcategories || [],
+      errorMessage: "Server Exception: " + (error.message || error.toString())
+    });
   }
 };
 
