@@ -180,41 +180,88 @@ exports.getIndex = async (req, res, next) => {
   }
 };
 
-exports.getOrderTrack = (req, res, next) => {
-  const orderId = req.query.orderId;
-  let trackedOrder = null;
-  
-  if (orderId) {
-    req.user.getOrders({ where: { id: orderId }, include: [{ model: Product }] })
-      .then(orders => {
-        if (orders.length > 0) {
-          trackedOrder = orders[0];
-        }
-        res.render('shop/order-track', {
-          path: '/order-track',
-          pageTitle: 'Order Tracking - One Commerce',
-          order: trackedOrder,
-          orderId: orderId,
-          searched: true
-        });
-      })
-      .catch(err => {
-        console.log(err);
-        res.render('shop/order-track', {
-          path: '/order-track',
-          pageTitle: 'Order Tracking - One Commerce',
-          order: null,
-          orderId: orderId,
-          searched: true
-        });
+exports.getOrderTrack = async (req, res, next) => {
+  try {
+    const query = (req.query.orderId || req.query.phone || req.query.searchQuery || '').trim();
+    if (!query) {
+      return res.render('shop/order-track', {
+        path: '/order-track',
+        pageTitle: 'Order Tracking - One Commerce',
+        orders: [],
+        order: null,
+        searchQuery: '',
+        orderId: '',
+        searched: false
       });
-  } else {
-    res.render('shop/order-track', {
+    }
+
+    const Order = require('../models/order');
+    const OrderItem = require('../models/order-item');
+    const Sequelize = require('sequelize');
+    const Op = Sequelize.Op;
+
+    const cleanDigits = query.replace(/[^0-9]/g, '');
+
+    const whereConditions = [];
+    if (!isNaN(parseInt(query))) {
+      whereConditions.push({ id: parseInt(query) });
+    }
+    whereConditions.push({ invoiceId: { [Op.like]: `%${query}%` } });
+
+    if (cleanDigits.length >= 6) {
+      whereConditions.push({ phone: { [Op.like]: `%${cleanDigits}%` } });
+    } else if (query.length >= 3) {
+      whereConditions.push({ phone: { [Op.like]: `%${query}%` } });
+    }
+
+    const rawOrders = await Order.findAll({
+      where: { [Op.or]: whereConditions },
+      order: [['createdAt', 'DESC']]
+    }).catch(() => []);
+
+    const orders = [];
+    for (const ord of rawOrders) {
+      const ordObj = ord.get ? ord.get({ plain: true }) : ord;
+      const items = await OrderItem.findAll({ where: { orderId: ordObj.id } }).catch(() => []);
+      const products = [];
+      let subtotal = 0;
+      for (const item of items) {
+        const prod = await safeFindProductById(item.productId);
+        if (prod) {
+          const prodObj = prod.get ? prod.get({ plain: true }) : prod;
+          const qty = item.quantity || 1;
+          prodObj.orderItem = { quantity: qty };
+          products.push(prodObj);
+          subtotal += (prodObj.price || 0) * qty;
+        }
+      }
+      ordObj.products = products;
+      const shipFee = (ordObj.shippingCharge !== null && ordObj.shippingCharge !== undefined) ? Number(ordObj.shippingCharge) : (isNaN(parseInt(ordObj.area)) ? 60 : parseInt(ordObj.area));
+      const disc = Number(ordObj.discount || 0);
+      const adv = Number(ordObj.advance || 0);
+      ordObj.totalAmount = (ordObj.amount && Number(ordObj.amount) > 0) ? Number(ordObj.amount) : (subtotal + shipFee - disc - adv);
+      orders.push(ordObj);
+    }
+
+    return res.render('shop/order-track', {
       path: '/order-track',
       pageTitle: 'Order Tracking - One Commerce',
+      orders: orders,
+      order: orders.length > 0 ? orders[0] : null,
+      searchQuery: query,
+      orderId: query,
+      searched: true
+    });
+  } catch (err) {
+    console.log("Error in getOrderTrack:", err);
+    return res.render('shop/order-track', {
+      path: '/order-track',
+      pageTitle: 'Order Tracking - One Commerce',
+      orders: [],
       order: null,
-      orderId: '',
-      searched: false
+      searchQuery: req.query.orderId || '',
+      orderId: req.query.orderId || '',
+      searched: true
     });
   }
 };

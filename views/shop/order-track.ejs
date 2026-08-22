@@ -1,50 +1,312 @@
 <%- include('../includes/head.ejs') %>
+<style>
+    .track-wrapper {
+        max-width: 780px;
+        margin: 2.5rem auto 4rem;
+        padding: 0 1rem;
+    }
+
+    .track-search-card {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 2rem 2.25rem;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+        margin-bottom: 2rem;
+    }
+
+    .track-header-title {
+        font-size: 1.75rem;
+        font-weight: 900;
+        text-align: center;
+        margin: 0 0 0.5rem 0;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+    }
+
+    .track-subtitle {
+        text-align: center;
+        color: #64748b;
+        font-size: 0.92rem;
+        margin-bottom: 1.75rem;
+    }
+
+    .track-input-group {
+        display: flex;
+        gap: 0.6rem;
+    }
+
+    .track-input-field {
+        flex: 1;
+        padding: 0.85rem 1.2rem;
+        background: #f8fafc;
+        border: 1.5px solid #cbd5e1;
+        color: #0f172a;
+        border-radius: 12px;
+        outline: none;
+        font-size: 0.98rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .track-input-field:focus {
+        border-color: #fe5200;
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(254, 82, 0, 0.12);
+    }
+
+    .btn-track-submit {
+        background: linear-gradient(135deg, #fe5200 0%, #eb3b5a 100%);
+        color: #ffffff;
+        border: none;
+        padding: 0.85rem 1.75rem;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 0.98rem;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(254, 82, 0, 0.35);
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+
+    .btn-track-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(254, 82, 0, 0.5);
+    }
+
+    .order-card-box {
+        background: #ffffff;
+        border-radius: 18px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+
+    .order-card-header {
+        background: #f8fafc;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .order-inv-txt {
+        font-size: 1.15rem;
+        font-weight: 900;
+        color: #fe5200;
+    }
+
+    .order-status-pill {
+        padding: 0.35rem 1rem;
+        border-radius: 30px;
+        font-weight: 800;
+        font-size: 0.82rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .order-card-body {
+        padding: 1.5rem;
+    }
+
+    .customer-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        background: #f8fafc;
+        padding: 1rem 1.25rem;
+        border-radius: 12px;
+        margin-bottom: 1.25rem;
+        border: 1px solid #e2e8f0;
+        font-size: 0.88rem;
+    }
+
+    .info-lbl {
+        color: #64748b;
+        font-size: 0.76rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 0.2rem;
+    }
+
+    .info-val {
+        color: #0f172a;
+        font-weight: 800;
+    }
+
+    .track-prod-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 1.25rem 0;
+    }
+
+    .track-prod-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f1f5f9;
+        gap: 1rem;
+    }
+
+    .track-prod-item:last-child {
+        border-bottom: none;
+    }
+
+    .track-prod-flex {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .track-prod-img {
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        object-fit: cover;
+        border: 1px solid #e2e8f0;
+    }
+
+    .track-total-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 1rem;
+        border-top: 2px dashed #e2e8f0;
+        font-weight: 900;
+        font-size: 1.15rem;
+        color: #0f172a;
+    }
+
+    .no-order-alert {
+        text-align: center;
+        color: #dc2626;
+        padding: 1.5rem;
+        background: rgba(239, 68, 68, 0.08);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        border-radius: 14px;
+        font-weight: 700;
+        font-size: 0.95rem;
+    }
+
+    @media (max-width: 576px) {
+        .track-input-group {
+            flex-direction: column;
+        }
+        .btn-track-submit {
+            width: 100%;
+        }
+        .track-search-card {
+            padding: 1.5rem 1.2rem;
+        }
+    }
+</style>
 </head>
 
 <body>
     <%- include('../includes/navigation.ejs') %>
 
-    <main>
-        <div style="max-width: 600px; margin: 2rem auto; background: var(--bg-card); backdrop-filter: blur(12px); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 2rem; box-shadow: var(--shadow-glow);">
-            <h1 style="font-size: 1.8rem; font-weight: 800; text-align: center; margin-bottom: 0.5rem; color: var(--accent-blue);">🚚 Track Your Order</h1>
-            <p style="text-align: center; color: var(--text-muted); margin-bottom: 2rem;">Enter your Order ID below to check current order status and details.</p>
+    <main class="track-wrapper">
+        <div class="track-search-card">
+            <h1 class="track-header-title">
+                <i class="fa-solid fa-truck-fast" style="color:#fe5200;"></i> Track Your Order
+            </h1>
+            <p class="track-subtitle">
+                Enter your Order ID (Invoice #) or Mobile Number to check current status and details.
+            </p>
 
-            <form action="/order-track" method="GET" style="display: flex; gap: 0.5rem; margin-bottom: 2rem;">
-                <input type="text" name="orderId" placeholder="Example: 1, 2, 3..." value="<%= typeof orderId !== 'undefined' ? orderId : '' %>" style="flex: 1; padding: 0.75rem 1rem; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: var(--radius-sm); outline: none; font-size: 1rem;" required>
-                <button type="submit" class="btn" style="width: auto; padding: 0.75rem 1.5rem;">Track</button>
+            <form action="/order-track" method="GET" class="track-input-group">
+                <input type="text" name="orderId" class="track-input-field" placeholder="Enter Order ID or Mobile Number (e.g., 01700000000 or INV-123)..." value="<%= typeof searchQuery !== 'undefined' ? searchQuery : (typeof orderId !== 'undefined' ? orderId : '') %>" required autofocus>
+                <button type="submit" class="btn-track-submit">
+                    <i class="fa-solid fa-magnifying-glass"></i> Track Order
+                </button>
             </form>
-
-            <% if (searched) { %>
-                <% if (order) { %>
-                    <div style="border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-                            <span style="font-weight: 800; font-size: 1.1rem; color: var(--accent-blue);">Order #<%= order.id %></span>
-                            <span style="background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.3rem 0.8rem; border-radius: 50px; font-weight: 700; font-size: 0.85rem;">✓ Confirmed</span>
-                        </div>
-
-                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
-                            Date: <%= new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %>
-                        </p>
-
-                        <div style="background: var(--bg-secondary); padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1rem; border: 1px solid var(--border-color);">
-                            <h4 style="margin-bottom: 0.5rem; font-size: 1rem;">Ordered Items:</h4>
-                            <ul style="list-style: none; padding-left: 0;">
-                                <% order.products.forEach(p => { %>
-                                    <li style="display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0; border-bottom: 1px solid var(--border-color);">
-                                        <span><%= p.title %> (x<%= p.orderItem.quantity %>)</span>
-                                        <span style="font-weight: 700; color: var(--accent-blue);">৳ <%= p.price * p.orderItem.quantity %></span>
-                                    </li>
-                                <% }); %>
-                            </ul>
-                        </div>
-                    </div>
-                <% } else { %>
-                    <div style="text-align: center; color: #f87171; padding: 1rem; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-sm);">
-                        ❌ Sorry, no order was found with this Order ID.
-                    </div>
-                <% } %>
-            <% } %>
         </div>
+
+        <% if (typeof searched !== 'undefined' && searched) { %>
+            <% if (typeof orders !== 'undefined' && orders && orders.length > 0) { %>
+                <div style="margin-bottom: 1rem; font-weight: 800; color: #475569; font-size: 0.95rem;">
+                    Found <%= orders.length %> Order(s) for "<%= searchQuery %>":
+                </div>
+                <% orders.forEach(o => { %>
+                    <% const st = (o.status || 'Pending').toLowerCase(); %>
+                    <% let badgeStyle = 'background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3);'; %>
+                    <% if (st === 'completed' || st === 'confirm') { badgeStyle = 'background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3);'; } %>
+                    <% if (st === 'processing' || st === 'in-courier') { badgeStyle = 'background: rgba(14, 165, 233, 0.15); color: #0284c7; border: 1px solid rgba(14, 165, 233, 0.3);'; } %>
+                    <% if (st === 'cancelled') { badgeStyle = 'background: rgba(239, 68, 68, 0.15); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.3);'; } %>
+
+                    <div class="order-card-box">
+                        <div class="order-card-header">
+                            <div>
+                                <span class="order-inv-txt">#<%= o.invoiceId || ('INV-' + o.id) %></span>
+                                <div style="font-size: 0.78rem; color: #64748b; margin-top: 2px;">
+                                    <i class="fa-regular fa-clock me-1"></i><%= new Date(o.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) %> <%= new Date(o.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) %>
+                                </div>
+                            </div>
+                            <span class="order-status-pill" style="<%= badgeStyle %>">
+                                <i class="fa-solid fa-circle-info"></i> <%= o.status || 'Pending' %>
+                            </span>
+                        </div>
+
+                        <div class="order-card-body">
+                            <div class="customer-info-grid">
+                                <div>
+                                    <div class="info-lbl">Customer Name</div>
+                                    <div class="info-val"><%= o.name || 'Customer' %></div>
+                                </div>
+                                <div>
+                                    <div class="info-lbl">Mobile Number</div>
+                                    <div class="info-val">📞 <%= o.phone || 'N/A' %></div>
+                                </div>
+                                <div>
+                                    <div class="info-lbl">Delivery Address</div>
+                                    <div class="info-val" style="font-weight: 600;"><%= o.address || 'Dhaka' %></div>
+                                </div>
+                                <div>
+                                    <div class="info-lbl">Payment Method</div>
+                                    <div class="info-val"><%= o.paymentMethod || 'Cash On Delivery' %></div>
+                                </div>
+                            </div>
+
+                            <% if (o.products && o.products.length > 0) { %>
+                                <h5 style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin-bottom: 0.75rem;">Ordered Products:</h5>
+                                <ul class="track-prod-list">
+                                    <% o.products.forEach(p => { %>
+                                        <li class="track-prod-item">
+                                            <div class="track-prod-flex">
+                                                <img src="<%= p.imageUrl || 'https://via.placeholder.com/60' %>" alt="<%= p.title %>" class="track-prod-img">
+                                                <div>
+                                                    <strong style="font-size: 0.9rem; color: #0f172a; display: block;"><%= p.title %></strong>
+                                                    <span style="font-size: 0.8rem; color: #64748b;">Quantity: <%= p.orderItem ? p.orderItem.quantity : 1 %></span>
+                                                </div>
+                                            </div>
+                                            <strong style="color: #fe5200; font-size: 0.95rem;">৳<%= p.price * (p.orderItem ? p.orderItem.quantity : 1) %></strong>
+                                        </li>
+                                    <% }); %>
+                                </ul>
+                            <% } %>
+
+                            <div class="track-total-row">
+                                <span>Grand Total:</span>
+                                <span style="color: #fe5200;">৳<%= o.totalAmount || o.amount || 0 %></span>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="no-order-alert">
+                    ❌ Sorry, no orders found matching "<%= searchQuery %>". Please check your Order ID or Mobile Number.
+                </div>
+            <% } %>
+        <% } %>
     </main>
 
 <%- include('../includes/end.ejs') %>

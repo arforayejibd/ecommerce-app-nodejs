@@ -1565,11 +1565,27 @@ exports.getEditProduct = async (req, res, next) => {
   }
 };
 
+const cleanInputText = (str, removeEmojis = false) => {
+  if (!str || typeof str !== 'string') return '';
+  let cleaned = str
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/\u00A0/g, ' ')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u2013\u2014]/g, '-')
+    .trim();
+  if (removeEmojis) {
+    cleaned = cleaned.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F004}\u{1F0CF}\u{1F170}-\u{1F251}]/gu, '');
+  }
+  return cleaned;
+};
+
 exports.postAddProduct = async (req, res, next) => {
   try {
-    const title = req.body.title;
+    const title = cleanInputText(req.body.title);
     const imageUrl = req.body.imageUrl || 'https://www.onecommercebd.com/uploads/category/thumb/1787182103-Nosepin.jpg';
-    const description = req.body.description || '';
+    const description = cleanInputText(req.body.description);
     const price = parseFloat(req.body.price) || 0;
     const oldPrice = req.body.oldPrice ? parseFloat(req.body.oldPrice) : null;
     const category = req.body.category || "General";
@@ -1593,10 +1609,18 @@ exports.postAddProduct = async (req, res, next) => {
           title, price, oldPrice, imageUrl, description, category, subCategory, isHotDeal, isFreeDelivery
         });
       } catch (e2) {
-        // Fallback Product creation without subCategory/isFreeDelivery
-        await Product.create({
-          title, price, oldPrice, imageUrl, description, category, isHotDeal
-        });
+        try {
+          await Product.create({
+            title, price, oldPrice, imageUrl, description, category, isHotDeal
+          });
+        } catch (e3) {
+          // Fallback creation stripping emojis if MySQL charset is 3-byte utf8
+          const safeTitle = cleanInputText(req.body.title, true);
+          const safeDesc = cleanInputText(req.body.description, true);
+          await Product.create({
+            title: safeTitle, price, oldPrice, imageUrl, description: safeDesc, category, isHotDeal
+          });
+        }
       }
     }
 
@@ -1612,10 +1636,12 @@ exports.postEditProduct = async (req, res, next) => {
     const id = req.body.productId;
     const product = await findProductById(id);
     if (product) {
+      const cleanTitle = cleanInputText(req.body.title) || product.title;
+      const cleanDesc = cleanInputText(req.body.description) || product.description;
       const updateData = {
-        title: req.body.title || product.title,
+        title: cleanTitle,
         imageUrl: req.body.imageUrl || product.imageUrl,
-        description: req.body.description || product.description,
+        description: cleanDesc,
         price: req.body.price ? parseFloat(req.body.price) : product.price,
         oldPrice: req.body.oldPrice ? parseFloat(req.body.oldPrice) : null,
         category: req.body.category || product.category || "General",
@@ -1626,6 +1652,11 @@ exports.postEditProduct = async (req, res, next) => {
         await Product.update(updateData, { where: { id: id } });
       } catch (upErr) {
         console.log("Error updating product:", upErr.message);
+        const safeTitle = cleanInputText(req.body.title, true) || product.title;
+        const safeDesc = cleanInputText(req.body.description, true) || product.description;
+        updateData.title = safeTitle;
+        updateData.description = safeDesc;
+        await Product.update(updateData, { where: { id: id } }).catch(() => {});
       }
     }
     return res.redirect("/admin/product-list");
