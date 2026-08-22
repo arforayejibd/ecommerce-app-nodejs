@@ -537,7 +537,7 @@
                     <div class="detail-disc-badge">-<%= discount %>% OFF</div>
                 <% } %>
                 <% if (product.isFreeDelivery) { %>
-                    <div class="free-delivery-badge"><i class="fa-solid fa-truck-fast"></i> Free Delivery</div>
+                    <div class="free-delivery-badge"><i class="fa-solid fa-truck-fast"></i> <%= typeof __ !== 'undefined' ? __('Free Delivery') : 'Free Delivery' %></div>
                 <% } %>
                 <img id="main-preview-img" src="<%= product.imageUrl %>" alt="<%= product.title %>">
                 <div class="zoom-target-lens" id="zoomTargetLens"></div>
@@ -565,7 +565,7 @@
             <div>
                 <span class="code-pill-tag">Product Code : <strong>P04<%= product.id %></strong></span>
                 <% if (product.isFreeDelivery) { %>
-                    <span class="code-pill-tag" style="background:#d1fae5; color:#047857; border:1px solid #6ee7b7;"><i class="fa-solid fa-truck-fast"></i> <strong>Free Delivery</strong></span>
+                    <span class="code-pill-tag" style="background:#d1fae5; color:#047857; border:1px solid #6ee7b7;"><i class="fa-solid fa-truck-fast"></i> <strong><%= typeof __ !== 'undefined' ? __('Free Delivery') : 'Free Delivery' %></strong></span>
                 <% } %>
             </div>
 
@@ -657,12 +657,15 @@
                         <div class="sale-badge">-<%= disc %>%</div>
                     <% } %>
                     <% if (prod.isFreeDelivery) { %>
-                        <div class="free-delivery-badge"><i class="fa-solid fa-truck-fast"></i> Free Delivery</div>
+                        <div class="free-delivery-badge desktop-only-badge"><i class="fa-solid fa-truck-fast"></i> <%= typeof __ !== 'undefined' ? __('Free Delivery') : 'Free Delivery' %></div>
                     <% } %>
                     <div class="pro_img">
                         <a href="/products/<%= prod.id %>"><img src="<%= prod.imageUrl %>" alt="<%= prod.title %>" loading="lazy"></a>
                     </div>
                     <div class="pro_des">
+                        <% if (prod.isFreeDelivery) { %>
+                            <div class="free-delivery-badge mobile-only-badge"><i class="fa-solid fa-truck-fast"></i> <%= typeof __ !== 'undefined' ? __('Free Delivery') : 'Free Delivery' %></div>
+                        <% } %>
                         <div class="pro_name"><a href="/products/<%= prod.id %>"><%= prod.title %></a></div>
                         <div class="pro_price">
                             <span>৳ <%= prod.price %></span>

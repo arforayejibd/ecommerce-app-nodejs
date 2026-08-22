@@ -113,7 +113,7 @@ app.use((req, res, next) => {
           "Order Items List": "Order Items List", "Product": "Product", "Quantity": "Quantity", "Price": "Price",
           "Delivery & Customer Info": "Delivery & Customer Info", "Customer Name": "Customer Name",
           "Return to Home": "Return to Home", "No Active Orders": "No Active Orders",
-          "Discount": "Discount", "Advance": "Advance"
+          "Discount": "Discount", "Advance": "Advance", "Free Delivery": "Free Delivery"
         },
         bn: {
           "Home": "হোম", "Categories": "ক্যাটাগরি", "Products": "প্রোডাক্টসমূহ", "Hot Deals": "হট ডিল",
@@ -139,7 +139,7 @@ app.use((req, res, next) => {
           "Order Items List": "অর্ডারের পণ্যের তালিকা", "Product": "পণ্য", "Quantity": "পরিমাণ", "Price": "মূল্য",
           "Delivery & Customer Info": "ডেলিভারি ও কাস্টমার ইনফরমেশন", "Customer Name": "কাস্টমারের নাম",
           "Return to Home": "হোম পেজে ফিরে যান", "No Active Orders": "আপনার কোনো সক্রিয় অর্ডার নেই!",
-          "Discount": "ডিসকাউন্ট", "Advance": "এডভান্স"
+          "Discount": "ডিসকাউন্ট", "Advance": "এডভান্স", "Free Delivery": "ফ্রি ডেলিভারি"
         }
       };
       res.locals.__ = (key) => {

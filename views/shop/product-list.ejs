@@ -26,7 +26,7 @@
                             <div class="sale-badge">-<%= discount %>%</div>
                         <% } %>
                         <% if (product.isFreeDelivery) { %>
-                            <div class="free-delivery-badge"><i class="fa-solid fa-truck-fast"></i> <%= typeof __ !== 'undefined' ? __('Inside Dhaka') : 'Free Delivery' %></div>
+                            <div class="free-delivery-badge desktop-only-badge"><i class="fa-solid fa-truck-fast"></i> <%= typeof __ !== 'undefined' ? __('Free Delivery') : 'Free Delivery' %></div>
                         <% } %>
                         
                         <div class="pro_img">
@@ -36,6 +36,9 @@
                         </div>
 
                         <div class="pro_des">
+                            <% if (product.isFreeDelivery) { %>
+                                <div class="free-delivery-badge mobile-only-badge"><i class="fa-solid fa-truck-fast"></i> <%= typeof __ !== 'undefined' ? __('Free Delivery') : 'Free Delivery' %></div>
+                            <% } %>
                             <div class="pro_name">
                                 <a href="/products/<%= product.id %>"><%= product.title %></a>
                             </div>

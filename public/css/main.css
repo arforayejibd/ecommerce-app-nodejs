@@ -562,6 +562,34 @@ main {
   gap: 0.3rem;
 }
 
+.desktop-only-badge {
+  display: inline-flex;
+}
+
+.mobile-only-badge {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .desktop-only-badge {
+    display: none !important;
+  }
+  .mobile-only-badge {
+    display: inline-flex !important;
+    position: static !important;
+    align-self: flex-start !important;
+    margin-bottom: 0.25rem !important;
+    font-size: 0.68rem !important;
+    font-weight: 800 !important;
+    padding: 0.2rem 0.55rem !important;
+    border-radius: 6px !important;
+    background: #d1fae5 !important;
+    color: #047857 !important;
+    border: 1px solid #6ee7b7 !important;
+    box-shadow: none !important;
+  }
+}
+
 .pro_img {
   width: 100%;
   aspect-ratio: 1 / 1;
