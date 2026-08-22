@@ -583,7 +583,7 @@
                     <button type="submit" name="action" value="order_now" class="btn-order-now-lg">
                         <i class="fa-solid fa-bag-shopping"></i> Order Now
                     </button>
-                    <button type="submit" name="action" value="add_to_cart" class="btn-add-cart-lg">
+                    <button type="button" onclick="handleAddToCart(event, '<%= product.id %>')" class="btn-add-cart-lg">
                         <i class="fa-solid fa-cart-plus"></i> Add to Cart
                     </button>
                 </div>
@@ -747,6 +747,67 @@
             previewBox.style.display = 'none';
         });
     })();
+</script>
+
+<!-- Add to Cart Toast Notification -->
+<div id="add-to-cart-toast" style="position: fixed; bottom: 90px; right: 20px; background: #0f172a; color: #ffffff; border: 1px solid #334155; padding: 0.85rem 1.25rem; border-radius: 14px; font-weight: 700; font-size: 0.9rem; box-shadow: 0 10px 30px rgba(0,0,0,0.25); display: flex; align-items: center; gap: 0.6rem; z-index: 9999; opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none;">
+    <i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 1.15rem;"></i>
+    <span id="toast-msg-txt">Product added to cart!</span>
+</div>
+
+<script>
+function handleAddToCart(e, prodId) {
+    if (e) e.preventDefault();
+    const qtyInput = document.getElementById('qty-counter');
+    const qty = qtyInput ? qtyInput.value : 1;
+    const btn = e ? e.currentTarget : null;
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Adding...';
+    }
+
+    fetch('/cart', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json'
+        },
+        body: `productId=${prodId}&quantity=${qty}&action=add_to_cart`
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Added to Cart!';
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fa-solid fa-cart-plus"></i> Add to Cart';
+            }, 2500);
+        }
+        // Update header badges
+        const badges = document.querySelectorAll('.nh-badge, .mobile-cart-badge');
+        badges.forEach(b => {
+            b.innerText = data.cartCount || (parseInt(b.innerText || 0) + parseInt(qty));
+        });
+        
+        // Show toast
+        const toast = document.getElementById('add-to-cart-toast');
+        if (toast) {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateY(0)';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+            }, 3000);
+        }
+    })
+    .catch(err => {
+        console.error('Error adding to cart:', err);
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-cart-plus"></i> Add to Cart';
+        }
+    });
+}
 </script>
 
 <%- include('../includes/end.ejs') %>

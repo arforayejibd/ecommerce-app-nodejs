@@ -277,6 +277,10 @@ exports.getCart = async (req, res, next) => {
 exports.postCart = async (req, res, next) => {
   try {
     const productId = req.body.productId;
+    const qty = req.body.quantity ? parseInt(req.body.quantity) : 1;
+    const addQty = isNaN(qty) || qty < 1 ? 1 : qty;
+    const action = req.body.action;
+
     if (!productId) {
       return res.redirect("/cart");
     }
@@ -292,19 +296,31 @@ exports.postCart = async (req, res, next) => {
     }).catch(() => null);
 
     if (existingItem) {
-      existingItem.quantity = (existingItem.quantity || 1) + 1;
+      existingItem.quantity = (existingItem.quantity || 1) + addQty;
       await existingItem.save();
     } else {
       await CartItem.create({
         cartId: cart.id,
         productId: productId,
-        quantity: 1
+        quantity: addQty
       }).catch(async () => {
         const product = await safeFindProductById(productId);
         if (product && typeof cart.addProduct === 'function') {
-          await cart.addProduct(product, { through: { quantity: 1 } });
+          await cart.addProduct(product, { through: { quantity: addQty } });
         }
       });
+    }
+
+    const allItems = await CartItem.findAll({ where: { cartId: cart.id } }).catch(() => []);
+    const totalCartCount = allItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
+
+    if (req.xhr || (req.headers.accept && req.headers.accept.includes("json"))) {
+      return res.json({ success: true, message: "Product added to cart!", cartCount: totalCartCount });
+    }
+
+    if (action === "add_to_cart") {
+      const backUrl = req.get("Referrer") || `/products/${productId}`;
+      return res.redirect(backUrl);
     }
 
     return res.redirect("/cart");
