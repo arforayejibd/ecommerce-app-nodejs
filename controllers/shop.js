@@ -5,95 +5,113 @@ const ERROR_PREFIX = "In shop controller, ";
 
 const { Op } = require("sequelize");
 
-exports.getProducts = (req, res, next) => {
-  const category = req.query.category;
-  const subcategory = req.query.subcategory;
-  const search = req.query.search;
-  let whereCondition = {};
-
-  if (category && category !== "All") {
-    whereCondition.category = category;
-  }
-  if (subcategory) {
-    whereCondition.subCategory = subcategory;
-  }
-  if (search) {
-    whereCondition.title = { [Op.like]: `%${search}%` };
-  }
-
-  Product.findAll({ where: whereCondition })
-    .then((products) => {
-      return Product.findAll({
-        attributes: ['category'],
-        group: ['category']
-      }).then(catResults => {
-        const categories = catResults.map(c => c.category).filter(Boolean);
-        res.render("shop/product-list", {
-          prods: products,
-          pageTitle: subcategory ? `${subcategory} - Products` : (category ? `${category} - Products` : "All Products"),
-          path: "/products",
-          hasProducts: products.length > 0,
-          categories: categories,
-          selectedCategory: category || "All",
-          selectedSubCategory: subcategory || "",
-          searchQuery: search || ""
-        });
-      }).catch(() => {
-        res.render("shop/product-list", {
-          prods: products,
-          pageTitle: "Products",
-          path: "/products",
-          hasProducts: products.length > 0,
-          categories: [],
-          selectedCategory: "All",
-          selectedSubCategory: "",
-          searchQuery: ""
-        });
+const safeFindAllProducts = async (whereObj = {}) => {
+  try {
+    return await Product.findAll({ where: whereObj, order: [['id', 'DESC']] });
+  } catch (err) {
+    console.log("Fallback safeFindAllProducts:", err.message);
+    try {
+      return await Product.findAll({
+        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal'],
+        where: whereObj,
+        order: [['id', 'DESC']]
       });
-    })
-    .catch((error) => {
-      console.log("In shop controller, getProducts: ", error);
-      res.render("shop/product-list", {
-        prods: [],
-        pageTitle: "Products",
-        path: "/products",
-        hasProducts: false,
-        categories: [],
-        selectedCategory: "All",
-        selectedSubCategory: "",
-        searchQuery: ""
-      });
-    });
+    } catch (err2) {
+      console.log("Secondary fallback safeFindAllProducts failed:", err2.message);
+      return [];
+    }
+  }
 };
 
-exports.getProduct = (req, res, next) => {
-  const productId = req.params.productId;
-  Product.findByPk(productId)
-    .then((product) => {
-      if (!product) {
-        return res.redirect("/products");
-      }
-      return Product.findAll().then(allProducts => {
-        const related = allProducts.filter(p => p.id !== product.id).slice(0, 4);
-        res.render("shop/product-detail", {
-          product: product,
-          relatedProducts: related,
-          pageTitle: product.title,
-          path: "/products",
-        });
-      }).catch(() => {
-        res.render("shop/product-detail", {
-          product: product,
-          relatedProducts: [],
-          pageTitle: product.title,
-          path: "/products",
-        });
+const safeFindProductById = async (id) => {
+  try {
+    return await Product.findByPk(id);
+  } catch (err) {
+    console.log("Fallback safeFindProductById for id:", id, err.message);
+    try {
+      return await Product.findByPk(id, {
+        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal']
       });
-    })
-    .catch((error) => {
-      console.log("Error in getProduct: ", error);
-      res.redirect("/products");
+    } catch (err2) {
+      console.log("Secondary fallback safeFindProductById failed:", err2.message);
+      return null;
+    }
+  }
+};
+
+exports.getProducts = async (req, res, next) => {
+  try {
+    const category = req.query.category;
+    const subcategory = req.query.subcategory;
+    const search = req.query.search;
+    let whereCondition = {};
+
+    if (category && category !== "All") {
+      whereCondition.category = category;
+    }
+    if (search) {
+      whereCondition.title = { [Op.like]: `%${search}%` };
+    }
+
+    const products = await safeFindAllProducts(whereCondition);
+
+    let categories = [];
+    try {
+      const catResults = await Product.findAll({
+        attributes: ['category'],
+        group: ['category']
+      });
+      categories = catResults.map(c => c.category).filter(Boolean);
+    } catch (e) {
+      categories = Array.from(new Set((products || []).map(p => p.category).filter(Boolean)));
+    }
+
+    res.render("shop/product-list", {
+      prods: products,
+      pageTitle: subcategory ? `${subcategory} - Products` : (category ? `${category} - Products` : "All Products"),
+      path: "/products",
+      hasProducts: (products || []).length > 0,
+      categories: categories,
+      selectedCategory: category || "All",
+      selectedSubCategory: subcategory || "",
+      searchQuery: search || ""
     });
+  } catch (error) {
+    console.log("In shop controller, getProducts: ", error);
+    res.render("shop/product-list", {
+      prods: [],
+      pageTitle: "Products",
+      path: "/products",
+      hasProducts: false,
+      categories: [],
+      selectedCategory: "All",
+      selectedSubCategory: "",
+      searchQuery: ""
+    });
+  }
+};
+
+exports.getProduct = async (req, res, next) => {
+  try {
+    const productId = req.params.productId;
+    const product = await safeFindProductById(productId);
+    if (!product) {
+      return res.redirect("/products");
+    }
+
+    const allProducts = await safeFindAllProducts();
+    const related = (allProducts || []).filter(p => p.id !== product.id).slice(0, 4);
+
+    res.render("shop/product-detail", {
+      product: product,
+      relatedProducts: related,
+      pageTitle: product.title,
+      path: "/products",
+    });
+  } catch (error) {
+    console.log("Error in getProduct: ", error);
+    res.redirect("/products");
+  }
 };
 
 const path = require("path");
@@ -113,62 +131,60 @@ const loadBanners = () => {
   return [];
 };
 
-exports.getIndex = (req, res, next) => {
-  Product.findAll()
-    .then((products) => {
-      products = products || [];
-      let hotDeals = products.filter(p => p.isHotDeal || (p.oldPrice && p.oldPrice > p.price));
-      if (hotDeals.length < 8) {
-        const existingIds = new Set(hotDeals.map(p => p.id));
-        const remaining = products.filter(p => !existingIds.has(p.id));
-        hotDeals = [...hotDeals, ...remaining].slice(0, 8);
-      } else {
-        hotDeals = hotDeals.slice(0, 8);
+exports.getIndex = async (req, res, next) => {
+  try {
+    const products = await safeFindAllProducts();
+    let hotDeals = (products || []).filter(p => p.isHotDeal || p.hotDeal || (p.oldPrice && p.oldPrice > p.price));
+    if (hotDeals.length < 8) {
+      const existingIds = new Set(hotDeals.map(p => p.id));
+      const remaining = (products || []).filter(p => !existingIds.has(p.id));
+      hotDeals = [...hotDeals, ...remaining].slice(0, 8);
+    } else {
+      hotDeals = hotDeals.slice(0, 8);
+    }
+    
+    const categoryMap = {};
+    (products || []).forEach(p => {
+      const cat = p.category || "General";
+      if (!categoryMap[cat]) {
+        categoryMap[cat] = [];
       }
-      
-      const categoryMap = {};
-      products.forEach(p => {
-        const cat = p.category || "General";
-        if (!categoryMap[cat]) {
-          categoryMap[cat] = [];
-        }
-        categoryMap[cat].push(p);
-      });
-
-      const categoriesList = Object.keys(categoryMap).map(catName => ({
-        name: catName,
-        img: categoryMap[catName][0] ? categoryMap[catName][0].imageUrl : ''
-      }));
-
-      // Filter active banners under 'Main Slider Banner' category
-      const allBanners = loadBanners();
-      let sliderBanners = allBanners.filter(b => (b.status == 1 || b.status === true || b.status === '1') && (b.category_id == 1 || (b.category_name && b.category_name.toLowerCase().includes('slider'))));
-      if (sliderBanners.length === 0) {
-        sliderBanners = allBanners.filter(b => b.status == 1 || b.status === true || b.status === '1');
-      }
-
-      res.render("shop/index", {
-        prods: products,
-        hotDeals: hotDeals,
-        categoryMap: categoryMap,
-        categoriesList: categoriesList,
-        sliderBanners: sliderBanners,
-        pageTitle: "Home - One Commerce",
-        path: "/",
-      });
-    })
-    .catch((error) => {
-      console.log("In shop controller, getIndex: ", error);
-      res.render("shop/index", {
-        prods: [],
-        hotDeals: [],
-        categoryMap: {},
-        categoriesList: [],
-        sliderBanners: [],
-        pageTitle: "Home - One Commerce",
-        path: "/",
-      });
+      categoryMap[cat].push(p);
     });
+
+    const categoriesList = Object.keys(categoryMap).map(catName => ({
+      name: catName,
+      img: categoryMap[catName][0] ? categoryMap[catName][0].imageUrl : ''
+    }));
+
+    // Filter active banners under 'Main Slider Banner' category
+    const allBanners = loadBanners();
+    let sliderBanners = allBanners.filter(b => (b.status == 1 || b.status === true || b.status === '1') && (b.category_id == 1 || (b.category_name && b.category_name.toLowerCase().includes('slider'))));
+    if (sliderBanners.length === 0) {
+      sliderBanners = allBanners.filter(b => b.status == 1 || b.status === true || b.status === '1');
+    }
+
+    res.render("shop/index", {
+      prods: products,
+      hotDeals: hotDeals,
+      categoryMap: categoryMap,
+      categoriesList: categoriesList,
+      sliderBanners: sliderBanners,
+      pageTitle: "Home - One Commerce",
+      path: "/",
+    });
+  } catch (error) {
+    console.log("In shop controller, getIndex: ", error);
+    res.render("shop/index", {
+      prods: [],
+      hotDeals: [],
+      categoryMap: {},
+      categoriesList: [],
+      sliderBanners: [],
+      pageTitle: "Home - One Commerce",
+      path: "/",
+    });
+  }
 };
 
 exports.getOrderTrack = (req, res, next) => {

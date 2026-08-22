@@ -659,12 +659,20 @@
             
             fetch('/admin/delete-product', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: { 
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json'
+                },
                 body: new URLSearchParams({ productId: productId })
             })
-            .then(() => {
-                const row = document.getElementById('product-row-' + productId);
-                if (row) row.remove();
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const row = document.getElementById('product-row-' + productId);
+                    if (row) row.remove();
+                } else {
+                    alert("Error deleting product: " + (data.message || 'Failed'));
+                }
             })
             .catch(err => alert("Error deleting product: " + err.message));
         }

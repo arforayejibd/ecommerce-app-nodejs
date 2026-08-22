@@ -1102,14 +1102,27 @@ const renderGenericAdminPage = (res, title, path, icon, description, contentDeta
 };
 
 // 6. Quick Price Edit Handler
-exports.getQuickPriceEdit = (req, res, next) => {
-  Product.findAll().then(products => {
+exports.getQuickPriceEdit = async (req, res, next) => {
+  try {
+    let products = [];
+    try {
+      products = await Product.findAll({ order: [['id', 'DESC']] });
+    } catch (dbErr) {
+      products = await Product.findAll({
+        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal'],
+        order: [['id', 'DESC']]
+      }).catch(() => []);
+    }
+
     res.render("admin/quick-price-edit", {
       pageTitle: "Quick Price Edit",
       path: "/admin/products/price-edit",
-      products: products
+      products: products || []
     });
-  });
+  } catch (err) {
+    console.log("Error in getQuickPriceEdit:", err);
+    res.redirect("/admin/product-list");
+  }
 };
 
 // 7. Campaigns Handlers
@@ -1393,15 +1406,31 @@ exports.getAddProduct = async (req, res, next) => {
   }
 };
 
+const findProductById = async (id) => {
+  try {
+    return await Product.findByPk(id);
+  } catch (err) {
+    console.log("Fallback findProductById for id:", id, err.message);
+    try {
+      return await Product.findByPk(id, {
+        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal']
+      });
+    } catch (err2) {
+      console.log("Secondary fallback findProductById failed:", err2.message);
+      return null;
+    }
+  }
+};
+
 exports.getEditProduct = async (req, res, next) => {
   try {
     const productId = req.params.productId;
-    const product = await Product.findByPk(productId);
+    const product = await findProductById(productId);
     if (!product) {
       return res.redirect("/admin/product-list");
     }
-    const categories = await Category.findAll({ where: { status: true }, order: [['order', 'ASC']] });
-    const subcategories = await SubCategory.findAll({ where: { status: true }, order: [['name', 'ASC']] });
+    const categories = await Category.findAll({ where: { status: true }, order: [['order', 'ASC']] }).catch(() => []);
+    const subcategories = await SubCategory.findAll({ where: { status: true }, order: [['name', 'ASC']] }).catch(() => []);
     res.render("admin/edit-product", {
       pageTitle: "Edit Product",
       path: "/admin/edit-product",
@@ -1416,165 +1445,165 @@ exports.getEditProduct = async (req, res, next) => {
   }
 };
 
-exports.postAddProduct = (req, res, next) => {
-  const title = req.body.title;
-  const imageUrl = req.body.imageUrl;
-  const description = req.body.description;
-  const price = req.body.price;
-  const oldPrice = req.body.oldPrice ? parseFloat(req.body.oldPrice) : null;
-  const category = req.body.category || "General";
-  const subCategory = req.body.subcategory || req.body.subCategory || null;
-  const isHotDeal = req.body.isHotDeal === "true" || req.body.isHotDeal === true || req.body.isHotDeal === "on";
-  const isFreeDelivery = req.body.isFreeDelivery === "true" || req.body.isFreeDelivery === true || req.body.isFreeDelivery === "on";
+exports.postAddProduct = async (req, res, next) => {
+  try {
+    const title = req.body.title;
+    const imageUrl = req.body.imageUrl || 'https://www.onecommercebd.com/uploads/category/thumb/1787182103-Nosepin.jpg';
+    const description = req.body.description || '';
+    const price = parseFloat(req.body.price) || 0;
+    const oldPrice = req.body.oldPrice ? parseFloat(req.body.oldPrice) : null;
+    const category = req.body.category || "General";
+    const subCategory = req.body.subcategory || req.body.subCategory || null;
+    const isHotDeal = req.body.isHotDeal === "true" || req.body.isHotDeal === true || req.body.isHotDeal === "on";
+    const isFreeDelivery = req.body.isFreeDelivery === "true" || req.body.isFreeDelivery === true || req.body.isFreeDelivery === "on";
 
-  req.user
-    .createProduct({
-      title: title,
-      price: price,
-      oldPrice: oldPrice,
-      imageUrl: imageUrl,
-      description: description,
-      category: category,
-      subCategory: subCategory,
-      isHotDeal: isHotDeal,
-      isFreeDelivery: isFreeDelivery,
-    })
-    .then((result) => {
-      console.log("Product Created");
-      res.redirect("/admin/product-list");
-    })
-    .catch((error) => {
-      console.log("Error in Admin Controller, postAddProduct: {}", error);
-    });
-};
-
-exports.postEditProduct = (req, res, next) => {
-  const id = req.body.productId;
-
-  Product.findByPk(id)
-    .then((product) => {
-      product.title = req.body.title;
-      product.imageUrl = req.body.imageUrl;
-      product.description = req.body.description;
-      product.price = req.body.price;
-      product.oldPrice = req.body.oldPrice ? parseFloat(req.body.oldPrice) : null;
-      product.category = req.body.category || "General";
-      product.subCategory = req.body.subcategory || req.body.subCategory || null;
-      product.isHotDeal = req.body.isHotDeal === "true" || req.body.isHotDeal === true || req.body.isHotDeal === "on";
-      product.isFreeDelivery = req.body.isFreeDelivery === "true" || req.body.isFreeDelivery === true || req.body.isFreeDelivery === "on";
-      return product.save();
-    })
-    .then((result) => {
-      console.log("Product updated successfully");
-      res.redirect("/admin/product-list");
-    })
-    .catch((error) =>
-      console.log("Error in Admin Controller, postEditProduct: {}", error)
-    );
-};
-
-exports.getProducts = (req, res, next) => {
-  const categoryFilter = req.query.category || 'all';
-  const keyword = req.query.keyword || '';
-
-  Product.findAll({
-    order: [["createdAt", "DESC"]]
-  })
-    .then((products) => {
-      let filteredProducts = products || [];
-
-      if (categoryFilter && categoryFilter !== 'all') {
-        if (categoryFilter === 'deals') {
-          filteredProducts = filteredProducts.filter(p => p.isHotDeal);
-        } else {
-          filteredProducts = filteredProducts.filter(p => (p.category || '').toLowerCase() === categoryFilter.toLowerCase());
-        }
+    let created = false;
+    try {
+      if (req.user && typeof req.user.createProduct === 'function') {
+        await req.user.createProduct({
+          title, price, oldPrice, imageUrl, description, category, subCategory, isHotDeal, isFreeDelivery
+        });
+        created = true;
       }
+    } catch (e) {}
 
-      if (keyword) {
-        const kw = keyword.trim().toLowerCase();
-        filteredProducts = filteredProducts.filter(p => {
-          return (p.title || '').toLowerCase().includes(kw) || 
-                 (p.category || '').toLowerCase().includes(kw) ||
-                 (p.id + '').includes(kw);
+    if (!created) {
+      try {
+        await Product.create({
+          title, price, oldPrice, imageUrl, description, category, subCategory, isHotDeal, isFreeDelivery
+        });
+      } catch (e2) {
+        // Fallback Product creation without subCategory/isFreeDelivery
+        await Product.create({
+          title, price, oldPrice, imageUrl, description, category, isHotDeal
         });
       }
+    }
 
-      // Extract unique categories for filter tabs
-      const categoriesList = Array.from(new Set((products || []).map(p => p.category).filter(Boolean)));
+    return res.redirect("/admin/product-list");
+  } catch (error) {
+    console.log("Error in postAddProduct:", error);
+    return res.redirect("/admin/product-list");
+  }
+};
 
-      res.render("admin/product-list", {
-        pageTitle: "Manage Products",
-        path: "/admin/product-list",
-        prods: filteredProducts,
-        totalProductsCount: (products || []).length,
-        filteredCount: filteredProducts.length,
-        hasProducts: filteredProducts.length > 0,
-        categoryFilter: categoryFilter,
-        keyword: keyword,
-        categoriesList: categoriesList
+exports.postEditProduct = async (req, res, next) => {
+  try {
+    const id = req.body.productId;
+    const product = await findProductById(id);
+    if (product) {
+      const updateData = {
+        title: req.body.title || product.title,
+        imageUrl: req.body.imageUrl || product.imageUrl,
+        description: req.body.description || product.description,
+        price: req.body.price ? parseFloat(req.body.price) : product.price,
+        oldPrice: req.body.oldPrice ? parseFloat(req.body.oldPrice) : null,
+        category: req.body.category || product.category || "General",
+        isHotDeal: req.body.isHotDeal === "true" || req.body.isHotDeal === true || req.body.isHotDeal === "on"
+      };
+
+      try {
+        await Product.update(updateData, { where: { id: id } });
+      } catch (upErr) {
+        console.log("Error updating product:", upErr.message);
+      }
+    }
+    return res.redirect("/admin/product-list");
+  } catch (error) {
+    console.log("Error in postEditProduct:", error);
+    return res.redirect("/admin/product-list");
+  }
+};
+
+exports.deleteProduct = async (req, res, next) => {
+  try {
+    const productId = req.body.productId || req.query.productId;
+    if (!productId) {
+      if (req.xhr || req.headers.accept?.includes('json') || req.headers['content-type']?.includes('json')) {
+        return res.status(400).json({ success: false, message: 'Product ID required' });
+      }
+      return res.redirect("/admin/product-list");
+    }
+
+    try {
+      const CartItem = require("../models/cart-item");
+      await CartItem.destroy({ where: { productId: productId } }).catch(() => {});
+    } catch (e) {}
+
+    const product = await findProductById(productId);
+    if (product) {
+      await product.destroy().catch(async () => {
+        await Product.destroy({ where: { id: productId } });
       });
-    })
-    .catch((error) =>
-      console.log("Error in Admin Controller, getProducts: {}", error)
-    );
-};
+    } else {
+      await Product.destroy({ where: { id: productId } });
+    }
 
-exports.deleteProduct = (req, res, next) => {
-  const productId = req.body.productId;
-  Product.findByPk(productId)
-    .then((product) => {
-      if (product) return product.destroy();
-    })
-    .then((result) => {
-      console.log("destroyed successfully", result);
-      res.redirect("/admin/product-list");
-    })
-    .catch((error) =>
-      console.log("Error in Admin Controller, deleteProduct: {}", error)
-    );
-};
-
-exports.postDeleteProductsBulk = (req, res, next) => {
-  const productIds = req.body.productIds;
-  if (!productIds) {
-    return res.status(400).json({ success: false, message: 'No products specified' });
+    if (req.xhr || req.headers.accept?.includes('json') || req.headers['content-type']?.includes('json') || req.headers['content-type']?.includes('urlencoded')) {
+      return res.json({ success: true, message: "Product deleted successfully" });
+    }
+    return res.redirect("/admin/product-list");
+  } catch (error) {
+    console.log("Error in deleteProduct:", error);
+    if (req.xhr || req.headers.accept?.includes('json') || req.headers['content-type']?.includes('json') || req.headers['content-type']?.includes('urlencoded')) {
+      return res.status(500).json({ success: false, message: error.message || 'Error deleting product' });
+    }
+    return res.redirect("/admin/product-list");
   }
-  const ids = Array.isArray(productIds) ? productIds : [productIds];
-  Product.destroy({ where: { id: ids } })
-    .then(() => {
-      res.json({ success: true, message: 'Selected products deleted successfully' });
-    })
-    .catch(err => res.status(500).json({ success: false, error: err.message }));
 };
 
-exports.postToggleProductsDeal = (req, res, next) => {
-  const productIds = req.body.productIds;
-  const isHotDeal = req.body.isHotDeal === true || req.body.isHotDeal === 'true' || req.body.isHotDeal === 1;
+exports.postDeleteProductsBulk = async (req, res, next) => {
+  try {
+    const productIds = req.body.productIds;
+    if (!productIds) {
+      return res.status(400).json({ success: false, message: 'No products specified' });
+    }
+    const ids = Array.isArray(productIds) ? productIds : [productIds];
 
-  if (!productIds) {
-    return res.status(400).json({ success: false, message: 'No products specified' });
+    try {
+      const CartItem = require("../models/cart-item");
+      await CartItem.destroy({ where: { productId: ids } }).catch(() => {});
+    } catch (e) {}
+
+    await Product.destroy({ where: { id: ids } });
+    return res.json({ success: true, message: 'Selected products deleted successfully' });
+  } catch (err) {
+    console.log("Error in postDeleteProductsBulk:", err);
+    return res.status(500).json({ success: false, message: err.message || 'Failed to delete selected products' });
   }
-  const ids = Array.isArray(productIds) ? productIds : [productIds];
-  Product.update({ isHotDeal: isHotDeal }, { where: { id: ids } })
-    .then(() => {
-      res.json({ success: true, message: `Updated Hot Deal status for ${ids.length} product(s)` });
-    })
-    .catch(err => res.status(500).json({ success: false, error: err.message }));
 };
 
-exports.postToggleSingleHotDeal = (req, res, next) => {
-  const productId = req.body.productId;
-  Product.findByPk(productId)
-    .then(product => {
-      if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
-      product.isHotDeal = !product.isHotDeal;
-      return product.save();
-    })
-    .then(product => {
-      res.json({ success: true, isHotDeal: product.isHotDeal, message: 'Hot deal status updated' });
-    })
-    .catch(err => res.status(500).json({ success: false, error: err.message }));
+exports.postToggleProductsDeal = async (req, res, next) => {
+  try {
+    const productIds = req.body.productIds;
+    const isHotDeal = req.body.isHotDeal === true || req.body.isHotDeal === 'true' || req.body.isHotDeal === 1;
+
+    if (!productIds) {
+      return res.status(400).json({ success: false, message: 'No products specified' });
+    }
+    const ids = Array.isArray(productIds) ? productIds : [productIds];
+    await Product.update({ isHotDeal: isHotDeal }, { where: { id: ids } });
+    return res.json({ success: true, message: `Updated Hot Deal status for ${ids.length} product(s)` });
+  } catch (err) {
+    console.log("Error in postToggleProductsDeal:", err);
+    return res.status(500).json({ success: false, message: err.message || 'Failed to update deal status' });
+  }
+};
+
+exports.postToggleSingleHotDeal = async (req, res, next) => {
+  try {
+    const productId = req.body.productId;
+    const product = await findProductById(productId);
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+    const newDealState = !product.isHotDeal;
+    await Product.update({ isHotDeal: newDealState }, { where: { id: productId } });
+    return res.json({ success: true, isHotDeal: newDealState, message: 'Hot deal status updated' });
+  } catch (err) {
+    console.log("Error in postToggleSingleHotDeal:", err);
+    return res.status(500).json({ success: false, message: err.message || 'Failed to toggle hot deal' });
+  }
 };
 
 exports.postToggleProductsStatus = (req, res, next) => {
@@ -1583,7 +1612,7 @@ exports.postToggleProductsStatus = (req, res, next) => {
     return res.status(400).json({ success: false, message: 'No products specified' });
   }
   const ids = Array.isArray(productIds) ? productIds : [productIds];
-  res.json({ success: true, message: `Updated status for ${ids.length} product(s)` });
+  return res.json({ success: true, message: `Updated status for ${ids.length} product(s)` });
 };
 
 // Media Library Handlers
