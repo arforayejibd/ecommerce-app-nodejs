@@ -1571,7 +1571,7 @@ const cleanInputText = (str, removeEmojis = false) => {
     .normalize('NFKC')
     .replace(/[\u200B-\u200D\uFEFF]/g, '')
     .replace(/\u00A0/g, ' ')
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, (match) => (match === '\n' || match === '\r' ? match : ''))
     .replace(/[\u201C\u201D]/g, '"')
     .replace(/[\u2018\u2019]/g, "'")
     .replace(/[\u2013\u2014]/g, '-')
@@ -1580,7 +1580,6 @@ const cleanInputText = (str, removeEmojis = false) => {
     cleaned = cleaned
       .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '')
       .replace(/[^\u0000-\uFFFF]/g, '')
-      .replace(/\s+/g, ' ')
       .trim();
   }
   return cleaned;
@@ -1601,48 +1600,65 @@ exports.postAddProduct = async (req, res, next) => {
     const isHotDeal = req.body.isHotDeal === "true" || req.body.isHotDeal === true || req.body.isHotDeal === "on";
     const isFreeDelivery = req.body.isFreeDelivery === "true" || req.body.isFreeDelivery === true || req.body.isFreeDelivery === "on";
 
+    const User = require("../models/user");
+    let adminUser = req.user;
+    if (!adminUser) {
+      adminUser = await User.findByPk(1).catch(() => null);
+    }
+    if (!adminUser) {
+      adminUser = await User.create({ name: "Lahiru", email: "lahirurc1st@gmail.com" }).catch(() => null);
+    }
+    const userIdVal = adminUser ? adminUser.id : 1;
+
     let createdProduct = null;
 
-    // Attempt 1: req.user or full fields + original cleaned text
+    // Attempt 1: Try req.user.createProduct if available
     try {
-      if (req.user && typeof req.user.createProduct === 'function') {
-        createdProduct = await req.user.createProduct({
-          title, price, oldPrice, imageUrl, description, category, subCategory, isHotDeal, isFreeDelivery
-        });
-      } else {
-        createdProduct = await Product.create({
-          title, price, oldPrice, imageUrl, description, category, subCategory, isHotDeal, isFreeDelivery
+      if (adminUser && typeof adminUser.createProduct === 'function') {
+        createdProduct = await adminUser.createProduct({
+          title, price, oldPrice, imageUrl, description, category, subCategory, isHotDeal, isFreeDelivery, userId: userIdVal
         });
       }
     } catch (e1) {
       console.log("postAddProduct Attempt 1 failed:", e1.message);
+    }
 
-      // Attempt 2: Basic fields + original cleaned text
+    // Attempt 2: Product.create with full fields + userId
+    if (!createdProduct) {
       try {
         createdProduct = await Product.create({
-          title, price, oldPrice, imageUrl, description, category, isHotDeal
+          title, price, oldPrice, imageUrl, description, category, subCategory, isHotDeal, isFreeDelivery, userId: userIdVal
         });
       } catch (e2) {
         console.log("postAddProduct Attempt 2 failed:", e2.message);
 
-        // Attempt 3: Safe text with 4-byte emojis/surrogate pairs stripped (for 3-byte utf8 MySQL)
-        const safeTitle = cleanInputText(rawTitle, true) || 'Untitled Product';
-        const safeDesc = cleanInputText(rawDesc, true) || 'No description provided.';
-
+        // Attempt 3: Product.create with basic fields + userId
         try {
           createdProduct = await Product.create({
-            title: safeTitle, price, oldPrice, imageUrl, description: safeDesc, category, subCategory, isHotDeal, isFreeDelivery
+            title, price, oldPrice, imageUrl, description, category, isHotDeal, userId: userIdVal
           });
         } catch (e3) {
           console.log("postAddProduct Attempt 3 failed:", e3.message);
 
-          // Attempt 4: Safe text + minimum required fields
+          // Attempt 4: Safe text (emojis stripped for 3-byte utf8 live MySQL) + full fields + userId
+          const safeTitle = cleanInputText(rawTitle, true) || 'Untitled Product';
+          const safeDesc = cleanInputText(rawDesc, true) || 'No description provided.';
+
           try {
             createdProduct = await Product.create({
-              title: safeTitle, price, oldPrice, imageUrl, description: safeDesc, category, isHotDeal
+              title: safeTitle, price, oldPrice, imageUrl, description: safeDesc, category, subCategory, isHotDeal, isFreeDelivery, userId: userIdVal
             });
           } catch (e4) {
             console.log("postAddProduct Attempt 4 failed:", e4.message);
+
+            // Attempt 5: Safe text + minimum required fields + userId
+            try {
+              createdProduct = await Product.create({
+                title: safeTitle, price, oldPrice, imageUrl, description: safeDesc, category, isHotDeal, userId: userIdVal
+              });
+            } catch (e5) {
+              console.log("postAddProduct Attempt 5 failed:", e5.message);
+            }
           }
         }
       }
@@ -1668,6 +1684,13 @@ exports.postEditProduct = async (req, res, next) => {
       const subCategory = req.body.subcategory || req.body.subCategory || product.subCategory || null;
       const isFreeDelivery = req.body.isFreeDelivery === "true" || req.body.isFreeDelivery === true || req.body.isFreeDelivery === "on";
 
+      const User = require("../models/user");
+      let adminUser = req.user;
+      if (!adminUser) {
+        adminUser = await User.findByPk(1).catch(() => null);
+      }
+      const userIdVal = adminUser ? adminUser.id : 1;
+
       const updateData = {
         title: cleanTitle,
         imageUrl: req.body.imageUrl || product.imageUrl,
@@ -1677,7 +1700,8 @@ exports.postEditProduct = async (req, res, next) => {
         category: req.body.category || product.category || "General",
         subCategory: subCategory,
         isHotDeal: req.body.isHotDeal === "true" || req.body.isHotDeal === true || req.body.isHotDeal === "on",
-        isFreeDelivery: isFreeDelivery
+        isFreeDelivery: isFreeDelivery,
+        userId: userIdVal
       };
 
       try {
