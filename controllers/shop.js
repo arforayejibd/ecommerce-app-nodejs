@@ -134,14 +134,7 @@ const loadBanners = () => {
 exports.getIndex = async (req, res, next) => {
   try {
     const products = await safeFindAllProducts();
-    let hotDeals = (products || []).filter(p => p.isHotDeal || p.hotDeal || (p.oldPrice && p.oldPrice > p.price));
-    if (hotDeals.length < 8) {
-      const existingIds = new Set(hotDeals.map(p => p.id));
-      const remaining = (products || []).filter(p => !existingIds.has(p.id));
-      hotDeals = [...hotDeals, ...remaining].slice(0, 8);
-    } else {
-      hotDeals = hotDeals.slice(0, 8);
-    }
+    const hotDeals = (products || []).filter(p => p.isHotDeal === true || p.isHotDeal === 1 || p.isHotDeal === 'true' || p.hotDeal === true);
     
     const categoryMap = {};
     (products || []).forEach(p => {
