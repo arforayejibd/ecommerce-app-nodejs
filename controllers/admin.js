@@ -1535,7 +1535,7 @@ const findProductById = async (id) => {
     console.log("Fallback findProductById for id:", id, err.message);
     try {
       return await Product.findByPk(id, {
-        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal']
+        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'subCategory', 'oldPrice', 'isHotDeal', 'isFreeDelivery', 'stock', 'purchasePrice']
       });
     } catch (err2) {
       console.log("Secondary fallback findProductById failed:", err2.message);
