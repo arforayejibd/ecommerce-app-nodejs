@@ -387,8 +387,8 @@
 
                             <!-- Primary Image Input -->
                             <div class="form-group">
-                                <label class="form-label">Primary Cover Image *</label>
-                                <input type="hidden" id="imageUrlInput" name="imageUrl" value="<%= editing ? product.imageUrl : '' %>" required>
+                                <label class="form-label">Primary Cover Image</label>
+                                <input type="hidden" id="imageUrlInput" name="imageUrl" value="<%= editing ? product.imageUrl : '' %>">
                                 <div style="display: flex; gap: 1.25rem; align-items: center; background: #ffffff; padding: 0.85rem 1rem; border-radius: 14px; border: 1px solid #e2e8f0;">
                                     <div class="image-preview-frame" style="margin: 0; width: 90px; height: 90px; min-width: 90px; border-radius: 12px; overflow: hidden; border: 1px solid #cbd5e1; background: #f8fafc; display: flex; align-items: center; justify-content: center;">
                                         <img id="sidebarImgPreview" src="<%= editing && product.imageUrl ? product.imageUrl : 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'90\' height=\'90\' fill=\'%23f8fafc\'><rect width=\'100%\' height=\'100%\' fill=\'%23f8fafc\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%2394a3b8\' font-family=\'sans-serif\' font-size=\'11\'>No Cover</text></svg>' %>" alt="Cover Image Preview" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'90\' height=\'90\' fill=\'%23f8fafc\'><rect width=\'100%\' height=\'100%\' fill=\'%23f8fafc\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%2394a3b8\' font-family=\'sans-serif\' font-size=\'11\'>No Image</text></svg>';">
@@ -594,6 +594,28 @@
                 }
             }
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const titleInput = form.querySelector('input[name="title"]');
+                    const descInput = form.querySelector('textarea[name="description"]');
+                    const imgInput = document.getElementById('imageUrlInput');
+
+                    if (imgInput && (!imgInput.value || imgInput.value.trim() === '')) {
+                        imgInput.value = 'https://www.onecommercebd.com/uploads/category/thumb/1787182103-Nosepin.jpg';
+                    }
+
+                    if (titleInput) {
+                        titleInput.value = titleInput.value.replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\u00A0/g, ' ').trim();
+                    }
+                    if (descInput) {
+                        descInput.value = descInput.value.replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\u00A0/g, ' ').trim();
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>
