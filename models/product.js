@@ -43,6 +43,16 @@ const Product = sequelize.define("product", {
     type: Sequelize.BOOLEAN,
     defaultValue: false,
   },
+  stock: {
+    type: Sequelize.INTEGER,
+    defaultValue: 50,
+    allowNull: true,
+  },
+  purchasePrice: {
+    type: Sequelize.DOUBLE,
+    defaultValue: 0,
+    allowNull: true,
+  },
 });
 
 module.exports = Product;

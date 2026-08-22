@@ -182,6 +182,8 @@ sequelize
   .sync()
   .then((result) => {
     sequelize.query("ALTER TABLE products CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;").catch(e => console.log("products table alter utf8mb4 info:", e.message));
+    sequelize.query("ALTER TABLE products ADD COLUMN stock INT DEFAULT 50;").catch(e => {});
+    sequelize.query("ALTER TABLE products ADD COLUMN purchasePrice DOUBLE DEFAULT 0;").catch(e => {});
     // Seed default categories if empty
     return Category.count().then(count => {
       if (count === 0) {

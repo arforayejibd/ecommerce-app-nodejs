@@ -299,12 +299,12 @@
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
                                 <div class="form-group">
                                     <label class="form-label">Purchase Cost (৳) *</label>
-                                    <input type="number" name="purchasePrice" class="form-control-custom" value="450" placeholder="e.g. 450" required>
+                                    <input type="number" name="purchasePrice" class="form-control-custom" value="<%= editing && product.purchasePrice !== undefined && product.purchasePrice !== null ? product.purchasePrice : '450' %>" placeholder="e.g. 450" required>
                                 </div>
 
                                 <div class="form-group">
                                     <label class="form-label">Stock Quantity *</label>
-                                    <input type="number" name="stock" class="form-control-custom" value="50" placeholder="e.g. 50" required>
+                                    <input type="number" name="stock" class="form-control-custom" value="<%= editing && product.stock !== undefined && product.stock !== null ? product.stock : '50' %>" placeholder="e.g. 50" required>
                                 </div>
 
                                 <div class="form-group">

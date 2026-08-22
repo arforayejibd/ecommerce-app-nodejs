@@ -572,8 +572,9 @@
 
                                         <!-- Stock Badge -->
                                         <td style="text-align: center;">
-                                            <span class="stock-badge-tag">
-                                                45 In Stock
+                                            <% const stockNum = (product.stock !== undefined && product.stock !== null) ? product.stock : 50; %>
+                                            <span class="stock-badge-tag" style="<%= stockNum <= 5 ? 'background: rgba(239, 68, 68, 0.12); color: #dc2626; border-color: rgba(239, 68, 68, 0.3);' : '' %>">
+                                                <%= stockNum %> In Stock
                                             </span>
                                         </td>
 

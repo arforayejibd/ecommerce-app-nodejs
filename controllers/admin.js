@@ -393,6 +393,8 @@ exports.getProducts = async (req, res, next) => {
         imageUrl: (item.imageUrl || 'https://www.onecommercebd.com/uploads/category/thumb/1787182103-Nosepin.jpg').toString(),
         price: item.price || 0,
         oldPrice: item.oldPrice || '',
+        stock: (item.stock !== undefined && item.stock !== null) ? parseInt(item.stock) : 50,
+        purchasePrice: (item.purchasePrice !== undefined && item.purchasePrice !== null) ? parseFloat(item.purchasePrice) : 450,
         isHotDeal: item.isHotDeal === true || item.hotDeal === true || item.deal === true
       };
     });
@@ -1604,6 +1606,8 @@ exports.postAddProduct = async (req, res, next) => {
     const description = cleanInputText(rawDesc) || 'No description provided.';
     const price = parseFloat(req.body.price) || 0;
     const oldPrice = req.body.oldPrice ? parseFloat(req.body.oldPrice) : null;
+    const stock = req.body.stock !== undefined && req.body.stock !== '' ? parseInt(req.body.stock) : 50;
+    const purchasePrice = req.body.purchasePrice !== undefined && req.body.purchasePrice !== '' ? parseFloat(req.body.purchasePrice) : 0;
     const category = req.body.category || "General";
     const subCategory = req.body.subcategory || req.body.subCategory || null;
     const isHotDeal = req.body.isHotDeal === "true" || req.body.isHotDeal === true || req.body.isHotDeal === "on";
@@ -1625,7 +1629,7 @@ exports.postAddProduct = async (req, res, next) => {
     try {
       if (adminUser && typeof adminUser.createProduct === 'function') {
         createdProduct = await adminUser.createProduct({
-          title, price, oldPrice, imageUrl, description, category, subCategory, isHotDeal, isFreeDelivery, userId: userIdVal
+          title, price, oldPrice, stock, purchasePrice, imageUrl, description, category, subCategory, isHotDeal, isFreeDelivery, userId: userIdVal
         });
       }
     } catch (e1) {
@@ -1636,7 +1640,7 @@ exports.postAddProduct = async (req, res, next) => {
     if (!createdProduct) {
       try {
         createdProduct = await Product.create({
-          title, price, oldPrice, imageUrl, description, category, subCategory, isHotDeal, isFreeDelivery, userId: userIdVal
+          title, price, oldPrice, stock, purchasePrice, imageUrl, description, category, subCategory, isHotDeal, isFreeDelivery, userId: userIdVal
         });
       } catch (e2) {
         console.log("postAddProduct Attempt 2 failed:", e2.message);
@@ -1644,7 +1648,7 @@ exports.postAddProduct = async (req, res, next) => {
         // Attempt 3: Product.create with basic fields + userId
         try {
           createdProduct = await Product.create({
-            title, price, oldPrice, imageUrl, description, category, isHotDeal, userId: userIdVal
+            title, price, oldPrice, stock, purchasePrice, imageUrl, description, category, isHotDeal, userId: userIdVal
           });
         } catch (e3) {
           console.log("postAddProduct Attempt 3 failed:", e3.message);
@@ -1655,7 +1659,7 @@ exports.postAddProduct = async (req, res, next) => {
 
           try {
             createdProduct = await Product.create({
-              title: safeTitle, price, oldPrice, imageUrl, description: safeDesc, category, subCategory, isHotDeal, isFreeDelivery, userId: userIdVal
+              title: safeTitle, price, oldPrice, stock, purchasePrice, imageUrl, description: safeDesc, category, subCategory, isHotDeal, isFreeDelivery, userId: userIdVal
             });
           } catch (e4) {
             console.log("postAddProduct Attempt 4 failed:", e4.message);
@@ -1663,7 +1667,7 @@ exports.postAddProduct = async (req, res, next) => {
             // Attempt 5: Safe text + minimum required fields + userId
             try {
               createdProduct = await Product.create({
-                title: safeTitle, price, oldPrice, imageUrl, description: safeDesc, category, isHotDeal, userId: userIdVal
+                title: safeTitle, price, oldPrice, stock, purchasePrice, imageUrl, description: safeDesc, category, isHotDeal, userId: userIdVal
               });
             } catch (e5) {
               console.log("postAddProduct Attempt 5 failed:", e5.message);
@@ -1675,6 +1679,8 @@ exports.postAddProduct = async (req, res, next) => {
                 createdProduct = await Product.create({
                   title: uTitle,
                   price: price || 0,
+                  stock: stock || 50,
+                  purchasePrice: purchasePrice || 0,
                   imageUrl: imageUrl,
                   description: uDesc,
                   category: category || 'General',
@@ -1737,6 +1743,8 @@ exports.postEditProduct = async (req, res, next) => {
       const cleanDesc = cleanInputText(rawDesc) || product.description;
       const subCategory = req.body.subcategory || req.body.subCategory || product.subCategory || null;
       const isFreeDelivery = req.body.isFreeDelivery === "true" || req.body.isFreeDelivery === true || req.body.isFreeDelivery === "on";
+      const stockVal = req.body.stock !== undefined && req.body.stock !== '' ? parseInt(req.body.stock) : (product.stock !== undefined && product.stock !== null ? product.stock : 50);
+      const purchasePriceVal = req.body.purchasePrice !== undefined && req.body.purchasePrice !== '' ? parseFloat(req.body.purchasePrice) : (product.purchasePrice !== undefined && product.purchasePrice !== null ? product.purchasePrice : 450);
 
       const User = require("../models/user");
       let adminUser = req.user;
@@ -1751,6 +1759,8 @@ exports.postEditProduct = async (req, res, next) => {
         description: cleanDesc,
         price: req.body.price ? parseFloat(req.body.price) : product.price,
         oldPrice: req.body.oldPrice ? parseFloat(req.body.oldPrice) : null,
+        stock: stockVal,
+        purchasePrice: purchasePriceVal,
         category: req.body.category || product.category || "General",
         subCategory: subCategory,
         isHotDeal: req.body.isHotDeal === "true" || req.body.isHotDeal === true || req.body.isHotDeal === "on",
