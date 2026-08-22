@@ -381,15 +381,50 @@ exports.postCartUpdateQty = async (req, res, next) => {
 exports.getOrders = async (req, res, next) => {
   try {
     const User = require("../models/user");
+    const Order = require("../models/order");
+    const OrderItem = require("../models/order-item");
+
     const user = req.user || await User.findByPk(1).catch(() => null);
-    let orders = [];
-    if (user && typeof user.getOrders === 'function') {
-      orders = await user.getOrders({ include: [{ model: Product }] }).catch(() => []);
+    if (!user) {
+      return res.render('shop/orders', {
+        path: '/orders',
+        pageTitle: 'Your Orders - One Commerce',
+        orders: []
+      });
     }
+
+    let rawOrders = await Order.findAll({
+      where: { userId: user.id },
+      order: [['createdAt', 'DESC']]
+    }).catch(() => []);
+
+    if (!rawOrders || rawOrders.length === 0) {
+      rawOrders = await Order.findAll({
+        order: [['createdAt', 'DESC']]
+      }).catch(() => []);
+    }
+
+    const orders = [];
+    for (const ord of rawOrders) {
+      const ordObj = ord.get ? ord.get({ plain: true }) : ord;
+      const items = await OrderItem.findAll({ where: { orderId: ordObj.id } }).catch(() => []);
+      const products = [];
+      for (const item of items) {
+        const prod = await safeFindProductById(item.productId);
+        if (prod) {
+          const prodObj = prod.get ? prod.get({ plain: true }) : prod;
+          prodObj.orderItem = { quantity: item.quantity || 1 };
+          products.push(prodObj);
+        }
+      }
+      ordObj.products = products;
+      orders.push(ordObj);
+    }
+
     return res.render('shop/orders', {
       path: '/orders',
       pageTitle: 'Your Orders - One Commerce',
-      orders: orders || []
+      orders: orders
     });
   } catch (err) {
     console.log("Error in getOrders:", err);
@@ -416,14 +451,39 @@ exports.postOrder = async (req, res, next) => {
 
     const User = require("../models/user");
     const user = req.user || await User.findByPk(1).catch(() => null);
-    const order = await user.createOrder({
+    const userIdVal = user ? user.id : 1;
+
+    const shippingFee = area ? parseInt(area) : 60;
+    let subtotal = 0;
+    products.forEach(p => {
+      const qty = p.cartItem ? p.cartItem.quantity : 1;
+      subtotal += (p.price || 0) * qty;
+    });
+    const totalAmount = subtotal + (isNaN(shippingFee) ? 60 : shippingFee);
+    const invoiceId = 'INV-' + Date.now().toString().slice(-6);
+
+    const Order = require("../models/order");
+    const orderData = {
+      invoiceId: invoiceId,
       name: name || 'Customer',
       phone: phone || '01700000000',
       address: address || 'Dhaka',
       area: area || '60',
       paymentMethod: payment_method || 'Cash On Delivery',
-      status: 'Pending'
-    }).catch(() => null);
+      status: 'Pending',
+      shippingCharge: isNaN(shippingFee) ? 60 : shippingFee,
+      amount: totalAmount,
+      userId: userIdVal
+    };
+
+    let order = null;
+    if (user && typeof user.createOrder === 'function') {
+      order = await user.createOrder(orderData).catch(async () => {
+        return await Order.create(orderData).catch(() => null);
+      });
+    } else {
+      order = await Order.create(orderData).catch(() => null);
+    }
 
     if (order) {
       const OrderItem = require("../models/order-item");

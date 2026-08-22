@@ -262,6 +262,7 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             border-bottom: 1px solid #e2e8f0;
+            white-space: nowrap;
         }
 
         .orders-data-table td {
@@ -317,6 +318,7 @@
             align-items: center;
             gap: 0.3rem;
             transition: all 0.2s ease;
+            white-space: nowrap;
         }
 
         .btn-fraud-check:hover {
@@ -412,27 +414,41 @@
             <div class="orders-table-card">
                 <div style="overflow-x: auto;">
                     <table class="orders-data-table" id="orders-main-table">
-                        <thead>
+                        <thead style="white-space: nowrap;">
                             <tr>
                                 <th style="width:2%; text-align: center;">
                                     <input type="checkbox" id="checkall" class="form-check-input" onchange="toggleCheckAll(this)">
                                 </th>
-                                <th style="width:3%; text-align: center;">SL</th>
-                                <th style="width:8%; text-align: center;">Action</th>
-                                <th style="width:9%;">Invoice</th>
-                                <th style="width:11%;">Date & Time</th>
+                                <th style="width:3%; text-align: center; white-space: nowrap;">SL</th>
+                                <th style="width:8%; text-align: center; white-space: nowrap;">Action</th>
+                                <th style="width:8%; white-space: nowrap;">Invoice</th>
+                                <th style="width:11%; white-space: nowrap;">Date & Time</th>
                                 <th style="width:18%;">Customer Details</th>
-                                <th style="width:11%;">Phone</th>
-                                <th style="width:9%; text-align: center;">Fraud Check</th>
-                                <th style="width:10%;">Assigned To</th>
-                                <th style="width:9%; text-align: right;">Amount</th>
-                                <th style="width:10%; text-align: center;">Status</th>
+                                <th style="width:11%; white-space: nowrap;">Phone</th>
+                                <th style="width:10%; text-align: center; white-space: nowrap;">Fraud Check</th>
+                                <th style="width:11%; white-space: nowrap;">Assigned To</th>
+                                <th style="width:9%; text-align: right; white-space: nowrap;">Amount</th>
+                                <th style="width:9%; text-align: center; white-space: nowrap;">Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             <% if (orders && orders.length > 0) { %>
                                 <% orders.forEach((order, index) => { %>
-                                    <% const orderTotal = order.products && order.products.length > 0 ? order.products.reduce((acc, p) => acc + (p.price * (p.orderItem ? p.orderItem.quantity : 1)), 0) + (parseInt(order.area) || 60) - (order.discount || 0) : (order.amount || 750); %>
+                                    <% 
+                                      let orderTotal = Number(order.amount || 0);
+                                      if (orderTotal <= 0) {
+                                        let sub = 0;
+                                        if (order.products && order.products.length > 0) {
+                                          order.products.forEach(p => {
+                                            sub += Number(p.price || 0) * Number(p.orderItem ? p.orderItem.quantity : 1);
+                                          });
+                                        }
+                                        let shipFee = (order.shippingCharge !== null && order.shippingCharge !== undefined) ? Number(order.shippingCharge) : (isNaN(parseInt(order.area)) ? 60 : parseInt(order.area));
+                                        let disc = Number(order.discount || 0);
+                                        let adv = Number(order.advance || 0);
+                                        orderTotal = sub + shipFee - disc - adv;
+                                      }
+                                    %>
                                     <tr id="order-row-<%= order.id %>">
                                         <td style="text-align: center;"><input type="checkbox" class="order-checkbox form-check-input" value="<%= order.id %>"></td>
                                         <td style="text-align: center;"><strong><%= index + 1 %></strong></td>
@@ -476,8 +492,8 @@
                                             </button>
                                         </td>
 
-                                        <td>
-                                            <span style="font-size: 0.82rem; color: #475569; font-weight: 700; background: #f1f5f9; padding: 2px 10px; border-radius: 12px; display: inline-block;">
+                                        <td style="white-space: nowrap;">
+                                            <span style="font-size: 0.82rem; color: #475569; font-weight: 700; background: #f1f5f9; padding: 4px 12px; border-radius: 12px; display: inline-block; white-space: nowrap;">
                                                 <%= order.assignee || 'Super Admin' %>
                                             </span>
                                         </td>

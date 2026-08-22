@@ -79,14 +79,17 @@ app.use((req, res, next) => {
       if (!setting) {
         setting = await Setting.create({}).catch(() => null);
       }
-      res.locals.siteSettings = setting || {};
+      const adminController = require("./controllers/admin");
+      const footerConfig = adminController.loadFooterConfig();
+      const siteSettings = setting ? setting.get({ plain: true }) : {};
+      siteSettings.developer_name = footerConfig.developer_name || 'OneHost BD';
+      res.locals.siteSettings = siteSettings;
 
       // Global Dynamic API Integration Configurations
       res.locals.bkashConfig = req.app.locals.bkashConfig || { username: '01700000000', app_key: 'bkash_app_key_837492810', app_secret: 'bkash_secret_739201948', base_url: 'https://tokenized.pay.bKash.com/v1.2.0-beta', password: 'bkash_password_92841', logo: 'https://raw.githubusercontent.com/tahmid-ul/bkash-logo/main/bkash-logo.png', status: true };
       res.locals.shurjopayConfig = req.app.locals.shurjopayConfig || { base_url: 'https://shurjopay.com', username: 'sp_merchant_user', password: 'sp_password_83749', prefix: 'NO', success_url: 'http://127.0.0.1:3000/payment/shurjopay/success', return_url: 'http://127.0.0.1:3000/payment/shurjopay/cancel', logo: 'https://shurjopay.com/favicon.ico', status: true };
       res.locals.smsConfig = req.app.locals.smsConfig || { url: 'https://api.sms.net.bd/sendsms', api_key: 'sms_net_bd_api_key_83749102', serderid: 'ROSEDRAPE', status: true, order: true, forget_pass: true, password_g: true };
       
-      const adminController = require("./controllers/admin");
       const courierConfig = adminController.loadCourierConfig();
       res.locals.steadfastConfig = courierConfig.steadfast;
       res.locals.pathaoConfig = courierConfig.pathao;
@@ -106,16 +109,18 @@ app.use((req, res, next) => {
         res.locals.globalCategories = [];
       }
 
-      // Cart Count
+      // Cart Count (Direct & safe query on CartItem table)
       res.locals.cartCount = 0;
       if (req.user && typeof req.user.getCart === 'function') {
         try {
-          const cart = await req.user.getCart();
+          const cart = await req.user.getCart().catch(() => null);
           if (cart) {
-            const products = await cart.getProducts();
-            res.locals.cartCount = products.reduce((sum, p) => sum + (p.cartItem ? p.cartItem.quantity : 0), 0);
+            const CartItem = require('./models/cart-item');
+            const items = await CartItem.findAll({ where: { cartId: cart.id } }).catch(() => []);
+            res.locals.cartCount = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
           }
         } catch (cartErr) {
+          console.log("Error calculating cart count:", cartErr.message);
           res.locals.cartCount = 0;
         }
       }

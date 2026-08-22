@@ -101,7 +101,6 @@ exports.getDashboard = (req, res, next) => {
     Order.sum('advance', { where: { status: { [Op.ne]: 'Cancelled' } } }),
     Order.count({ distinct: true, col: 'phone' }),
     Order.findAll({
-      include: [{ model: Product }],
       order: [["createdAt", "DESC"]],
       limit: 5
     }),
@@ -219,63 +218,86 @@ exports.getDashboard = (req, res, next) => {
 };
 
 // 2. Orders Management Handler (Supports status query filter & slug)
-exports.getAdminOrders = (req, res, next) => {
-  const statusFilter = req.query.status || req.params.slug || 'all';
-  const keyword = (req.query.keyword || '').trim().toLowerCase();
+exports.getAdminOrders = async (req, res, next) => {
+  try {
+    const statusFilter = req.query.status || req.params.slug || 'all';
+    const keyword = (req.query.keyword || '').trim().toLowerCase();
 
-  Promise.all([
-    Order.findAll({
-      include: [{ model: Product, required: false }],
-      order: [['createdAt', 'DESC']]
-    }).catch(err => {
-      console.log("Error fetching orders:", err);
-      return [];
-    }),
-    User.findAll().catch(() => [])
-  ])
-    .then(([orders, users]) => {
-      orders = orders || [];
-      users = users || [];
-      let filteredOrders = orders;
-      
-      // Filter by status if not 'all'
-      if (statusFilter !== 'all') {
-        filteredOrders = orders.filter(o => (o.status || 'pending').toLowerCase() === statusFilter.toLowerCase());
+    const OrderItem = require("../models/order-item");
+    const rawOrders = await Order.findAll({ order: [['createdAt', 'DESC']] }).catch(() => []);
+    const users = await User.findAll().catch(() => []);
+
+    const orders = [];
+    for (const ord of rawOrders) {
+      const ordObj = ord.get ? ord.get({ plain: true }) : ord;
+      const items = await OrderItem.findAll({ where: { orderId: ordObj.id } }).catch(() => []);
+      const products = [];
+      let calculatedSubtotal = 0;
+      for (const item of items) {
+        let prod = null;
+        try {
+          prod = await Product.findByPk(item.productId);
+        } catch (e1) {
+          prod = await Product.findByPk(item.productId, {
+            attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal']
+          }).catch(() => null);
+        }
+        if (prod) {
+          const prodObj = prod.get ? prod.get({ plain: true }) : prod;
+          const qty = item.quantity || 1;
+          prodObj.orderItem = { quantity: qty };
+          products.push(prodObj);
+          calculatedSubtotal += Number(prodObj.price || 0) * qty;
+        }
       }
+      ordObj.products = products;
 
-      // Filter by keyword if provided
-      if (keyword) {
-        filteredOrders = filteredOrders.filter(o => {
-          const inv = o.invoiceId ? o.invoiceId.toString().toLowerCase() : ('inv-' + o.id);
-          const name = (o.name || '').toLowerCase();
-          const phone = (o.phone || '').toLowerCase();
-          const addr = (o.address || '').toLowerCase();
-          return inv.includes(keyword) || name.includes(keyword) || phone.includes(keyword) || addr.includes(keyword);
-        });
+      const shipFee = (ordObj.shippingCharge !== null && ordObj.shippingCharge !== undefined) ? Number(ordObj.shippingCharge) : (isNaN(parseInt(ordObj.area)) ? 60 : parseInt(ordObj.area));
+      const disc = Number(ordObj.discount || 0);
+      const adv = Number(ordObj.advance || 0);
+
+      if (!ordObj.amount || Number(ordObj.amount) <= 0) {
+        ordObj.amount = calculatedSubtotal + shipFee - disc - adv;
       }
+      orders.push(ordObj);
+    }
 
-      res.render("admin/orders", {
-        pageTitle: "Orders Management",
-        path: "/admin/orders",
-        statusFilter: statusFilter,
-        orders: filteredOrders,
-        totalOrdersCount: orders.length,
-        filteredCount: filteredOrders.length,
-        users: users
+    let filteredOrders = orders;
+    if (statusFilter !== 'all') {
+      filteredOrders = orders.filter(o => (o.status || 'pending').toLowerCase() === statusFilter.toLowerCase());
+    }
+
+    if (keyword) {
+      filteredOrders = filteredOrders.filter(o => {
+        const inv = o.invoiceId ? o.invoiceId.toString().toLowerCase() : ('inv-' + o.id);
+        const name = (o.name || '').toLowerCase();
+        const phone = (o.phone || '').toLowerCase();
+        const addr = (o.address || '').toLowerCase();
+        return inv.includes(keyword) || name.includes(keyword) || phone.includes(keyword) || addr.includes(keyword);
       });
-    })
-    .catch(err => {
-      console.log("Error in getAdminOrders: ", err);
-      res.render("admin/orders", {
-        pageTitle: "Orders Management",
-        path: "/admin/orders",
-        statusFilter: statusFilter || 'all',
-        orders: [],
-        totalOrdersCount: 0,
-        filteredCount: 0,
-        users: []
-      });
+    }
+
+    return res.render("admin/orders", {
+      pageTitle: "Orders Management",
+      path: "/admin/orders",
+      statusFilter: statusFilter,
+      orders: filteredOrders,
+      totalOrdersCount: orders.length,
+      filteredCount: filteredOrders.length,
+      users: users
     });
+  } catch (err) {
+    console.log("Error in getAdminOrders:", err);
+    return res.render("admin/orders", {
+      pageTitle: "Orders Management",
+      path: "/admin/orders",
+      statusFilter: 'all',
+      orders: [],
+      totalOrdersCount: 0,
+      filteredCount: 0,
+      users: []
+    });
+  }
 };
 
 exports.getTestProducts = async (req, res, next) => {
@@ -406,26 +428,44 @@ exports.getProducts = async (req, res, next) => {
   }
 };
 
-exports.getInvoice = (req, res, next) => {
-  const invoiceId = req.params.invoiceId;
-  Order.findOne({
-    where: { id: invoiceId },
-    include: [{ model: Product }]
-  })
-  .then(order => {
-    if (!order) {
+exports.getInvoice = async (req, res, next) => {
+  try {
+    const invoiceId = req.params.invoiceId;
+    const OrderItem = require("../models/order-item");
+    const orderInst = await Order.findOne({ where: { id: invoiceId } }).catch(() => null);
+    if (!orderInst) {
       return res.redirect('/admin/orders');
     }
+
+    const orderObj = orderInst.get ? orderInst.get({ plain: true }) : orderInst;
+    const items = await OrderItem.findAll({ where: { orderId: orderObj.id } }).catch(() => []);
+    const products = [];
+    for (const item of items) {
+      let prod = null;
+      try {
+        prod = await Product.findByPk(item.productId);
+      } catch (e1) {
+        prod = await Product.findByPk(item.productId, {
+          attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal']
+        }).catch(() => null);
+      }
+      if (prod) {
+        const prodObj = prod.get ? prod.get({ plain: true }) : prod;
+        prodObj.orderItem = { quantity: item.quantity || 1 };
+        products.push(prodObj);
+      }
+    }
+    orderObj.products = products;
+
     res.render('admin/invoice', {
-      pageTitle: `Invoice #${order.invoiceId || order.id}`,
+      pageTitle: `Invoice #${orderObj.invoiceId || orderObj.id}`,
       path: '/admin/orders',
-      order: order
+      order: orderObj
     });
-  })
-  .catch(err => {
+  } catch (err) {
     console.log("Error in getInvoice: ", err);
     res.redirect('/admin/orders');
-  });
+  }
 };
 
 const OrderItem = require("../models/order-item");
@@ -433,20 +473,42 @@ const OrderItem = require("../models/order-item");
 exports.getProcessOrder = async (req, res, next) => {
   try {
     const invoiceId = req.params.invoiceId;
-    const order = await Order.findOne({
-      where: { id: invoiceId },
-      include: [{ model: Product }]
-    });
-    if (!order) {
+    const orderInst = await Order.findOne({ where: { id: invoiceId } }).catch(() => null);
+    if (!orderInst) {
       return res.redirect('/admin/orders');
     }
-    const allProducts = await Product.findAll();
-    const allUsers = await User.findAll();
+
+    const orderObj = orderInst.get ? orderInst.get({ plain: true }) : orderInst;
+    const items = await OrderItem.findAll({ where: { orderId: orderObj.id } }).catch(() => []);
+    const products = [];
+    for (const item of items) {
+      let prod = null;
+      try {
+        prod = await Product.findByPk(item.productId);
+      } catch (e1) {
+        prod = await Product.findByPk(item.productId, {
+          attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal']
+        }).catch(() => null);
+      }
+      if (prod) {
+        const prodObj = prod.get ? prod.get({ plain: true }) : prod;
+        prodObj.orderItem = { quantity: item.quantity || 1 };
+        products.push(prodObj);
+      }
+    }
+    orderObj.products = products;
+
+    let allProducts = await Product.findAll().catch(async () => {
+      return await Product.findAll({
+        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal']
+      }).catch(() => []);
+    });
+    const allUsers = await User.findAll().catch(() => []);
 
     res.render('admin/process', {
-      pageTitle: `Edit Order #${order.invoiceId || order.id}`,
+      pageTitle: `Edit Order #${orderObj.invoiceId || orderObj.id}`,
       path: '/admin/orders',
-      order: order,
+      order: orderObj,
       allProducts: allProducts || [],
       allUsers: allUsers || []
     });
@@ -480,23 +542,27 @@ exports.postProcessOrder = async (req, res, next) => {
       const quantitiesArray = Array.isArray(product_quantities) ? product_quantities : [product_quantities];
 
       // Delete existing order items
-      await OrderItem.destroy({ where: { orderId: order.id } });
+      await OrderItem.destroy({ where: { orderId: order.id } }).catch(() => {});
 
-      // Fetch products from database
-      const products = await Product.findAll({ where: { id: idsArray } });
-      
       let itemsSubtotal = 0;
       for (let i = 0; i < idsArray.length; i++) {
         const pId = parseInt(idsArray[i]);
         const qty = parseInt(quantitiesArray[i]) || 1;
-        const prod = products.find(p => p.id === pId);
+        let prod = null;
+        try {
+          prod = await Product.findByPk(pId);
+        } catch (e1) {
+          prod = await Product.findByPk(pId, {
+            attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal']
+          }).catch(() => null);
+        }
         if (prod) {
-          itemsSubtotal += (prod.price * qty);
+          itemsSubtotal += ((prod.price || 0) * qty);
           await OrderItem.create({
             orderId: order.id,
             productId: pId,
             quantity: qty
-          });
+          }).catch(() => {});
         }
       }
 
@@ -522,7 +588,6 @@ exports.getFraudCheck = (req, res, next) => {
   
   const cleanPhone = phone.replace(/[^0-9]/g, '').slice(-11);
   
-  // Simulated Steadfast API fraud check response with realistic courier metrics
   setTimeout(() => {
     const totalParcels = Math.floor(Math.random() * 15) + 3;
     const deliveredParcels = Math.floor(totalParcels * (0.8 + Math.random() * 0.18));
@@ -544,14 +609,41 @@ exports.getFraudCheck = (req, res, next) => {
   }, 400);
 };
 
-exports.postPrintOrders = (req, res, next) => {
-  const orderIds = req.body.orderIds;
-  const ids = Array.isArray(orderIds) ? orderIds : [orderIds];
-  Order.findAll({ where: { id: ids }, include: [{ model: Product }] })
-    .then(orders => {
-      res.json({ success: true, orders: orders });
-    })
-    .catch(err => res.status(500).json({ success: false, error: err.message }));
+exports.postPrintOrders = async (req, res, next) => {
+  try {
+    const orderIds = req.body.orderIds;
+    const ids = Array.isArray(orderIds) ? orderIds : [orderIds];
+    const OrderItem = require("../models/order-item");
+    const rawOrders = await Order.findAll({ where: { id: ids } }).catch(() => []);
+
+    const orders = [];
+    for (const ord of rawOrders) {
+      const ordObj = ord.get ? ord.get({ plain: true }) : ord;
+      const items = await OrderItem.findAll({ where: { orderId: ordObj.id } }).catch(() => []);
+      const products = [];
+      for (const item of items) {
+        let prod = null;
+        try {
+          prod = await Product.findByPk(item.productId);
+        } catch (e1) {
+          prod = await Product.findByPk(item.productId, {
+            attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal']
+          }).catch(() => null);
+        }
+        if (prod) {
+          const prodObj = prod.get ? prod.get({ plain: true }) : prod;
+          prodObj.orderItem = { quantity: item.quantity || 1 };
+          products.push(prodObj);
+        }
+      }
+      ordObj.products = products;
+      orders.push(ordObj);
+    }
+
+    return res.json({ success: true, orders: orders });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
 };
 
 // Courier API Config Helpers
@@ -1028,43 +1120,64 @@ exports.postDeleteBanner = (req, res, next) => {
   res.redirect("/admin/banner/manage");
 };
 
-// 5. Site Settings Handlers
-exports.getSettings = (req, res, next) => {
-  Setting.findOne()
-    .then(setting => {
-      if (!setting) {
-        return Setting.create({});
-      }
-      return setting;
-    })
-    .then(setting => {
-      res.render("admin/settings", {
-        pageTitle: "General Site Settings",
-        path: "/admin/settings",
-        setting: setting
-      });
-    })
-    .catch(err => {
-      console.log(err);
-      res.render("admin/settings", {
-        pageTitle: "General Site Settings",
-        path: "/admin/settings",
-        setting: {}
-      });
-    });
+// Footer Config Helpers
+const getFooterFilePath = () => path.join(__dirname, '..', 'util', 'footer-config.json');
+
+const loadFooterConfig = () => {
+  try {
+    const file = getFooterFilePath();
+    if (fs.existsSync(file)) return JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch (e) {}
+  return { developer_name: 'OneHost BD' };
 };
 
-exports.postSettings = (req, res, next) => {
-  Setting.findOne()
-    .then(setting => {
-      if (!setting) {
-        setting = Setting.build({});
-      }
+const saveFooterConfig = (data) => {
+  try { fs.writeFileSync(getFooterFilePath(), JSON.stringify(data, null, 2), 'utf8'); } catch (e) {}
+};
+
+exports.loadFooterConfig = loadFooterConfig;
+
+// 5. Site Settings Handlers
+exports.getSettings = async (req, res, next) => {
+  try {
+    let setting = await Setting.findOne().catch(() => null);
+    if (!setting) {
+      setting = await Setting.create({}).catch(() => null);
+    }
+    const footerConfig = loadFooterConfig();
+    const plainSetting = setting ? setting.get({ plain: true }) : {};
+    plainSetting.developer_name = footerConfig.developer_name || 'OneHost BD';
+
+    res.render("admin/settings", {
+      pageTitle: "General Site Settings",
+      path: "/admin/settings",
+      setting: plainSetting
+    });
+  } catch (err) {
+    console.log("Error in getSettings:", err);
+    res.render("admin/settings", {
+      pageTitle: "General Site Settings",
+      path: "/admin/settings",
+      setting: {}
+    });
+  }
+};
+
+exports.postSettings = async (req, res, next) => {
+  try {
+    let setting = await Setting.findOne().catch(() => null);
+    if (!setting) {
+      setting = await Setting.create({
+        name: req.body.name || "One Commerce",
+        phone: req.body.phone || "01700000000"
+      }).catch(() => null);
+    }
+
+    if (setting) {
       setting.name = req.body.name || setting.name;
       setting.phone = req.body.phone || setting.phone;
       setting.play_store = req.body.play_store || setting.play_store;
-      setting.developer_name = req.body.developer_name || setting.developer_name || 'OneHost BD';
-      setting.status = req.body.status === '1' || req.body.status === 'on';
+      setting.status = req.body.status === '1' || req.body.status === 'on' || req.body.status === true;
       setting.white_logo = req.body.white_logo || setting.white_logo;
       setting.dark_logo = req.body.dark_logo || setting.dark_logo;
       setting.favicon = req.body.favicon || setting.favicon;
@@ -1076,18 +1189,24 @@ exports.postSettings = (req, res, next) => {
       setting.meta_description = req.body.meta_description || setting.meta_description;
       setting.meta_keyword = req.body.meta_keyword || setting.meta_keyword;
 
-      return setting.save();
-    })
-    .then(result => {
-      if (req.xhr || req.headers.accept && req.headers.accept.includes('json')) {
-        return res.json({ success: true, message: 'Settings saved successfully!' });
-      }
-      res.redirect("/admin/settings");
-    })
-    .catch(err => {
-      console.log(err);
-      res.redirect("/admin/settings");
-    });
+      await setting.save();
+    }
+
+    if (req.body.developer_name !== undefined) {
+      saveFooterConfig({ developer_name: req.body.developer_name });
+    }
+
+    if (req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
+      return res.json({ success: true, message: 'Settings saved successfully!' });
+    }
+    return res.redirect("/admin/settings");
+  } catch (err) {
+    console.log("Error in postSettings:", err);
+    if (req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
+      return res.status(500).json({ success: false, message: err.message });
+    }
+    return res.redirect("/admin/settings");
+  }
 };
 
 // Generic Module View Renderer Helper

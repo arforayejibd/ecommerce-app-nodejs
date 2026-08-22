@@ -20,10 +20,6 @@ const Setting = sequelize.define('setting', {
     type: Sequelize.STRING,
     defaultValue: "https://play.google.com/store/apps/details?id=com.onecommercebd.app"
   },
-  developer_name: {
-    type: Sequelize.STRING,
-    defaultValue: "OneHost BD"
-  },
   status: {
     type: Sequelize.BOOLEAN,
     defaultValue: true
