@@ -1585,6 +1585,15 @@ const cleanInputText = (str, removeEmojis = false) => {
   return cleaned;
 };
 
+const ultraSafeText = (str) => {
+  if (!str || typeof str !== 'string') return '';
+  return str
+    .normalize('NFKC')
+    .replace(/[^\x20-\x7E\u0980-\u09FF\n\r\t]/g, ' ')
+    .replace(/ +/g, ' ')
+    .trim();
+};
+
 exports.postAddProduct = async (req, res, next) => {
   try {
     const rawTitle = req.body.title || '';
@@ -1658,6 +1667,22 @@ exports.postAddProduct = async (req, res, next) => {
               });
             } catch (e5) {
               console.log("postAddProduct Attempt 5 failed:", e5.message);
+
+              // Attempt 6: Ultra-safe ASCII & Bengali text fail-safe fallback
+              const uTitle = ultraSafeText(rawTitle) || 'Product Entry';
+              const uDesc = ultraSafeText(rawDesc) || 'Product details';
+              try {
+                createdProduct = await Product.create({
+                  title: uTitle,
+                  price: price || 0,
+                  imageUrl: imageUrl,
+                  description: uDesc,
+                  category: category || 'General',
+                  userId: userIdVal
+                });
+              } catch (e6) {
+                console.log("postAddProduct Attempt 6 failed:", e6.message);
+              }
             }
           }
         }
@@ -1721,9 +1746,20 @@ exports.postEditProduct = async (req, res, next) => {
           console.log("Error updating product (Attempt 2):", upErr2.message);
           delete updateData.subCategory;
           delete updateData.isFreeDelivery;
-          await Product.update(updateData, { where: { id: id } }).catch((upErr3) => {
+          try {
+            await Product.update(updateData, { where: { id: id } });
+          } catch (upErr3) {
             console.log("Error updating product (Attempt 3):", upErr3.message);
-          });
+            // Attempt 4: Ultra-safe ASCII & Bengali text update
+            const uTitle = ultraSafeText(rawTitle) || product.title;
+            const uDesc = ultraSafeText(rawDesc) || product.description;
+            await Product.update({
+              title: uTitle,
+              description: uDesc
+            }, { where: { id: id } }).catch((upErr4) => {
+              console.log("Error updating product (Attempt 4):", upErr4.message);
+            });
+          }
         }
       }
     }
