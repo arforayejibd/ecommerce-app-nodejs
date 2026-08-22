@@ -181,6 +181,7 @@ SubCategory.belongsTo(Category, { foreignKey: 'categoryId' });
 sequelize
   .sync()
   .then((result) => {
+    sequelize.query("ALTER TABLE products CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;").catch(e => console.log("products table alter utf8mb4 info:", e.message));
     // Seed default categories if empty
     return Category.count().then(count => {
       if (count === 0) {

@@ -607,11 +607,11 @@
                         imgInput.value = 'https://www.onecommercebd.com/uploads/category/thumb/1787182103-Nosepin.jpg';
                     }
 
-                    if (titleInput) {
-                        titleInput.value = titleInput.value.replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\u00A0/g, ' ').trim();
+                    if (titleInput && titleInput.value) {
+                        titleInput.value = titleInput.value.normalize('NFKC').replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\u00A0/g, ' ').trim();
                     }
-                    if (descInput) {
-                        descInput.value = descInput.value.replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\u00A0/g, ' ').trim();
+                    if (descInput && descInput.value) {
+                        descInput.value = descInput.value.normalize('NFKC').replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\u00A0/g, ' ').trim();
                     }
                 });
             }

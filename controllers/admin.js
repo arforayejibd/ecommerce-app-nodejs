@@ -1568,6 +1568,7 @@ exports.getEditProduct = async (req, res, next) => {
 const cleanInputText = (str, removeEmojis = false) => {
   if (!str || typeof str !== 'string') return '';
   let cleaned = str
+    .normalize('NFKC')
     .replace(/[\u200B-\u200D\uFEFF]/g, '')
     .replace(/\u00A0/g, ' ')
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
@@ -1576,16 +1577,23 @@ const cleanInputText = (str, removeEmojis = false) => {
     .replace(/[\u2013\u2014]/g, '-')
     .trim();
   if (removeEmojis) {
-    cleaned = cleaned.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F004}\u{1F0CF}\u{1F170}-\u{1F251}]/gu, '');
+    cleaned = cleaned
+      .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '')
+      .replace(/[^\u0000-\uFFFF]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
   return cleaned;
 };
 
 exports.postAddProduct = async (req, res, next) => {
   try {
-    const title = cleanInputText(req.body.title);
+    const rawTitle = req.body.title || '';
+    const rawDesc = req.body.description || '';
+
+    const title = cleanInputText(rawTitle) || 'Untitled Product';
     const imageUrl = req.body.imageUrl || 'https://www.onecommercebd.com/uploads/category/thumb/1787182103-Nosepin.jpg';
-    const description = cleanInputText(req.body.description);
+    const description = cleanInputText(rawDesc) || 'No description provided.';
     const price = parseFloat(req.body.price) || 0;
     const oldPrice = req.body.oldPrice ? parseFloat(req.body.oldPrice) : null;
     const category = req.body.category || "General";
@@ -1593,33 +1601,49 @@ exports.postAddProduct = async (req, res, next) => {
     const isHotDeal = req.body.isHotDeal === "true" || req.body.isHotDeal === true || req.body.isHotDeal === "on";
     const isFreeDelivery = req.body.isFreeDelivery === "true" || req.body.isFreeDelivery === true || req.body.isFreeDelivery === "on";
 
-    let created = false;
+    let createdProduct = null;
+
+    // Attempt 1: req.user or full fields + original cleaned text
     try {
       if (req.user && typeof req.user.createProduct === 'function') {
-        await req.user.createProduct({
+        createdProduct = await req.user.createProduct({
           title, price, oldPrice, imageUrl, description, category, subCategory, isHotDeal, isFreeDelivery
         });
-        created = true;
-      }
-    } catch (e) {}
-
-    if (!created) {
-      try {
-        await Product.create({
+      } else {
+        createdProduct = await Product.create({
           title, price, oldPrice, imageUrl, description, category, subCategory, isHotDeal, isFreeDelivery
+        });
+      }
+    } catch (e1) {
+      console.log("postAddProduct Attempt 1 failed:", e1.message);
+
+      // Attempt 2: Basic fields + original cleaned text
+      try {
+        createdProduct = await Product.create({
+          title, price, oldPrice, imageUrl, description, category, isHotDeal
         });
       } catch (e2) {
+        console.log("postAddProduct Attempt 2 failed:", e2.message);
+
+        // Attempt 3: Safe text with 4-byte emojis/surrogate pairs stripped (for 3-byte utf8 MySQL)
+        const safeTitle = cleanInputText(rawTitle, true) || 'Untitled Product';
+        const safeDesc = cleanInputText(rawDesc, true) || 'No description provided.';
+
         try {
-          await Product.create({
-            title, price, oldPrice, imageUrl, description, category, isHotDeal
+          createdProduct = await Product.create({
+            title: safeTitle, price, oldPrice, imageUrl, description: safeDesc, category, subCategory, isHotDeal, isFreeDelivery
           });
         } catch (e3) {
-          // Fallback creation stripping emojis if MySQL charset is 3-byte utf8
-          const safeTitle = cleanInputText(req.body.title, true);
-          const safeDesc = cleanInputText(req.body.description, true);
-          await Product.create({
-            title: safeTitle, price, oldPrice, imageUrl, description: safeDesc, category, isHotDeal
-          });
+          console.log("postAddProduct Attempt 3 failed:", e3.message);
+
+          // Attempt 4: Safe text + minimum required fields
+          try {
+            createdProduct = await Product.create({
+              title: safeTitle, price, oldPrice, imageUrl, description: safeDesc, category, isHotDeal
+            });
+          } catch (e4) {
+            console.log("postAddProduct Attempt 4 failed:", e4.message);
+          }
         }
       }
     }
@@ -1636,8 +1660,14 @@ exports.postEditProduct = async (req, res, next) => {
     const id = req.body.productId;
     const product = await findProductById(id);
     if (product) {
-      const cleanTitle = cleanInputText(req.body.title) || product.title;
-      const cleanDesc = cleanInputText(req.body.description) || product.description;
+      const rawTitle = req.body.title || '';
+      const rawDesc = req.body.description || '';
+
+      const cleanTitle = cleanInputText(rawTitle) || product.title;
+      const cleanDesc = cleanInputText(rawDesc) || product.description;
+      const subCategory = req.body.subcategory || req.body.subCategory || product.subCategory || null;
+      const isFreeDelivery = req.body.isFreeDelivery === "true" || req.body.isFreeDelivery === true || req.body.isFreeDelivery === "on";
+
       const updateData = {
         title: cleanTitle,
         imageUrl: req.body.imageUrl || product.imageUrl,
@@ -1645,18 +1675,32 @@ exports.postEditProduct = async (req, res, next) => {
         price: req.body.price ? parseFloat(req.body.price) : product.price,
         oldPrice: req.body.oldPrice ? parseFloat(req.body.oldPrice) : null,
         category: req.body.category || product.category || "General",
-        isHotDeal: req.body.isHotDeal === "true" || req.body.isHotDeal === true || req.body.isHotDeal === "on"
+        subCategory: subCategory,
+        isHotDeal: req.body.isHotDeal === "true" || req.body.isHotDeal === true || req.body.isHotDeal === "on",
+        isFreeDelivery: isFreeDelivery
       };
 
       try {
         await Product.update(updateData, { where: { id: id } });
       } catch (upErr) {
-        console.log("Error updating product:", upErr.message);
-        const safeTitle = cleanInputText(req.body.title, true) || product.title;
-        const safeDesc = cleanInputText(req.body.description, true) || product.description;
+        console.log("Error updating product (Attempt 1):", upErr.message);
+
+        // Attempt 2: Safe text without 4-byte emojis / surrogate pairs
+        const safeTitle = cleanInputText(rawTitle, true) || product.title;
+        const safeDesc = cleanInputText(rawDesc, true) || product.description;
         updateData.title = safeTitle;
         updateData.description = safeDesc;
-        await Product.update(updateData, { where: { id: id } }).catch(() => {});
+
+        try {
+          await Product.update(updateData, { where: { id: id } });
+        } catch (upErr2) {
+          console.log("Error updating product (Attempt 2):", upErr2.message);
+          delete updateData.subCategory;
+          delete updateData.isFreeDelivery;
+          await Product.update(updateData, { where: { id: id } }).catch((upErr3) => {
+            console.log("Error updating product (Attempt 3):", upErr3.message);
+          });
+        }
       }
     }
     return res.redirect("/admin/product-list");
