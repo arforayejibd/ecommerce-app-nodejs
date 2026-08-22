@@ -219,159 +219,215 @@ exports.getOrderTrack = (req, res, next) => {
   }
 };
 
-exports.getCart = (req, res, next) => {
-  req.user.getCart()
-    .then(cart => {
-      return cart.getProducts()
-        .then(products => {
-          res.render("shop/cart", {
-            pageTitle: "Cart",
-            path: "/shop/cart",
-            products: products,
-          });
-        })
-    })
-    .catch(error => { console.log('Error in shop controller, getCart {}', error) });
-};
-
-exports.postCart = (req, res, next) => {
-  const productId = req.body.productId;
-  let fetchedCart;
-  let newQuantity = 1;
-
-  req.user.getCart()
-    .then(cart => {
-      fetchedCart = cart;
-      return cart.getProducts({ where: { id: productId } })
-    })
-    .then(products => {
-      let product;
-      if (products.length > 0) {
-        product = products[0];
-      }
-      if (product) {
-        newQuantity = product.cartItem.quantity + 1;
-        return product;
-      }
-      return Product.findByPk(productId);
-    })
-    .then(product => {
-      return fetchedCart.addProduct(product, {
-        through: { quantity: newQuantity }
-      })
-    })
-    .then(() => {
-      res.redirect("/cart");
-    })
-    .catch(error => console.log(error));
-  
-};
-
-exports.postCartDeleteProduct = (req, res, next) => {
-  const productId = req.body.productId;
-  req.user.getCart()
-    .then(cart => {
-      return cart.getProducts({ where: { id: productId } })
-    })
-    .then(products => {
-      const product = products[0];
-      return product.cartItem.destroy();
-    })
-    .then(result => {
-      res.redirect("/cart");
-    })
-    .catch(error => console.log(error));
-};
-
-exports.postCartUpdateQty = (req, res, next) => {
-  const productId = req.body.productId;
-  const newQty = parseInt(req.body.quantity);
-  
-  if (!productId || isNaN(newQty) || newQty < 1) {
-    return res.status(400).json({ success: false, message: 'Invalid payload' });
+const getUserCart = async (req) => {
+  let user = req.user;
+  if (!user) {
+    const User = require("../models/user");
+    user = await User.findByPk(1).catch(() => null);
+    if (!user) {
+      user = await User.create({ name: "Lahiru", email: "lahirurc1st@gmail.com" }).catch(() => null);
+    }
   }
+  if (!user) return null;
 
-  req.user.getCart()
-    .then(cart => {
-      return cart.getProducts({ where: { id: productId } });
-    })
-    .then(products => {
-      if (products.length === 0) {
-        return res.status(404).json({ success: false, message: 'Product not in cart' });
-      }
-      const product = products[0];
-      product.cartItem.quantity = newQty;
-      return product.cartItem.save();
-    })
-    .then(() => {
-      res.json({ success: true, message: 'Quantity updated' });
-    })
-    .catch(error => {
-      console.log('Error updating cart quantity: ', error);
-      res.status(500).json({ success: false, error: error.message });
-    });
+  let cart = await user.getCart().catch(() => null);
+  if (!cart) {
+    cart = await user.createCart().catch(() => null);
+  }
+  return cart;
 };
 
-exports.getOrders = (req, res, next) => {
-  req.user
-    .getOrders({include: [{ model: Product }]})
-    .then(orders => {
-      res.render('shop/orders', {
-        path: '/orders',
-        pageTitle: 'Your Orders',
-        orders: orders
+const getCartProducts = async (cart) => {
+  if (!cart) return [];
+  try {
+    return await cart.getProducts();
+  } catch (err) {
+    console.log("Fallback cart.getProducts:", err.message);
+    try {
+      return await cart.getProducts({
+        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal']
       });
-    })
-    .catch(err => {
-      console.log(err);
-      res.render('shop/orders', {
-        path: '/orders',
-        pageTitle: 'Your Orders',
-        orders: []
-      });
-    });
+    } catch (err2) {
+      console.log("Secondary fallback cart.getProducts failed:", err2.message);
+      return [];
+    }
+  }
 };
 
-exports.postOrder = (req, res, next) => {
-  const { name, phone, address, area, payment_method } = req.body;
-  let fetchedCart;
+exports.getCart = async (req, res, next) => {
+  try {
+    const cart = await getUserCart(req);
+    const products = await getCartProducts(cart);
+    
+    return res.render("shop/cart", {
+      pageTitle: "Cart - One Commerce",
+      path: "/cart",
+      products: products || [],
+    });
+  } catch (error) {
+    console.log("Error in shop controller getCart:", error);
+    return res.render("shop/cart", {
+      pageTitle: "Cart - One Commerce",
+      path: "/cart",
+      products: [],
+    });
+  }
+};
 
-  req.user
-    .getCart()
-    .then(cart => {
-      fetchedCart = cart;
-      return cart.getProducts();
-    })
-    .then(products => {
-      if (products.length === 0) {
-        return res.redirect('/cart');
+exports.postCart = async (req, res, next) => {
+  try {
+    const productId = req.body.productId;
+    if (!productId) {
+      return res.redirect("/cart");
+    }
+
+    const cart = await getUserCart(req);
+    if (!cart) {
+      return res.redirect("/cart");
+    }
+
+    const CartItem = require("../models/cart-item");
+    const existingItem = await CartItem.findOne({
+      where: { cartId: cart.id, productId: productId }
+    }).catch(() => null);
+
+    if (existingItem) {
+      existingItem.quantity = (existingItem.quantity || 1) + 1;
+      await existingItem.save();
+    } else {
+      await CartItem.create({
+        cartId: cart.id,
+        productId: productId,
+        quantity: 1
+      }).catch(async () => {
+        const product = await safeFindProductById(productId);
+        if (product && typeof cart.addProduct === 'function') {
+          await cart.addProduct(product, { through: { quantity: 1 } });
+        }
+      });
+    }
+
+    return res.redirect("/cart");
+  } catch (error) {
+    console.log("Error in shop controller postCart:", error);
+    return res.redirect("/cart");
+  }
+};
+
+exports.postCartDeleteProduct = async (req, res, next) => {
+  try {
+    const productId = req.body.productId;
+    const cart = await getUserCart(req);
+    if (cart && productId) {
+      const CartItem = require("../models/cart-item");
+      await CartItem.destroy({
+        where: { cartId: cart.id, productId: productId }
+      }).catch(() => {});
+    }
+    return res.redirect("/cart");
+  } catch (error) {
+    console.log("Error in postCartDeleteProduct:", error);
+    return res.redirect("/cart");
+  }
+};
+
+exports.postCartUpdateQty = async (req, res, next) => {
+  try {
+    const productId = req.body.productId;
+    const newQty = parseInt(req.body.quantity);
+    
+    if (!productId || isNaN(newQty) || newQty < 1) {
+      return res.status(400).json({ success: false, message: 'Invalid payload' });
+    }
+
+    const cart = await getUserCart(req);
+    if (!cart) {
+      return res.status(404).json({ success: false, message: 'Cart not found' });
+    }
+
+    const CartItem = require("../models/cart-item");
+    const item = await CartItem.findOne({
+      where: { cartId: cart.id, productId: productId }
+    }).catch(() => null);
+
+    if (item) {
+      item.quantity = newQty;
+      await item.save();
+      return res.json({ success: true, message: 'Quantity updated' });
+    }
+    return res.status(404).json({ success: false, message: 'Product not in cart' });
+  } catch (error) {
+    console.log("Error in postCartUpdateQty:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.getOrders = async (req, res, next) => {
+  try {
+    const User = require("../models/user");
+    const user = req.user || await User.findByPk(1).catch(() => null);
+    let orders = [];
+    if (user && typeof user.getOrders === 'function') {
+      orders = await user.getOrders({ include: [{ model: Product }] }).catch(() => []);
+    }
+    return res.render('shop/orders', {
+      path: '/orders',
+      pageTitle: 'Your Orders - One Commerce',
+      orders: orders || []
+    });
+  } catch (err) {
+    console.log("Error in getOrders:", err);
+    return res.render('shop/orders', {
+      path: '/orders',
+      pageTitle: 'Your Orders - One Commerce',
+      orders: []
+    });
+  }
+};
+
+exports.postOrder = async (req, res, next) => {
+  try {
+    const { name, phone, address, area, payment_method } = req.body;
+    const cart = await getUserCart(req);
+    if (!cart) {
+      return res.redirect('/cart');
+    }
+
+    const products = await getCartProducts(cart);
+    if (!products || products.length === 0) {
+      return res.redirect('/cart');
+    }
+
+    const User = require("../models/user");
+    const user = req.user || await User.findByPk(1).catch(() => null);
+    const order = await user.createOrder({
+      name: name || 'Customer',
+      phone: phone || '01700000000',
+      address: address || 'Dhaka',
+      area: area || '60',
+      paymentMethod: payment_method || 'Cash On Delivery',
+      status: 'Pending'
+    }).catch(() => null);
+
+    if (order) {
+      const OrderItem = require("../models/order-item");
+      const CartItem = require("../models/cart-item");
+      for (const prod of products) {
+        const qty = prod.cartItem ? prod.cartItem.quantity : 1;
+        await OrderItem.create({
+          orderId: order.id,
+          productId: prod.id,
+          quantity: qty
+        }).catch(() => {});
       }
-      return req.user
-        .createOrder({
-          name: name || 'Customer',
-          phone: phone || '01700000000',
-          address: address || 'Dhaka',
-          area: area || '60',
-          paymentMethod: payment_method || 'Cash On Delivery',
-          status: 'Pending'
-        })
-        .then(order => {
-          return order.addProducts(
-            products.map(product => {
-              product.orderItem = { quantity: product.cartItem.quantity };
-              return product;
-            })
-          );
-        })
-        .catch(err => console.log(err));
-    })
-    .then(result => {
-      return fetchedCart.setProducts(null);
-    })
-    .then(result => {
-      res.redirect('/orders-success');
-    })
-    .catch(err => console.log(err));
+      await CartItem.destroy({ where: { cartId: cart.id } }).catch(() => {});
+    }
+
+    return res.redirect('/orders-success');
+  } catch (err) {
+    console.log("Error in postOrder:", err);
+    return res.redirect('/cart');
+  }
 };
 
 

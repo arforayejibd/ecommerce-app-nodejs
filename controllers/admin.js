@@ -1063,6 +1063,7 @@ exports.postSettings = (req, res, next) => {
       setting.name = req.body.name || setting.name;
       setting.phone = req.body.phone || setting.phone;
       setting.play_store = req.body.play_store || setting.play_store;
+      setting.developer_name = req.body.developer_name || setting.developer_name || 'OneHost BD';
       setting.status = req.body.status === '1' || req.body.status === 'on';
       setting.white_logo = req.body.white_logo || setting.white_logo;
       setting.dark_logo = req.body.dark_logo || setting.dark_logo;

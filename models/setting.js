@@ -1,4 +1,4 @@
-﻿const Sequelize = require('sequelize');
+const Sequelize = require('sequelize');
 const sequelize = require('../util/database');
 
 const Setting = sequelize.define('setting', {
@@ -19,6 +19,10 @@ const Setting = sequelize.define('setting', {
   play_store: {
     type: Sequelize.STRING,
     defaultValue: "https://play.google.com/store/apps/details?id=com.onecommercebd.app"
+  },
+  developer_name: {
+    type: Sequelize.STRING,
+    defaultValue: "OneHost BD"
   },
   status: {
     type: Sequelize.BOOLEAN,
