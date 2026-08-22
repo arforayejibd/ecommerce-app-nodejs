@@ -233,7 +233,7 @@
     <main class="order-success-wrapper">
 
         <% if (orders && orders.length > 0) { %>
-            <% const order = orders[orders.length - 1]; %>
+            <% const order = orders[0]; %>
             <% let totalItemsPrice = 0; %>
 
             <!-- Success Banner Hero -->
@@ -241,29 +241,29 @@
                 <div class="success-badge-icon">
                     <i class="fa-solid fa-circle-check"></i>
                 </div>
-                <h2 class="success-title">ধন্যবাদ! আপনার অর্ডারটি সফলভাবে সম্পন্ন হয়েছে।</h2>
+                <h2 class="success-title"><%= typeof __ !== 'undefined' ? __('Thank you! Your order has been placed successfully.') : 'ধন্যবাদ! আপনার অর্ডারটি সফলভাবে সম্পন্ন হয়েছে।' %></h2>
                 <p class="success-subtitle">
-                    কিছুক্ষনের মধ্যে আমাদের একজন প্রতিনিধি আপনার নাম্বারে কল করে অর্ডারটি কনফার্ম করবেন।
+                    <%= typeof __ !== 'undefined' ? __('A representative will call you shortly to confirm your order.') : 'কিছুক্ষনের মধ্যে আমাদের একজন প্রতিনিধি আপনার নাম্বারে কল করে অর্ডারটি কনফার্ম করবেন।' %>
                 </p>
             </div>
 
             <!-- Order Key Specs Grid -->
             <div class="order-metrics-grid">
                 <div class="metric-box">
-                    <span class="metric-label">ইনভয়েস আইডি</span>
+                    <span class="metric-label"><%= typeof __ !== 'undefined' ? __('Invoice ID') : 'Invoice ID' %></span>
                     <span class="metric-value" style="color: #fe5200;">#INV-<%= order.id %></span>
                 </div>
                 <div class="metric-box">
-                    <span class="metric-label">তারিখ</span>
+                    <span class="metric-label"><%= typeof __ !== 'undefined' ? __('Date') : 'Date' %></span>
                     <span class="metric-value"><%= new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) %></span>
                 </div>
                 <div class="metric-box">
-                    <span class="metric-label">পেমেন্ট মেথড</span>
-                    <span class="metric-value"><%= order.paymentMethod || 'Cash On Delivery' %></span>
+                    <span class="metric-label"><%= typeof __ !== 'undefined' ? __('Payment Method') : 'Payment Method' %></span>
+                    <span class="metric-value"><%= typeof __ !== 'undefined' ? __(order.paymentMethod || 'Cash On Delivery') : (order.paymentMethod || 'Cash On Delivery') %></span>
                 </div>
                 <div class="metric-box">
-                    <span class="metric-label">সর্বমোট টাকা</span>
-                    <span class="metric-value" style="color: #10b981;">৳ <%= order.products ? order.products.reduce((acc, p) => acc + (p.price * p.orderItem.quantity), 0) + (parseInt(order.area) || 60) : 0 %></span>
+                    <span class="metric-label"><%= typeof __ !== 'undefined' ? __('Total') : 'Total' %></span>
+                    <span class="metric-value" style="color: #10b981;">৳ <%= order.totalAmount || (order.products ? order.products.reduce((acc, p) => acc + (p.price * p.orderItem.quantity), 0) + (parseInt(order.area) || 60) : 0) %></span>
                 </div>
             </div>
 
@@ -271,15 +271,15 @@
             <div class="order-details-card">
                 <div class="card-head-title">
                     <i class="fa-solid fa-bag-shopping" style="color: #fe5200;"></i>
-                    <span>অর্ডারের পণ্যের তালিকা</span>
+                    <span><%= typeof __ !== 'undefined' ? __('Order Items List') : 'Order Items List' %></span>
                 </div>
                 <div class="card-body-content" style="padding: 0;">
                     <table class="order-summary-table">
                         <thead>
                             <tr>
-                                <th>পণ্য</th>
-                                <th style="text-align: center;">পরিমাণ</th>
-                                <th style="text-align: right;">মূল্য</th>
+                                <th><%= typeof __ !== 'undefined' ? __('Product') : 'Product' %></th>
+                                <th style="text-align: center;"><%= typeof __ !== 'undefined' ? __('Quantity') : 'Quantity' %></th>
+                                <th style="text-align: right;"><%= typeof __ !== 'undefined' ? __('Price') : 'Price' %></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -302,16 +302,28 @@
                         </tbody>
                         <tfoot>
                             <tr>
-                                <th colspan="2" style="text-align: right;">সাবটোটাল:</th>
-                                <td style="text-align: right; font-weight: 800;">৳ <%= totalItemsPrice %></td>
+                                <th colspan="2" style="text-align: right;"><%= typeof __ !== 'undefined' ? __('Subtotal') : 'Subtotal' %>:</th>
+                                <td style="text-align: right; font-weight: 800;">৳ <%= order.subtotal || totalItemsPrice %></td>
                             </tr>
                             <tr>
-                                <th colspan="2" style="text-align: right;">ডেলিভারি চার্জ:</th>
-                                <td style="text-align: right; font-weight: 800; color: #0284c7;">৳ <%= parseInt(order.area) || 60 %></td>
+                                <th colspan="2" style="text-align: right;"><%= typeof __ !== 'undefined' ? __('Delivery Charge') : 'Delivery Charge' %>:</th>
+                                <td style="text-align: right; font-weight: 800; color: #0284c7;">৳ <%= order.shippingCharge !== undefined ? order.shippingCharge : (parseInt(order.area) || 60) %></td>
                             </tr>
+                            <% if (order.discount && Number(order.discount) > 0) { %>
+                            <tr>
+                                <th colspan="2" style="text-align: right;"><%= typeof __ !== 'undefined' ? __('Discount') : 'Discount' %>:</th>
+                                <td style="text-align: right; font-weight: 800; color: #ef4444;">- ৳ <%= order.discount %></td>
+                            </tr>
+                            <% } %>
+                            <% if (order.advance && Number(order.advance) > 0) { %>
+                            <tr>
+                                <th colspan="2" style="text-align: right;"><%= typeof __ !== 'undefined' ? __('Advance') : 'Advance' %>:</th>
+                                <td style="text-align: right; font-weight: 800; color: #16a34a;">- ৳ <%= order.advance %></td>
+                            </tr>
+                            <% } %>
                             <tr class="os-grand-row">
-                                <th colspan="2" style="text-align: right; font-size: 1.1rem; font-weight: 900;">সর্বমোট:</th>
-                                <td style="text-align: right;" class="os-grand-price">৳ <%= totalItemsPrice + (parseInt(order.area) || 60) %></td>
+                                <th colspan="2" style="text-align: right; font-size: 1.1rem; font-weight: 900;"><%= typeof __ !== 'undefined' ? __('Total') : 'Total' %>:</th>
+                                <td style="text-align: right;" class="os-grand-price">৳ <%= order.totalAmount || (totalItemsPrice + (parseInt(order.area) || 60)) %></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -322,20 +334,20 @@
             <div class="order-details-card">
                 <div class="card-head-title">
                     <i class="fa-solid fa-location-dot" style="color: #fe5200;"></i>
-                    <span>ডেলিভারি ও কাস্টমার ইনফরমেশন</span>
+                    <span><%= typeof __ !== 'undefined' ? __('Delivery & Customer Info') : 'Delivery & Customer Info' %></span>
                 </div>
                 <div class="card-body-content">
                     <div class="shipping-info-grid">
                         <div class="shipping-info-item">
-                            <span class="info-label">কাস্টমারের নাম</span>
+                            <span class="info-label"><%= typeof __ !== 'undefined' ? __('Customer Name') : 'Customer Name' %></span>
                             <span class="info-val"><%= order.name || 'Customer' %></span>
                         </div>
                         <div class="shipping-info-item">
-                            <span class="info-label">ফোন নাম্বার</span>
+                            <span class="info-label"><%= typeof __ !== 'undefined' ? __('Mobile Number') : 'Phone Number' %></span>
                             <span class="info-val"><%= order.phone || '01700000000' %></span>
                         </div>
                         <div class="shipping-info-item full-width">
-                            <span class="info-label">ডেলিভারি ঠিকানা</span>
+                            <span class="info-label"><%= typeof __ !== 'undefined' ? __('Full Address') : 'Delivery Address' %></span>
                             <span class="info-val"><%= order.address || 'Dhaka' %></span>
                         </div>
                     </div>
@@ -346,7 +358,7 @@
             <div class="order-success-actions">
                 <a href="/" class="btn-success-home">
                     <i class="fa-solid fa-house"></i>
-                    <span>হোম পেজে ফিরে যান</span>
+                    <span><%= typeof __ !== 'undefined' ? __('Return to Home') : 'Return to Home' %></span>
                 </a>
             </div>
 

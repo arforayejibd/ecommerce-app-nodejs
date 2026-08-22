@@ -217,16 +217,16 @@
     <main class="track-wrapper">
         <div class="track-search-card">
             <h1 class="track-header-title">
-                <i class="fa-solid fa-truck-fast" style="color:#fe5200;"></i> Track Your Order
+                <i class="fa-solid fa-truck-fast" style="color:#fe5200;"></i> <%= typeof __ !== 'undefined' ? __('Track Order') : 'Track Your Order' %>
             </h1>
             <p class="track-subtitle">
                 Enter your Order ID (Invoice #) or Mobile Number to check current status and details.
             </p>
 
             <form action="/order-track" method="GET" class="track-input-group">
-                <input type="text" name="orderId" class="track-input-field" placeholder="Enter Order ID or Mobile Number (e.g., 01700000000 or INV-123)..." value="<%= typeof searchQuery !== 'undefined' ? searchQuery : (typeof orderId !== 'undefined' ? orderId : '') %>" required autofocus>
+                <input type="text" name="orderId" class="track-input-field" placeholder="Enter Order ID or Mobile Number..." value="<%= typeof searchQuery !== 'undefined' ? searchQuery : (typeof orderId !== 'undefined' ? orderId : '') %>" required autofocus>
                 <button type="submit" class="btn-track-submit">
-                    <i class="fa-solid fa-magnifying-glass"></i> Track Order
+                    <i class="fa-solid fa-magnifying-glass"></i> <%= typeof __ !== 'undefined' ? __('Track Order') : 'Track Order' %>
                 </button>
             </form>
         </div>
@@ -259,25 +259,25 @@
                         <div class="order-card-body">
                             <div class="customer-info-grid">
                                 <div>
-                                    <div class="info-lbl">Customer Name</div>
+                                    <div class="info-lbl"><%= typeof __ !== 'undefined' ? __('Customer Name') : 'Customer Name' %></div>
                                     <div class="info-val"><%= o.name || 'Customer' %></div>
                                 </div>
                                 <div>
-                                    <div class="info-lbl">Mobile Number</div>
+                                    <div class="info-lbl"><%= typeof __ !== 'undefined' ? __('Mobile Number') : 'Mobile Number' %></div>
                                     <div class="info-val">📞 <%= o.phone || 'N/A' %></div>
                                 </div>
                                 <div>
-                                    <div class="info-lbl">Delivery Address</div>
+                                    <div class="info-lbl"><%= typeof __ !== 'undefined' ? __('Full Address') : 'Delivery Address' %></div>
                                     <div class="info-val" style="font-weight: 600;"><%= o.address || 'Dhaka' %></div>
                                 </div>
                                 <div>
-                                    <div class="info-lbl">Payment Method</div>
-                                    <div class="info-val"><%= o.paymentMethod || 'Cash On Delivery' %></div>
+                                    <div class="info-lbl"><%= typeof __ !== 'undefined' ? __('Payment Method') : 'Payment Method' %></div>
+                                    <div class="info-val"><%= typeof __ !== 'undefined' ? __(o.paymentMethod || 'Cash On Delivery') : (o.paymentMethod || 'Cash On Delivery') %></div>
                                 </div>
                             </div>
 
                             <% if (o.products && o.products.length > 0) { %>
-                                <h5 style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin-bottom: 0.75rem;">Ordered Products:</h5>
+                                <h5 style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin-bottom: 0.75rem;"><%= typeof __ !== 'undefined' ? __('Order Items List') : 'Ordered Products:' %></h5>
                                 <ul class="track-prod-list">
                                     <% o.products.forEach(p => { %>
                                         <li class="track-prod-item">
@@ -285,7 +285,7 @@
                                                 <img src="<%= p.imageUrl || 'https://via.placeholder.com/60' %>" alt="<%= p.title %>" class="track-prod-img">
                                                 <div>
                                                     <strong style="font-size: 0.9rem; color: #0f172a; display: block;"><%= p.title %></strong>
-                                                    <span style="font-size: 0.8rem; color: #64748b;">Quantity: <%= p.orderItem ? p.orderItem.quantity : 1 %></span>
+                                                    <span style="font-size: 0.8rem; color: #64748b;"><%= typeof __ !== 'undefined' ? __('Quantity') : 'Quantity' %>: <%= p.orderItem ? p.orderItem.quantity : 1 %></span>
                                                 </div>
                                             </div>
                                             <strong style="color: #fe5200; font-size: 0.95rem;">৳<%= p.price * (p.orderItem ? p.orderItem.quantity : 1) %></strong>
@@ -294,9 +294,31 @@
                                 </ul>
                             <% } %>
 
-                            <div class="track-total-row">
-                                <span>Grand Total:</span>
-                                <span style="color: #fe5200;">৳<%= o.totalAmount || o.amount || 0 %></span>
+                            <div style="background: #f8fafc; border-radius: 12px; padding: 0.85rem 1rem; margin-top: 1rem; border: 1px solid #e2e8f0; font-size: 0.88rem;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem; color: #475569;">
+                                    <span><%= typeof __ !== 'undefined' ? __('Subtotal') : 'Subtotal' %>:</span>
+                                    <strong style="color: #0f172a;">৳<%= o.subtotal || 0 %></strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem; color: #475569;">
+                                    <span><%= typeof __ !== 'undefined' ? __('Delivery Charge') : 'Delivery Charge' %>:</span>
+                                    <strong style="color: #0284c7;">৳<%= (o.shippingCharge !== undefined && o.shippingCharge !== null) ? o.shippingCharge : (parseInt(o.area) || 60) %></strong>
+                                </div>
+                                <% if (o.discount && Number(o.discount) > 0) { %>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem; color: #ef4444;">
+                                    <span><%= typeof __ !== 'undefined' ? __('Discount') : 'Discount' %>:</span>
+                                    <strong>- ৳<%= o.discount %></strong>
+                                </div>
+                                <% } %>
+                                <% if (o.advance && Number(o.advance) > 0) { %>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem; color: #16a34a;">
+                                    <span><%= typeof __ !== 'undefined' ? __('Advance') : 'Advance' %>:</span>
+                                    <strong>- ৳<%= o.advance %></strong>
+                                </div>
+                                <% } %>
+                                <div class="track-total-row" style="padding-top: 0.6rem; margin-top: 0.5rem;">
+                                    <span><%= typeof __ !== 'undefined' ? __('Total') : 'Grand Total' %>:</span>
+                                    <span style="color: #fe5200;">৳<%= o.totalAmount || o.amount || 0 %></span>
+                                </div>
                             </div>
                         </div>
                     </div>

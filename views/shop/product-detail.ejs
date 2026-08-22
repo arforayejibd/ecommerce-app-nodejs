@@ -581,10 +581,10 @@
 
                 <div class="action-buttons-flex">
                     <button type="submit" name="action" value="order_now" class="btn-order-now-lg">
-                        <i class="fa-solid fa-bag-shopping"></i> Order Now
+                        <i class="fa-solid fa-bag-shopping"></i> <%= typeof __ !== 'undefined' ? __('Order Now') : 'Order Now' %>
                     </button>
                     <button type="button" onclick="handleAddToCart(event, '<%= product.id %>')" class="btn-add-cart-lg">
-                        <i class="fa-solid fa-cart-plus"></i> Add to Cart
+                        <i class="fa-solid fa-cart-plus"></i> <%= typeof __ !== 'undefined' ? __('Add to Cart') : 'Add to Cart' %>
                     </button>
                 </div>
             </form>
@@ -596,8 +596,8 @@
             <div class="delivery-notice-box">
                 <i class="fa-solid fa-truck-fast" style="font-size: 1.3rem; color: #16a34a; margin-top: 2px;"></i>
                 <div>
-                    <strong>Inside Dhaka: ৳<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.delivery_inside) ? siteSettings.delivery_inside : 60 %></strong> &nbsp;|&nbsp; 
-                    <strong>Outside Dhaka: ৳<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.delivery_outside) ? siteSettings.delivery_outside : 120 %></strong><br>
+                    <strong><%= typeof __ !== 'undefined' ? __('Inside Dhaka') : 'Inside Dhaka' %>: ৳<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.delivery_inside) ? siteSettings.delivery_inside : 60 %></strong> &nbsp;|&nbsp; 
+                    <strong><%= typeof __ !== 'undefined' ? __('Outside Dhaka') : 'Outside Dhaka' %>: ৳<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.delivery_outside) ? siteSettings.delivery_outside : 120 %></strong><br>
                     Cash on Delivery Nationwide. 7-Day Easy Return Guarantee.
                 </div>
             </div>
@@ -608,8 +608,8 @@
     <div class="middle-details-grid">
         <div class="section-card-white">
             <div style="margin-bottom: 1.25rem;">
-                <div class="sec-label">Overview</div>
-                <div class="sec-title">Product Description</div>
+                <div class="sec-label"><%= typeof __ !== 'undefined' ? __('Overview') : 'Overview' %></div>
+                <div class="sec-title"><%= typeof __ !== 'undefined' ? __('Description') : 'Product Description' %></div>
             </div>
             <div style="line-height: 1.8; color: #334155; font-size: 0.95rem; white-space: pre-line; word-break: break-word;"><%= product.description %></div>
                 <ul style="list-style: none; padding-left: 0; margin-top: 1rem; line-height: 2;">
@@ -672,7 +672,7 @@
                     <div class="pro_btn">
                         <form action="/cart" method="POST">
                             <input type="hidden" name="productId" value="<%= prod.id %>">
-                            <button type="submit">🛒 Order Now</button>
+                            <button type="submit">🛒 <%= typeof __ !== 'undefined' ? __('Order Now') : 'Order Now' %></button>
                         </form>
                     </div>
                 </div>
@@ -684,14 +684,14 @@
     <div class="mobile-sticky-bar">
         <img src="<%= product.imageUrl %>" alt="<%= product.title %>" class="sticky-product-thumb">
         <div class="sticky-info-col">
-            <span class="sticky-price-label">Price</span>
+            <span class="sticky-price-label"><%= typeof __ !== 'undefined' ? __('Total') : 'Price' %></span>
             <span class="sticky-price-val">৳ <%= product.price %></span>
         </div>
         <form action="/cart" method="POST" style="flex:1; display:flex;">
             <input type="hidden" name="productId" value="<%= product.id %>">
             <input type="hidden" name="quantity" value="1">
             <button type="submit" name="action" value="order_now" class="sticky-order-btn">
-                <i class="fa-solid fa-bolt"></i> Order Now
+                <i class="fa-solid fa-bolt"></i> <%= typeof __ !== 'undefined' ? __('Order Now') : 'Order Now' %>
             </button>
         </form>
     </div>

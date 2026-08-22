@@ -1213,6 +1213,7 @@ exports.postSettings = async (req, res, next) => {
       setting.delivery_outside = req.body.delivery_outside ? parseInt(req.body.delivery_outside) : setting.delivery_outside;
       setting.meta_description = req.body.meta_description || setting.meta_description;
       setting.meta_keyword = req.body.meta_keyword || setting.meta_keyword;
+      setting.language = req.body.language || setting.language || 'bn';
 
       await setting.save();
     }

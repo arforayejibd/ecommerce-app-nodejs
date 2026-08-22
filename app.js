@@ -83,7 +83,71 @@ app.use((req, res, next) => {
       const footerConfig = adminController.loadFooterConfig();
       const siteSettings = setting ? setting.get({ plain: true }) : {};
       siteSettings.developer_name = footerConfig.developer_name || 'OneHost BD';
+      siteSettings.language = siteSettings.language || 'bn';
       res.locals.siteSettings = siteSettings;
+
+      // Global Translation Helper
+      const currentLang = siteSettings.language === 'en' ? 'en' : 'bn';
+      const translationDict = {
+        en: {
+          "Home": "Home", "Categories": "Categories", "Products": "Products", "Hot Deals": "Hot Deals",
+          "Track Order": "Track Order", "Cart": "Cart", "Search": "Search", "Search products...": "Search products...",
+          "Order Now": "Order Now", "Buy Now": "Buy Now", "Add to Cart": "Add to Cart", "Checkout": "Checkout",
+          "Shopping Cart": "Shopping Cart", "Order Summary": "Order Summary", "Subtotal": "Subtotal",
+          "Delivery Charge": "Delivery Charge", "Total": "Total", "Inside Dhaka": "Inside Dhaka",
+          "Outside Dhaka": "Outside Dhaka", "Billing Details": "Billing Details", "Your Name": "Your Name",
+          "Mobile Number": "Mobile Number", "Full Address": "Full Address", "Select Delivery Area": "Select Delivery Area",
+          "Confirm Order": "Confirm Order", "Cash on Delivery": "Cash on Delivery", "Online Payment": "Online Payment",
+          "Product Details": "Product Details", "Overview": "Overview", "Description": "Description",
+          "Stock": "Stock", "In Stock": "In Stock", "Out of Stock": "Out of Stock", "Customer Reviews": "Customer Reviews",
+          "Related Products": "Related Products", "Need Help? Call Us:": "Need Help? Call Us:", "Quick Links": "Quick Links",
+          "Contact Us": "Contact Us", "All Rights Reserved": "All Rights Reserved",
+          "Collection": "Collection", "View All": "View All", "View More": "View More", "All Products": "All Products",
+          "Explore Collection": "Explore Collection", "Fast Delivery": "Fast Delivery", "Secure Payment": "Secure Payment",
+          "Easy Returns": "Easy Returns", "24/7 Support": "24/7 Support", "Limited Time": "Limited Time",
+          "7-day return policy": "7-day return policy", "Nosepin": "Nosepin", "Ring": "Ring",
+          "Home Appliances": "Home Appliances", "Health Appliances": "Health Appliances",
+          "Thank you! Your order has been placed successfully.": "Thank you! Your order has been placed successfully.",
+          "A representative will call you shortly to confirm your order.": "A representative will call you shortly to confirm your order.",
+          "Invoice ID": "Invoice ID", "Date": "Date", "Payment Method": "Payment Method",
+          "Order Items List": "Order Items List", "Product": "Product", "Quantity": "Quantity", "Price": "Price",
+          "Delivery & Customer Info": "Delivery & Customer Info", "Customer Name": "Customer Name",
+          "Return to Home": "Return to Home", "No Active Orders": "No Active Orders",
+          "Discount": "Discount", "Advance": "Advance"
+        },
+        bn: {
+          "Home": "হোম", "Categories": "ক্যাটাগরি", "Products": "প্রোডাক্টসমূহ", "Hot Deals": "হট ডিল",
+          "Track Order": "অর্ডার ট্র্যাক", "Cart": "কার্ট", "Search": "খুঁজুন", "Search products...": "পণ্য খুঁজুন...",
+          "Order Now": "অর্ডার করুন", "Buy Now": "এখনই কিনুন", "Add to Cart": "কার্টে যোগ করুন", "Checkout": "চেকআউট",
+          "Shopping Cart": "শপিং কার্ট", "Order Summary": "অর্ডার সামারি", "Subtotal": "সাবটোটাল",
+          "Delivery Charge": "ডেলিভারি চার্জ", "Total": "সর্বমোট", "Inside Dhaka": "ঢাকার ভিতরে",
+          "Outside Dhaka": "ঢাকার বাইরে", "Billing Details": "বিলিং তথ্য", "Your Name": "আপনার নাম",
+          "Mobile Number": "মোবাইল নম্বর", "Full Address": "সম্পূর্ণ ঠিকানা", "Select Delivery Area": "ডেলিভারি এলাকা নির্বাচন করুন",
+          "Confirm Order": "অর্ডার নিশ্চিত করুন", "Cash on Delivery": "ক্যাশ অন ডেলিভারি", "Online Payment": "অনলাইন পেমেন্ট",
+          "Product Details": "প্রোডাক্টের বিবরণ", "Overview": "ওভারভিউ", "Description": "বিবরণ",
+          "Stock": "স্টক", "In Stock": "স্টকে আছে", "Out of Stock": "স্টক শেষ", "Customer Reviews": "গ্রাহকের মতামত",
+          "Related Products": "সম্পর্কিত প্রোডাক্ট", "Need Help? Call Us:": "প্রয়োজনে কল করুন:", "Quick Links": "গুরুত্বপূর্ণ লিংক",
+          "Contact Us": "যোগাযোগ", "All Rights Reserved": "সর্বস্বত্ব সংরক্ষিত",
+          "Collection": "কালেকশন", "View All": "সব দেখুন", "View More": "আরও দেখুন", "All Products": "সকল প্রোডাক্ট",
+          "Explore Collection": "কালেকশন ব্রাউজ করুন", "Fast Delivery": "দ্রুত ডেলিভারি", "Secure Payment": "নিরাপদ পেমেন্ট",
+          "Easy Returns": "সহজ রিটার্ন", "24/7 Support": "২৪/৭ সাপোর্ট", "Limited Time": "সীমিত সময়ের অফার",
+          "7-day return policy": "৭ দিনের রিটার্ন গ্যারান্টি", "Nosepin": "নোসপিন", "Ring": "আংটি / রিং",
+          "Home Appliances": "হোম অ্যাপ্লায়েন্স", "Health Appliances": "হেলথ অ্যাপ্লায়েন্স",
+          "Thank you! Your order has been placed successfully.": "ধন্যবাদ! আপনার অর্ডারটি সফলভাবে সম্পন্ন হয়েছে।",
+          "A representative will call you shortly to confirm your order.": "কিছুক্ষনের মধ্যে আমাদের একজন প্রতিনিধি আপনার নাম্বারে কল করে অর্ডারটি কনফার্ম করবেন।",
+          "Invoice ID": "ইনভয়েস আইডি", "Date": "তারিখ", "Payment Method": "পেমেন্ট মেথড",
+          "Order Items List": "অর্ডারের পণ্যের তালিকা", "Product": "পণ্য", "Quantity": "পরিমাণ", "Price": "মূল্য",
+          "Delivery & Customer Info": "ডেলিভারি ও কাস্টমার ইনফরমেশন", "Customer Name": "কাস্টমারের নাম",
+          "Return to Home": "হোম পেজে ফিরে যান", "No Active Orders": "আপনার কোনো সক্রিয় অর্ডার নেই!",
+          "Discount": "ডিসকাউন্ট", "Advance": "এডভান্স"
+        }
+      };
+      res.locals.__ = (key) => {
+        if (translationDict[currentLang] && translationDict[currentLang][key]) {
+          return translationDict[currentLang][key];
+        }
+        return key;
+      };
 
       // Global Dynamic API Integration Configurations
       res.locals.bkashConfig = req.app.locals.bkashConfig || { username: '01700000000', app_key: 'bkash_app_key_837492810', app_secret: 'bkash_secret_739201948', base_url: 'https://tokenized.pay.bKash.com/v1.2.0-beta', password: 'bkash_password_92841', logo: 'https://raw.githubusercontent.com/tahmid-ul/bkash-logo/main/bkash-logo.png', status: true };
@@ -200,6 +264,7 @@ sequelize
     sequelize.query("ALTER TABLE products ADD COLUMN isFreeDelivery TINYINT(1) DEFAULT 0;").catch(e => {});
     sequelize.query("ALTER TABLE products ADD COLUMN stock INT DEFAULT 50;").catch(e => {});
     sequelize.query("ALTER TABLE products ADD COLUMN purchasePrice DOUBLE DEFAULT 0;").catch(e => {});
+    sequelize.query("ALTER TABLE settings ADD COLUMN language VARCHAR(20) DEFAULT 'bn';").catch(e => {});
     // Seed default categories if empty
     return Category.count().then(count => {
       if (count === 0) {

@@ -203,8 +203,8 @@ exports.getOrderTrack = async (req, res, next) => {
     const cleanDigits = query.replace(/[^0-9]/g, '');
 
     const whereConditions = [];
-    if (!isNaN(parseInt(query))) {
-      whereConditions.push({ id: parseInt(query) });
+    if (cleanDigits && !isNaN(parseInt(cleanDigits))) {
+      whereConditions.push({ id: parseInt(cleanDigits) });
     }
     whereConditions.push({ invoiceId: { [Op.like]: `%${query}%` } });
 
@@ -239,6 +239,10 @@ exports.getOrderTrack = async (req, res, next) => {
       const shipFee = (ordObj.shippingCharge !== null && ordObj.shippingCharge !== undefined) ? Number(ordObj.shippingCharge) : (isNaN(parseInt(ordObj.area)) ? 60 : parseInt(ordObj.area));
       const disc = Number(ordObj.discount || 0);
       const adv = Number(ordObj.advance || 0);
+      ordObj.subtotal = subtotal;
+      ordObj.shippingCharge = shipFee;
+      ordObj.discount = disc;
+      ordObj.advance = adv;
       ordObj.totalAmount = (ordObj.amount && Number(ordObj.amount) > 0) ? Number(ordObj.amount) : (subtotal + shipFee - disc - adv);
       orders.push(ordObj);
     }
@@ -440,10 +444,19 @@ exports.getOrders = async (req, res, next) => {
       });
     }
 
-    let rawOrders = await Order.findAll({
-      where: { userId: user.id },
-      order: [['createdAt', 'DESC']]
-    }).catch(() => []);
+    let targetOrderId = req.query.orderId ? parseInt(req.query.orderId) : null;
+    let rawOrders = [];
+
+    if (targetOrderId && !isNaN(targetOrderId)) {
+      rawOrders = await Order.findAll({ where: { id: targetOrderId } }).catch(() => []);
+    }
+
+    if (!rawOrders || rawOrders.length === 0) {
+      rawOrders = await Order.findAll({
+        where: { userId: user.id },
+        order: [['createdAt', 'DESC']]
+      }).catch(() => []);
+    }
 
     if (!rawOrders || rawOrders.length === 0) {
       rawOrders = await Order.findAll({
@@ -456,15 +469,24 @@ exports.getOrders = async (req, res, next) => {
       const ordObj = ord.get ? ord.get({ plain: true }) : ord;
       const items = await OrderItem.findAll({ where: { orderId: ordObj.id } }).catch(() => []);
       const products = [];
+      let subtotal = 0;
       for (const item of items) {
         const prod = await safeFindProductById(item.productId);
         if (prod) {
           const prodObj = prod.get ? prod.get({ plain: true }) : prod;
-          prodObj.orderItem = { quantity: item.quantity || 1 };
+          const qty = item.quantity || 1;
+          prodObj.orderItem = { quantity: qty };
           products.push(prodObj);
+          subtotal += (prodObj.price || 0) * qty;
         }
       }
       ordObj.products = products;
+      const shipFee = (ordObj.shippingCharge !== null && ordObj.shippingCharge !== undefined) ? Number(ordObj.shippingCharge) : (isNaN(parseInt(ordObj.area)) ? 60 : parseInt(ordObj.area));
+      const disc = Number(ordObj.discount || 0);
+      const adv = Number(ordObj.advance || 0);
+      ordObj.shippingCharge = shipFee;
+      ordObj.subtotal = subtotal;
+      ordObj.totalAmount = (ordObj.amount && Number(ordObj.amount) > 0) ? Number(ordObj.amount) : (subtotal + shipFee - disc - adv);
       orders.push(ordObj);
     }
 
@@ -533,6 +555,9 @@ exports.postOrder = async (req, res, next) => {
     }
 
     if (order) {
+      order.invoiceId = 'INV-' + order.id;
+      await order.save().catch(() => {});
+
       const OrderItem = require("../models/order-item");
       const CartItem = require("../models/cart-item");
       for (const prod of products) {
@@ -544,6 +569,7 @@ exports.postOrder = async (req, res, next) => {
         }).catch(() => {});
       }
       await CartItem.destroy({ where: { cartId: cart.id } }).catch(() => {});
+      return res.redirect('/orders-success?orderId=' + order.id);
     }
 
     return res.redirect('/orders-success');

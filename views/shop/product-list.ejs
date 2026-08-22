@@ -8,11 +8,11 @@
         <!-- Page Header -->
         <div style="margin: 1.5rem 0 2rem; padding-bottom: 1.25rem; border-bottom: 1.5px solid #f1f5f9; display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
             <div>
-                <div style="font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #e11d48; margin-bottom: 0.35rem;">Explore Collection</div>
-                <h1 style="font-size: 1.75rem; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; margin: 0;">All Products</h1>
+                <div style="font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #e11d48; margin-bottom: 0.35rem;"><%= typeof __ !== 'undefined' ? __('Explore Collection') : 'Explore Collection' %></div>
+                <h1 style="font-size: 1.75rem; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; margin: 0;"><%= (typeof categoryName !== 'undefined' && categoryName) ? categoryName : (typeof __ !== 'undefined' ? __('All Products') : 'All Products') %></h1>
             </div>
             <div style="font-size: 0.875rem; font-weight: 600; color: #64748b;">
-                Showing <strong><%= prods.length %></strong> Items
+                <%= typeof __ !== 'undefined' ? __('Products') : 'Items' %>: <strong><%= prods.length %></strong>
             </div>
         </div>
 
@@ -26,7 +26,7 @@
                             <div class="sale-badge">-<%= discount %>%</div>
                         <% } %>
                         <% if (product.isFreeDelivery) { %>
-                            <div class="free-delivery-badge"><i class="fa-solid fa-truck-fast"></i> Free Delivery</div>
+                            <div class="free-delivery-badge"><i class="fa-solid fa-truck-fast"></i> <%= typeof __ !== 'undefined' ? __('Inside Dhaka') : 'Free Delivery' %></div>
                         <% } %>
                         
                         <div class="pro_img">
@@ -50,7 +50,7 @@
                         <div class="pro_btn">
                             <form action="/cart" method="POST">
                                 <input type="hidden" name="productId" value="<%= product.id %>">
-                                <button type="submit">🛒 Order Now</button>
+                                <button type="submit">🛒 <%= typeof __ !== 'undefined' ? __('Order Now') : 'Order Now' %></button>
                             </form>
                         </div>
                     </div>

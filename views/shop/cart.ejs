@@ -494,27 +494,27 @@
                     <form action="/create-order" method="POST" id="checkout-main-form">
 
                         <div class="form-group-mb">
-                            <label class="form-label-txt">Full Name <span style="color:#ef4444;">*</span></label>
+                            <label class="form-label-txt"><%= typeof __ !== 'undefined' ? __('Your Name') : 'Full Name' %> <span style="color:#ef4444;">*</span></label>
                             <input type="text" name="name" id="cust-name" autocomplete="name" autofocus class="form-ctrl-input" placeholder="Enter your full name" required>
                         </div>
 
                         <div class="form-group-mb">
-                            <label class="form-label-txt">Phone Number <span style="color:#ef4444;">*</span></label>
+                            <label class="form-label-txt"><%= typeof __ !== 'undefined' ? __('Mobile Number') : 'Phone Number' %> <span style="color:#ef4444;">*</span></label>
                             <input type="tel" name="phone" id="cust-phone" autocomplete="tel" minlength="11" maxlength="11" class="form-ctrl-input" placeholder="Enter 11-digit mobile number" required>
                         </div>
 
                         <div class="form-group-mb">
-                            <label class="form-label-txt">Delivery Address <span style="color:#ef4444;">*</span> (District, Thana, House No)</label>
+                            <label class="form-label-txt"><%= typeof __ !== 'undefined' ? __('Full Address') : 'Delivery Address' %> <span style="color:#ef4444;">*</span> (District, Thana, House No)</label>
                             <input type="text" name="address" id="cust-address" autocomplete="street-address" class="form-ctrl-input" placeholder="Enter full delivery address" required>
                         </div>
 
                         <div class="form-group-mb">
-                            <label class="form-label-txt">Select Delivery Area <span style="color:#ef4444;">*</span></label>
+                            <label class="form-label-txt"><%= typeof __ !== 'undefined' ? __('Select Delivery Area') : 'Select Delivery Area' %> <span style="color:#ef4444;">*</span></label>
                             <% const delInside = (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.delivery_inside) ? siteSettings.delivery_inside : 60; %>
                             <% const delOutside = (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.delivery_outside) ? siteSettings.delivery_outside : 120; %>
                             <select name="area" id="delivery-area-select" class="form-ctrl-input" onchange="recalculateCartSummary()" required>
-                                <option value="<%= delInside %>" selected>Inside Dhaka (৳ <%= delInside %>)</option>
-                                <option value="<%= delOutside %>">Outside Dhaka (৳ <%= delOutside %>)</option>
+                                <option value="<%= delInside %>" selected><%= typeof __ !== 'undefined' ? __('Inside Dhaka') : 'Inside Dhaka' %> (৳ <%= delInside %>)</option>
+                                <option value="<%= delOutside %>"><%= typeof __ !== 'undefined' ? __('Outside Dhaka') : 'Outside Dhaka' %> (৳ <%= delOutside %>)</option>
                             </select>
                         </div>
 
@@ -526,7 +526,7 @@
                                 <label class="payment-tile-card active">
                                     <input type="radio" name="payment_method" value="Cash On Delivery" checked style="display:none;">
                                     <i class="fa-solid fa-truck-fast" style="font-size: 1.25rem;"></i>
-                                    <span>Cash On Delivery</span>
+                                    <span><%= typeof __ !== 'undefined' ? __('Cash on Delivery') : 'Cash On Delivery' %></span>
                                 </label>
                                 <% if (typeof bkashConfig !== 'undefined' && bkashConfig && bkashConfig.status) { %>
                                 <label class="payment-tile-card">
@@ -554,7 +554,7 @@
                         </div>
 
                         <button type="submit" class="btn-submit-order-big desktop-place-order-btn">
-                            Place Order <i class="fa-solid fa-arrow-right"></i>
+                            <%= typeof __ !== 'undefined' ? __('Confirm Order') : 'Place Order' %> <i class="fa-solid fa-arrow-right"></i>
                         </button>
                     </form>
                 </div>
@@ -563,7 +563,7 @@
             <!-- Right Column: Order Details Summary -->
             <div class="card-checkout-box">
                 <div class="card-header-title">
-                    <h5>Order Details</h5>
+                    <h5><%= typeof __ !== 'undefined' ? __('Order Summary') : 'Order Details' %></h5>
                 </div>
 
                 <div class="card-body-content" style="padding: 0;">
@@ -612,15 +612,15 @@
 
                         <div style="padding: 1.25rem;">
                             <div class="summary-calc-row">
-                                <span>Subtotal:</span>
+                                <span><%= typeof __ !== 'undefined' ? __('Subtotal') : 'Subtotal' %>:</span>
                                 <strong style="white-space: nowrap; display: inline-flex; align-items: center; gap: 3px;">৳ <span id="cart-subtotal-val"><%= subtotal %></span></strong>
                             </div>
                             <div class="summary-calc-row">
-                                <span>Delivery Fee:</span>
+                                <span><%= typeof __ !== 'undefined' ? __('Delivery Charge') : 'Delivery Fee' %>:</span>
                                 <strong style="color: #0284c7; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px;"><span id="cart-shipping-val"><%= calcDelFee === 0 ? 'FREE (৳ 0)' : ('৳ ' + calcDelFee) %></span></strong>
                             </div>
                             <div class="summary-calc-row summary-calc-total">
-                                <span>Grand Total:</span>
+                                <span><%= typeof __ !== 'undefined' ? __('Total') : 'Grand Total' %>:</span>
                                 <strong style="white-space: nowrap; display: inline-flex; align-items: center; gap: 3px;">৳ <span id="cart-grandtotal-val"><%= calcGrandTotal %></span></strong>
                             </div>
                         </div>
@@ -647,7 +647,7 @@
             <span class="sticky-price-val">৳ <span id="mobile-sticky-grandtotal"><%= calcGrandTotal %></span></span>
         </div>
         <button type="submit" form="checkout-main-form" class="sticky-order-btn">
-            <i class="fa-solid fa-bolt"></i> Order Now
+            <i class="fa-solid fa-bolt"></i> <%= typeof __ !== 'undefined' ? __('Confirm Order') : 'Order Now' %>
         </button>
     </div>
     <% } %>

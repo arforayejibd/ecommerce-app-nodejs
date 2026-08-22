@@ -24,8 +24,8 @@
         <div class="nh-search">
             <form action="/products" method="GET">
                 <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                <input type="text" name="search" placeholder="Search products, categories..." value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>">
-                <button type="submit">Search</button>
+                <input type="text" name="search" placeholder="<%= typeof __ !== 'undefined' ? __('Search products...') : 'Search products...' %>" value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>">
+                <button type="submit"><%= typeof __ !== 'undefined' ? __('Search') : 'Search' %></button>
             </form>
         </div>
 
@@ -39,13 +39,13 @@
             <!-- Desktop Track Order Button -->
             <a href="/order-track" class="nh-action-btn track-btn">
                 <i class="fa-solid fa-location-dot"></i>
-                <span>Track Order</span>
+                <span><%= typeof __ !== 'undefined' ? __('Track Order') : 'Track Order' %></span>
             </a>
 
             <!-- Desktop Cart Button -->
             <a href="/cart" class="nh-action-btn cart-btn">
                 <i class="fa-solid fa-bag-shopping"></i>
-                <span>Cart</span>
+                <span><%= typeof __ !== 'undefined' ? __('Cart') : 'Cart' %></span>
                 <span class="nh-badge"><%= (typeof cartCount !== 'undefined') ? cartCount : 0 %></span>
             </a>
 
@@ -68,7 +68,7 @@
     <!-- Desktop Category Navbar -->
     <nav class="nh-navbar">
         <ul class="nh-nav-list">
-            <li><a href="/" class="nh-nav-link <%= path === '/' ? 'active' : '' %>">Home</a></li>
+            <li><a href="/" class="nh-nav-link <%= path === '/' ? 'active' : '' %>"><%= typeof __ !== 'undefined' ? __('Home') : 'Home' %></a></li>
             
             <% if (typeof globalCategories !== 'undefined' && globalCategories && globalCategories.length > 0) { %>
                 <% globalCategories.forEach(cat => { %>
@@ -99,7 +99,7 @@
                 <li><a href="/products?category=Health%20Appliances" class="nh-nav-link">Health Appliances</a></li>
             <% } %>
 
-            <li><a href="/order-track" class="nh-nav-link <%= path === '/order-track' ? 'active' : '' %>">Track Order</a></li>
+            <li><a href="/order-track" class="nh-nav-link <%= path === '/order-track' ? 'active' : '' %>"><%= typeof __ !== 'undefined' ? __('Track Order') : 'Track Order' %></a></li>
         </ul>
     </nav>
 </header>
@@ -122,7 +122,7 @@
         <button class="drawer-close-btn" onclick="toggleMobileDrawer()">&times;</button>
     </div>
     <ul class="drawer-menu-list">
-        <li><a href="/" class="<%= path === '/' ? 'active' : '' %>"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li><a href="/" class="<%= path === '/' ? 'active' : '' %>"><i class="fa-solid fa-house"></i> <%= typeof __ !== 'undefined' ? __('Home') : 'Home' %></a></li>
         
         <% if (typeof globalCategories !== 'undefined' && globalCategories && globalCategories.length > 0) { %>
             <% globalCategories.forEach(cat => { %>
@@ -139,8 +139,8 @@
             <li><a href="/products?category=Health%20Appliances"><i class="fa-solid fa-heart-pulse"></i> Health Appliances</a></li>
         <% } %>
 
-        <li><a href="/order-track" class="<%= path === '/order-track' ? 'active' : '' %>"><i class="fa-solid fa-truck-fast"></i> Track Order</a></li>
-        <li><a href="/cart"><i class="fa-solid fa-cart-shopping"></i> Shopping Cart</a></li>
+        <li><a href="/order-track" class="<%= path === '/order-track' ? 'active' : '' %>"><i class="fa-solid fa-truck-fast"></i> <%= typeof __ !== 'undefined' ? __('Track Order') : 'Track Order' %></a></li>
+        <li><a href="/cart"><i class="fa-solid fa-cart-shopping"></i> <%= typeof __ !== 'undefined' ? __('Shopping Cart') : 'Shopping Cart' %></a></li>
     </ul>
 </aside>
 

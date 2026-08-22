@@ -167,22 +167,22 @@
     <div class="trust-item">
       <div class="trust-icon red"><i class="fa-solid fa-truck-fast"></i></div>
       <div>
-        <div class="trust-title">Fast Delivery</div>
-        <div class="trust-sub">Inside Dhaka ৳<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.delivery_inside) ? siteSettings.delivery_inside : 60 %></div>
+        <div class="trust-title"><%= typeof __ !== 'undefined' ? __('Fast Delivery') : 'Fast Delivery' %></div>
+        <div class="trust-sub"><%= typeof __ !== 'undefined' ? __('Inside Dhaka') : 'Inside Dhaka' %> ৳<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.delivery_inside) ? siteSettings.delivery_inside : 60 %></div>
       </div>
     </div>
     <div class="trust-item">
       <div class="trust-icon blue"><i class="fa-solid fa-shield-halved"></i></div>
-      <div><div class="trust-title">Secure Payment</div><div class="trust-sub">Cash on Delivery</div></div>
+      <div><div class="trust-title"><%= typeof __ !== 'undefined' ? __('Secure Payment') : 'Secure Payment' %></div><div class="trust-sub"><%= typeof __ !== 'undefined' ? __('Cash on Delivery') : 'Cash on Delivery' %></div></div>
     </div>
     <div class="trust-item">
       <div class="trust-icon green"><i class="fa-solid fa-rotate-left"></i></div>
-      <div><div class="trust-title">Easy Returns</div><div class="trust-sub">7-day return policy</div></div>
+      <div><div class="trust-title"><%= typeof __ !== 'undefined' ? __('Easy Returns') : 'Easy Returns' %></div><div class="trust-sub"><%= typeof __ !== 'undefined' ? __('7-day return policy') : '7-day return policy' %></div></div>
     </div>
     <div class="trust-item">
       <div class="trust-icon amber"><i class="fa-solid fa-headset"></i></div>
       <div>
-        <div class="trust-title">24/7 Support</div>
+        <div class="trust-title"><%= typeof __ !== 'undefined' ? __('24/7 Support') : '24/7 Support' %></div>
         <div class="trust-sub"><%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.phone) ? siteSettings.phone : '01700000000' %></div>
       </div>
     </div>
@@ -207,7 +207,7 @@
       <div>
         <div class="sec-label">🔥 Limited Time</div>
         <div class="sec-title" style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
-          Hot Deals
+          <%= typeof __ !== 'undefined' ? __('Hot Deals') : 'Hot Deals' %>
           <div class="timer-chips">
             <span class="timer-chip" id="t-hr">05</span>
             <span class="timer-sep">:</span>
@@ -217,7 +217,7 @@
           </div>
         </div>
       </div>
-      <a href="/products" class="sec-link">View All <i class="fa-solid fa-arrow-right" style="font-size:0.75rem;"></i></a>
+      <a href="/products" class="sec-link"><%= typeof __ !== 'undefined' ? __('View All') : 'View All' %> <i class="fa-solid fa-arrow-right" style="font-size:0.75rem;"></i></a>
     </div>
     <div class="product-grid">
       <% hotDeals.slice(0, 8).forEach(product => { %>
@@ -227,7 +227,7 @@
             <div class="sale-badge">-<%= disc %>%</div>
           <% } %>
           <% if (product.isFreeDelivery) { %>
-            <div class="free-delivery-badge"><i class="fa-solid fa-truck-fast"></i> Free Delivery</div>
+            <div class="free-delivery-badge"><i class="fa-solid fa-truck-fast"></i> <%= typeof __ !== 'undefined' ? __('Inside Dhaka') : 'Free Delivery' %></div>
           <% } %>
           <div class="pro_img">
             <a href="/products/<%= product.id %>"><img src="<%= product.imageUrl %>" alt="<%= product.title %>" loading="lazy"></a>
@@ -242,7 +242,7 @@
           <div class="pro_btn">
             <form action="/cart" method="POST">
               <input type="hidden" name="productId" value="<%= product.id %>">
-              <button type="submit">🛒 Order Now</button>
+              <button type="submit">🛒 <%= typeof __ !== 'undefined' ? __('Order Now') : 'Order Now' %></button>
             </form>
           </div>
         </div>
@@ -257,8 +257,8 @@
       <% if (catProds.length > 0) { %>
       <section class="cat-section">
         <div class="sec-header">
-          <div><div class="sec-label">Collection</div><div class="sec-title"><%= cat.name %></div></div>
-          <a href="/products?category=<%= encodeURIComponent(cat.name) %>" class="sec-link">View More <i class="fa-solid fa-arrow-right" style="font-size:0.75rem;"></i></a>
+          <div><div class="sec-label"><%= typeof __ !== 'undefined' ? __('Collection') : 'Collection' %></div><div class="sec-title"><%= cat.name %></div></div>
+          <a href="/products?category=<%= encodeURIComponent(cat.name) %>" class="sec-link"><%= typeof __ !== 'undefined' ? __('View More') : 'View More' %> <i class="fa-solid fa-arrow-right" style="font-size:0.75rem;"></i></a>
         </div>
         <div class="product-grid">
           <% catProds.forEach(product => { %>
@@ -268,7 +268,7 @@
                 <div class="sale-badge">-<%= d %>%</div>
               <% } %>
               <% if (product.isFreeDelivery) { %>
-                <div class="free-delivery-badge"><i class="fa-solid fa-truck-fast"></i> Free Delivery</div>
+                <div class="free-delivery-badge"><i class="fa-solid fa-truck-fast"></i> <%= typeof __ !== 'undefined' ? __('Inside Dhaka') : 'Free Delivery' %></div>
               <% } %>
               <div class="pro_img">
                 <a href="/products/<%= product.id %>"><img src="<%= product.imageUrl %>" alt="<%= product.title %>" loading="lazy"></a>
@@ -283,7 +283,7 @@
               <div class="pro_btn">
                 <form action="/cart" method="POST">
                   <input type="hidden" name="productId" value="<%= product.id %>">
-                  <button type="submit">🛒 Order Now</button>
+                  <button type="submit">🛒 <%= typeof __ !== 'undefined' ? __('Order Now') : 'Order Now' %></button>
                 </form>
               </div>
             </div>

@@ -63,6 +63,10 @@ const Setting = sequelize.define('setting', {
   meta_keyword: {
     type: Sequelize.TEXT,
     defaultValue: "ecommerce, fashion, clothing, Bangladesh, online shopping, One Commerce"
+  },
+  language: {
+    type: Sequelize.STRING,
+    defaultValue: "bn"
   }
 });
 
