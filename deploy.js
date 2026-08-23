@@ -27,7 +27,10 @@ const IGNORED = [
   'banner-categories.json',
   'courier-config.json',
   'footer-config.json',
-  'media.json'
+  'media.json',
+  'uploads',
+  'database.sqlite',
+  'db.sqlite'
 ];
 
 async function syncDir(sftp, localDir, remoteDir) {
