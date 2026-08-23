@@ -301,7 +301,7 @@
                                 </div>
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem; color: #475569;">
                                     <span><%= typeof __ !== 'undefined' ? __('Delivery Charge') : 'Delivery Charge' %>:</span>
-                                    <strong style="color: #0284c7;"><%= (o.shippingCharge === 0 || o.shippingCharge === '0') ? (typeof __ !== 'undefined' ? __('Free Delivery') : 'FREE (৳ 0)') : ('৳ ' + o.shippingCharge) %></strong>
+                                    <strong style="color: #0284c7;">৳<%= (o.shippingCharge !== undefined && o.shippingCharge !== null) ? o.shippingCharge : 0 %></strong>
                                 </div>
                                 <% if (o.discount && Number(o.discount) > 0) { %>
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem; color: #ef4444;">

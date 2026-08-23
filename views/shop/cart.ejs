@@ -617,7 +617,7 @@
                             </div>
                             <div class="summary-calc-row">
                                 <span><%= typeof __ !== 'undefined' ? __('Delivery Charge') : 'Delivery Fee' %>:</span>
-                                <strong style="color: #0284c7; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px;"><span id="cart-shipping-val"><%= calcDelFee === 0 ? 'FREE (৳ 0)' : ('৳ ' + calcDelFee) %></span></strong>
+                                <strong style="color: #0284c7; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px;"><span id="cart-shipping-val">৳ <%= calcDelFee %></span></strong>
                             </div>
                             <div class="summary-calc-row summary-calc-total">
                                 <span><%= typeof __ !== 'undefined' ? __('Total') : 'Grand Total' %>:</span>
@@ -678,7 +678,7 @@
             const grandTotal = totalSubtotal + shippingVal;
 
             if (document.getElementById('cart-subtotal-val')) document.getElementById('cart-subtotal-val').innerText = totalSubtotal;
-            if (document.getElementById('cart-shipping-val')) document.getElementById('cart-shipping-val').innerText = hasFreeDelivery ? 'FREE (৳ 0)' : ('৳ ' + shippingVal);
+            if (document.getElementById('cart-shipping-val')) document.getElementById('cart-shipping-val').innerText = '৳ ' + shippingVal;
             if (document.getElementById('cart-grandtotal-val')) document.getElementById('cart-grandtotal-val').innerText = grandTotal;
             if (document.getElementById('mobile-sticky-grandtotal')) document.getElementById('mobile-sticky-grandtotal').innerText = grandTotal;
         }
