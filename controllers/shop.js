@@ -228,27 +228,47 @@ exports.getProduct = async (req, res, next) => {
 
 exports.getIndex = async (req, res, next) => {
   try {
-    let setting = await Setting.findOne().catch(() => null);
+    const fs = require("fs");
+    const path = require("path");
 
+    let setting = await Setting.findOne().catch(() => null);
     const prods = await safeFindAllProducts();
 
-    let bannerCategories = [];
+    // 1. Load Banners
+    let sliderBanners = [];
     try {
-      const bannerCategoriesFile = require("../util/path") + "/util/banner-categories.json";
-      const fs = require("fs");
-      if (fs.existsSync(bannerCategoriesFile)) {
-        bannerCategories = JSON.parse(fs.readFileSync(bannerCategoriesFile, "utf8"));
-      }
-    } catch (e) {}
-
-    let banners = [];
-    try {
-      const bannersFile = require("../util/path") + "/util/banners.json";
-      const fs = require("fs");
+      const bannersFile = path.join(__dirname, '..', 'util', 'banners.json');
       if (fs.existsSync(bannersFile)) {
-        banners = JSON.parse(fs.readFileSync(bannersFile, "utf8"));
+        const rawBanners = JSON.parse(fs.readFileSync(bannersFile, "utf8"));
+        sliderBanners = (rawBanners || []).filter(b => b.status !== false && b.status !== 'inactive');
       }
-    } catch (e) {}
+    } catch (e) {
+      console.log("Error loading sliderBanners:", e.message);
+    }
+
+    // 2. Load Banner Categories
+    let categoriesList = [];
+    try {
+      const catFile = path.join(__dirname, '..', 'util', 'banner-categories.json');
+      if (fs.existsSync(catFile)) {
+        const rawCats = JSON.parse(fs.readFileSync(catFile, "utf8"));
+        categoriesList = (rawCats || []).filter(c => c.status !== false && c.status !== 'inactive');
+      }
+    } catch (e) {
+      console.log("Error loading banner-categories.json:", e.message);
+    }
+
+    if (!categoriesList || categoriesList.length === 0) {
+      const uniqueCatNames = Array.from(new Set((prods || []).map(p => p.category).filter(Boolean)));
+      categoriesList = uniqueCatNames.map((name, i) => ({
+        id: i + 1,
+        name: name,
+        img: '/images/placeholder.jpg'
+      }));
+    }
+
+    // 3. Hot Deals
+    const hotDeals = (prods || []).filter(p => p.isHotDeal === true || p.isHotDeal === 1 || p.isHotDeal === 'true');
 
     let footerConfig = {
       about_text: 'Adiba\'s Collection offers authentic lifestyle, clothing, and home appliances nationwide.',
@@ -269,23 +289,29 @@ exports.getIndex = async (req, res, next) => {
     } catch (e) {}
 
     res.render("shop/index", {
-      prods: prods,
+      prods: prods || [],
+      hotDeals: hotDeals || [],
+      sliderBanners: sliderBanners || [],
+      categoriesList: categoriesList || [],
+      bannerCategories: categoriesList || [],
+      banners: sliderBanners || [],
       pageTitle: "Home - One Commerce",
       path: "/",
       siteSettings: setting ? setting.get({ plain: true }) : {},
-      bannerCategories: bannerCategories || [],
-      banners: banners || [],
       footerConfig: footerConfig
     });
   } catch (error) {
     console.log("In shop controller, getIndex: ", error);
     res.render("shop/index", {
       prods: [],
+      hotDeals: [],
+      sliderBanners: [],
+      categoriesList: [],
+      bannerCategories: [],
+      banners: [],
       pageTitle: "Home - One Commerce",
       path: "/",
       siteSettings: {},
-      bannerCategories: [],
-      banners: [],
       footerConfig: {}
     });
   }
