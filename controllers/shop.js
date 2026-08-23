@@ -1,5 +1,6 @@
 const Product = require("../models/product");
 const Cart = require("../models/cart");
+const sequelize = require("../util/database");
 
 const ERROR_PREFIX = "In shop controller, ";
 
@@ -48,6 +49,9 @@ exports.getProducts = async (req, res, next) => {
 
     if (category && category !== "All") {
       whereCondition.category = category;
+    }
+    if (subcategory) {
+      whereCondition.subcategory = subcategory;
     }
     if (search) {
       whereCondition.title = { [Op.like]: `%${search}%` };
@@ -285,18 +289,12 @@ const getUserCart = async (req) => {
     if (cart) return cart;
   }
 
-  let user = (req && req.user) ? req.user : null;
-  if (!user) {
-    const User = require("../models/user");
-    user = await User.findByPk(1).catch(() => null);
-  }
-
   let cart = null;
-  if (user && typeof user.createCart === 'function') {
-    cart = await user.createCart().catch(() => null);
+  if (req && req.user && typeof req.user.createCart === 'function') {
+    cart = await req.user.createCart().catch(() => null);
   }
   if (!cart) {
-    cart = await Cart.create({ userId: user ? user.id : 1 }).catch(() => null);
+    cart = await Cart.create({ userId: (req && req.user) ? req.user.id : null }).catch(() => null);
   }
 
   if (cart && req && req.session) {
@@ -540,21 +538,22 @@ exports.getOrders = async (req, res, next) => {
 };
 
 exports.postOrder = async (req, res, next) => {
+  const t = await sequelize.transaction().catch(() => null);
   try {
     const { name, phone, address, area, payment_method, productId, quantity, cartItemsJson } = req.body;
     const cart = await getUserCart(req);
 
     let products = [];
 
-    // Priority 1: Check cartItemsJson sent directly from cart page form
+    // Priority 1: Form Payload (cartItemsJson)
     if (cartItemsJson) {
       try {
         const parsed = JSON.parse(cartItemsJson);
         if (Array.isArray(parsed) && parsed.length > 0) {
           for (const item of parsed) {
-            const pId = item.productId || item.id;
-            const pQty = parseInt(item.quantity) || 1;
-            if (pId) {
+            const pId = parseInt(item.productId || item.id);
+            const pQty = Math.max(1, parseInt(item.quantity) || 1);
+            if (pId && !isNaN(pId)) {
               const prod = await safeFindProductById(pId);
               if (prod) {
                 const prodObj = prod.get ? prod.get({ plain: true }) : prod;
@@ -569,50 +568,32 @@ exports.postOrder = async (req, res, next) => {
       }
     }
 
-    // Priority 2: Check session cart
+    // Priority 2: Session Cart
     if (products.length === 0 && cart) {
       products = await getCartProducts(cart);
     }
 
-    // Priority 3: Direct productId submission from product card / detail page
+    // Priority 3: Direct productId submission from single-product buy
     if (products.length === 0 && productId) {
-      const singleProd = await safeFindProductById(productId);
-      if (singleProd) {
-        const prodObj = singleProd.get ? singleProd.get({ plain: true }) : singleProd;
-        prodObj.cartItem = { quantity: parseInt(quantity) || 1 };
-        products = [prodObj];
-      }
-    }
-
-    // Priority 4: Fallback to any recent cart items if cart table lookup failed
-    if (products.length === 0) {
-      const CartItem = require("../models/cart-item");
-      const recentItems = await CartItem.findAll({ order: [['id', 'DESC']], limit: 5 }).catch(() => []);
-      for (const item of recentItems) {
-        const prod = await safeFindProductById(item.productId);
-        if (prod) {
-          const prodObj = prod.get ? prod.get({ plain: true }) : prod;
-          prodObj.cartItem = { quantity: item.quantity || 1 };
-          products.push(prodObj);
+      const pId = parseInt(productId);
+      const pQty = Math.max(1, parseInt(quantity) || 1);
+      if (pId && !isNaN(pId)) {
+        const singleProd = await safeFindProductById(pId);
+        if (singleProd) {
+          const prodObj = singleProd.get ? singleProd.get({ plain: true }) : singleProd;
+          prodObj.cartItem = { quantity: pQty };
+          products = [prodObj];
         }
       }
     }
 
-    // Priority 5: Fallback to product #1 so NO ORDER EVER FAILS!
-    if (products.length === 0) {
-      const defaultProd = await safeFindProductById(1);
-      if (defaultProd) {
-        const prodObj = defaultProd.get ? defaultProd.get({ plain: true }) : defaultProd;
-        prodObj.cartItem = { quantity: 1 };
-        products = [prodObj];
-      }
+    // Strict Validation: If no valid products found in customer cart/payload, cancel cleanly
+    if (!products || products.length === 0) {
+      if (t) await t.rollback().catch(() => {});
+      return res.redirect('/cart');
     }
 
-    const User = require("../models/user");
-    const user = req.user || await User.findByPk(1).catch(() => null);
-    const userIdVal = user ? user.id : 1;
-
-    const hasFreeDelivery = (products || []).some(p => p.isFreeDelivery === true || p.isFreeDelivery === 1 || p.isFreeDelivery === 'true');
+    const hasFreeDelivery = products.some(p => p.isFreeDelivery === true || p.isFreeDelivery === 1 || p.isFreeDelivery === 'true');
     const selectedAreaFee = area ? parseInt(area) : 60;
     const shippingFee = hasFreeDelivery ? 0 : (isNaN(selectedAreaFee) ? 60 : selectedAreaFee);
 
@@ -622,11 +603,10 @@ exports.postOrder = async (req, res, next) => {
       subtotal += (p.price || 0) * qty;
     });
     const totalAmount = subtotal + shippingFee;
-    const invoiceId = 'INV-' + Date.now().toString().slice(-6);
 
     const Order = require("../models/order");
     const orderData = {
-      invoiceId: invoiceId,
+      invoiceId: 'INV-TEMP',
       name: (name && name.trim()) ? name.trim() : 'Customer',
       phone: (phone && phone.trim()) ? phone.trim() : '01700000000',
       address: (address && address.trim()) ? address.trim() : 'Dhaka',
@@ -637,53 +617,55 @@ exports.postOrder = async (req, res, next) => {
       amount: totalAmount
     };
 
-    let order = await Order.create(orderData).catch((err) => {
+    const options = t ? { transaction: t } : {};
+    let order = await Order.create(orderData, options).catch((err) => {
       console.log("Error in Order.create:", err.message);
       return null;
     });
 
-    if (!order) {
-      // Emergency fallback without non-essential fields if DB schema differs
-      order = await Order.create({
-        invoiceId: invoiceId,
-        name: (name && name.trim()) ? name.trim() : 'Customer',
-        phone: (phone && phone.trim()) ? phone.trim() : '01700000000',
-        address: (address && address.trim()) ? address.trim() : 'Dhaka',
-        amount: totalAmount
-      }).catch((e) => {
-        console.log("Emergency Order.create failed:", e.message);
-        return null;
-      });
-    }
-
     if (order) {
       order.invoiceId = 'INV-' + order.id;
-      await order.save().catch(() => {});
+      await order.save(options).catch(() => {});
+
+      const OrderItem = require("../models/order-item");
+      const CartItem = require("../models/cart-item");
+
+      for (const prod of products) {
+        const qty = prod.cartItem ? prod.cartItem.quantity : 1;
+        const itemCreated = await OrderItem.create({
+          orderId: order.id,
+          productId: prod.id,
+          quantity: qty
+        }, options).catch((err) => {
+          console.log("Error creating OrderItem:", err.message);
+          return null;
+        });
+
+        if (!itemCreated && t) {
+          throw new Error("Failed to create OrderItem for product " + prod.id);
+        }
+      }
+
+      if (cart) {
+        await CartItem.destroy({ where: { cartId: cart.id }, ...(t ? { transaction: t } : {}) }).catch(() => {});
+      }
+
+      if (t) await t.commit();
 
       if (req && req.session) {
         req.session.orderIds = req.session.orderIds || [];
         req.session.orderIds.push(order.id);
+        if (typeof req.session.save === 'function') req.session.save(() => {});
       }
 
-      const OrderItem = require("../models/order-item");
-      const CartItem = require("../models/cart-item");
-      for (const prod of products) {
-        const qty = prod.cartItem ? prod.cartItem.quantity : 1;
-        await OrderItem.create({
-          orderId: order.id,
-          productId: prod.id,
-          quantity: qty
-        }).catch(() => {});
-      }
-      if (cart) {
-        await CartItem.destroy({ where: { cartId: cart.id } }).catch(() => {});
-      }
       return res.redirect('/orders-success?orderId=' + order.id);
     }
 
-    return res.redirect('/orders-success');
+    if (t) await t.rollback().catch(() => {});
+    return res.redirect('/cart');
   } catch (err) {
-    console.log("Error in postOrder:", err);
+    if (t) await t.rollback().catch(() => {});
+    console.log("Error in postOrder transaction:", err);
     return res.redirect('/cart');
   }
 };
