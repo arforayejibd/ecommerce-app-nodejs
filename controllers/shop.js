@@ -277,19 +277,30 @@ exports.getOrderTrack = async (req, res, next) => {
 };
 
 const getUserCart = async (req) => {
-  let user = req.user;
+  const Cart = require("../models/cart");
+  let cartId = (req && req.session) ? req.session.cartId : null;
+
+  if (cartId) {
+    let cart = await Cart.findByPk(cartId).catch(() => null);
+    if (cart) return cart;
+  }
+
+  let user = (req && req.user) ? req.user : null;
   if (!user) {
     const User = require("../models/user");
     user = await User.findByPk(1).catch(() => null);
-    if (!user) {
-      user = await User.create({ name: "Lahiru", email: "lahirurc1st@gmail.com" }).catch(() => null);
-    }
   }
-  if (!user) return null;
 
-  let cart = await user.getCart().catch(() => null);
-  if (!cart) {
+  let cart = null;
+  if (user && typeof user.createCart === 'function') {
     cart = await user.createCart().catch(() => null);
+  }
+  if (!cart) {
+    cart = await Cart.create({ userId: user ? user.id : 1 }).catch(() => null);
+  }
+
+  if (cart && req && req.session) {
+    req.session.cartId = cart.id;
   }
   return cart;
 };
@@ -457,15 +468,10 @@ exports.getOrders = async (req, res, next) => {
       rawOrders = await Order.findAll({ where: { id: targetOrderId } }).catch(() => []);
     }
 
-    if (!rawOrders || rawOrders.length === 0) {
+    if ((!rawOrders || rawOrders.length === 0) && req.session && req.session.orderIds && req.session.orderIds.length > 0) {
+      const { Op } = require("sequelize");
       rawOrders = await Order.findAll({
-        where: { userId: user.id },
-        order: [['createdAt', 'DESC']]
-      }).catch(() => []);
-    }
-
-    if (!rawOrders || rawOrders.length === 0) {
-      rawOrders = await Order.findAll({
+        where: { id: { [Op.in]: req.session.orderIds } },
         order: [['createdAt', 'DESC']]
       }).catch(() => []);
     }
@@ -521,13 +527,21 @@ exports.getOrders = async (req, res, next) => {
 
 exports.postOrder = async (req, res, next) => {
   try {
-    const { name, phone, address, area, payment_method } = req.body;
+    const { name, phone, address, area, payment_method, productId, quantity } = req.body;
     const cart = await getUserCart(req);
-    if (!cart) {
-      return res.redirect('/cart');
+
+    let products = cart ? await getCartProducts(cart) : [];
+
+    // Fallback: Direct order submission from product card if cart is empty
+    if ((!products || products.length === 0) && productId) {
+      const singleProd = await safeFindProductById(productId);
+      if (singleProd) {
+        const prodObj = singleProd.get ? singleProd.get({ plain: true }) : singleProd;
+        prodObj.cartItem = { quantity: parseInt(quantity) || 1 };
+        products = [prodObj];
+      }
     }
 
-    const products = await getCartProducts(cart);
     if (!products || products.length === 0) {
       return res.redirect('/cart');
     }
@@ -575,6 +589,11 @@ exports.postOrder = async (req, res, next) => {
       order.invoiceId = 'INV-' + order.id;
       await order.save().catch(() => {});
 
+      if (req && req.session) {
+        req.session.orderIds = req.session.orderIds || [];
+        req.session.orderIds.push(order.id);
+      }
+
       const OrderItem = require("../models/order-item");
       const CartItem = require("../models/cart-item");
       for (const prod of products) {
@@ -585,7 +604,11 @@ exports.postOrder = async (req, res, next) => {
           quantity: qty
         }).catch(() => {});
       }
-      await CartItem.destroy({ where: { cartId: cart.id } }).catch(() => {});
+      if (cart) {
+        await CartItem.destroy({ where: { cartId: cart.id } }).catch(() => {});
+      }
+      return res.redirect('/orders-success?orderId=' + order.id);
+    }
       return res.redirect('/orders-success?orderId=' + order.id);
     }
 
