@@ -270,12 +270,12 @@ exports.getOrderTrack = async (req, res, next) => {
     console.log("Error in getOrderTrack:", err);
     return res.render('shop/order-track', {
       path: '/order-track',
-      pageTitle: 'Order Tracking - One Commerce',
-      orders: [],
-      order: null,
-      searchQuery: req.query.orderId || '',
-      orderId: req.query.orderId || '',
-      searched: true
+      pageTitle: "Home - One Commerce",
+      path: "/",
+      siteSettings: {},
+      bannerCategories: [],
+      banners: [],
+      footerConfig: {}
     });
   }
 };
@@ -286,7 +286,16 @@ const getUserCart = async (req) => {
 
   if (cartId) {
     let cart = await Cart.findByPk(cartId).catch(() => null);
-    if (cart) return cart;
+    if (cart) {
+      if (req && req.user && cart.userId && cart.userId !== req.user.id) {
+        cart = await Cart.create({ userId: req.user.id }).catch(() => null);
+        if (cart && req.session) {
+          req.session.cartId = cart.id;
+          if (typeof req.session.save === 'function') req.session.save(() => {});
+        }
+      }
+      return cart;
+    }
   }
 
   let cart = null;
@@ -358,7 +367,7 @@ exports.postCart = async (req, res, next) => {
   try {
     const productId = req.body.productId;
     const qty = req.body.quantity ? parseInt(req.body.quantity) : 1;
-    const addQty = isNaN(qty) || qty < 1 ? 1 : qty;
+    const addQty = isNaN(qty) || qty < 1 ? 1 : Math.min(qty, 100);
     const action = req.body.action;
 
     if (!productId) {
@@ -376,7 +385,7 @@ exports.postCart = async (req, res, next) => {
     }).catch(() => null);
 
     if (existingItem) {
-      existingItem.quantity = (existingItem.quantity || 1) + addQty;
+      existingItem.quantity = Math.min((existingItem.quantity || 1) + addQty, 100);
       await existingItem.save();
     } else {
       await CartItem.create({
@@ -398,14 +407,13 @@ exports.postCart = async (req, res, next) => {
       return res.json({ success: true, message: "Product added to cart!", cartCount: totalCartCount });
     }
 
-    if (action === "add_to_cart") {
-      const backUrl = req.get("Referrer") || `/products/${productId}`;
-      return res.redirect(backUrl);
+    if (action === 'order_now') {
+      return res.redirect('/cart');
     }
 
-    return res.redirect("/cart");
+    return res.redirect('/cart');
   } catch (error) {
-    console.log("Error in shop controller postCart:", error);
+    console.log("Error in postCart:", error);
     return res.redirect("/cart");
   }
 };
@@ -414,12 +422,20 @@ exports.postCartDeleteProduct = async (req, res, next) => {
   try {
     const productId = req.body.productId;
     const cart = await getUserCart(req);
-    if (cart && productId) {
-      const CartItem = require("../models/cart-item");
-      await CartItem.destroy({
-        where: { cartId: cart.id, productId: productId }
-      }).catch(() => {});
+    if (!cart) {
+      return res.redirect("/cart");
     }
+
+    const CartItem = require("../models/cart-item");
+    await CartItem.destroy({
+      where: { cartId: cart.id, productId: productId }
+    }).catch(async () => {
+      const products = await cart.getProducts({ where: { id: productId } });
+      if (products && products.length > 0) {
+        await products[0].cartItem.destroy();
+      }
+    });
+
     return res.redirect("/cart");
   } catch (error) {
     console.log("Error in postCartDeleteProduct:", error);
@@ -429,22 +445,16 @@ exports.postCartDeleteProduct = async (req, res, next) => {
 
 exports.postCartUpdateQty = async (req, res, next) => {
   try {
-    const productId = req.body.productId;
-    const newQty = parseInt(req.body.quantity);
-    
-    if (!productId || isNaN(newQty) || newQty < 1) {
-      return res.status(400).json({ success: false, message: 'Invalid payload' });
-    }
-
+    const { productId, quantity } = req.body;
     const cart = await getUserCart(req);
     if (!cart) {
-      return res.status(404).json({ success: false, message: 'Cart not found' });
+      return res.status(400).json({ success: false, message: 'Cart not found' });
     }
 
+    const newQty = Math.max(1, Math.min(parseInt(quantity) || 1, 100));
+
     const CartItem = require("../models/cart-item");
-    const item = await CartItem.findOne({
-      where: { cartId: cart.id, productId: productId }
-    }).catch(() => null);
+    const item = await CartItem.findOne({ where: { cartId: cart.id, productId: productId } }).catch(() => null);
 
     if (item) {
       item.quantity = newQty;
@@ -460,30 +470,24 @@ exports.postCartUpdateQty = async (req, res, next) => {
 
 exports.getOrders = async (req, res, next) => {
   try {
-    const User = require("../models/user");
     const Order = require("../models/order");
-    const OrderItem = require("../models/order-item");
-
-    const user = req.user || await User.findByPk(1).catch(() => null);
-    if (!user) {
-      return res.render('shop/orders', {
-        path: '/orders',
-        pageTitle: 'Your Orders - One Commerce',
-        orders: []
-      });
-    }
 
     let targetOrderId = req.query.orderId ? parseInt(req.query.orderId) : null;
     let rawOrders = [];
 
+    const sessionOrderIds = (req.session && req.session.orderIds) ? req.session.orderIds : [];
+
     if (targetOrderId && !isNaN(targetOrderId)) {
-      rawOrders = await Order.findAll({ where: { id: targetOrderId } }).catch(() => []);
+      const isAllowed = sessionOrderIds.includes(targetOrderId) || (req.user && req.user.isAdmin);
+      if (isAllowed) {
+        rawOrders = await Order.findAll({ where: { id: targetOrderId } }).catch(() => []);
+      }
     }
 
-    if ((!rawOrders || rawOrders.length === 0) && req.session && req.session.orderIds && req.session.orderIds.length > 0) {
+    if ((!rawOrders || rawOrders.length === 0) && sessionOrderIds.length > 0) {
       const { Op } = require("sequelize");
       rawOrders = await Order.findAll({
-        where: { id: { [Op.in]: req.session.orderIds } },
+        where: { id: { [Op.in]: sessionOrderIds } },
         order: [['createdAt', 'DESC']]
       }).catch(() => []);
     }
@@ -491,34 +495,25 @@ exports.getOrders = async (req, res, next) => {
     const orders = [];
     for (const ord of rawOrders) {
       const ordObj = ord.get ? ord.get({ plain: true }) : ord;
-      const items = await OrderItem.findAll({ where: { orderId: ordObj.id } }).catch(() => []);
+      const OrderItem = require("../models/order-item");
+      const orderItems = await OrderItem.findAll({ where: { orderId: ord.id } }).catch(() => []);
+
       const products = [];
-      let subtotal = 0;
-      for (const item of items) {
+      for (const item of orderItems) {
         const prod = await safeFindProductById(item.productId);
         if (prod) {
           const prodObj = prod.get ? prod.get({ plain: true }) : prod;
-          const qty = item.quantity || 1;
-          prodObj.orderItem = { quantity: qty };
+          prodObj.cartItem = { quantity: item.quantity || 1 };
           products.push(prodObj);
-          subtotal += (prodObj.price || 0) * qty;
         }
       }
       ordObj.products = products;
-      const hasFreeDelivery = (products || []).some(p => p.isFreeDelivery === true || p.isFreeDelivery === 1 || p.isFreeDelivery === 'true');
-      const shipFee = hasFreeDelivery ? 0 : ((ordObj.shippingCharge !== null && ordObj.shippingCharge !== undefined) ? Number(ordObj.shippingCharge) : (isNaN(parseInt(ordObj.area)) ? 60 : parseInt(ordObj.area)));
-      const disc = Number(ordObj.discount || 0);
-      const adv = Number(ordObj.advance || 0);
-      ordObj.shippingCharge = shipFee;
-      ordObj.subtotal = subtotal;
-      ordObj.discount = disc;
-      ordObj.advance = adv;
-      ordObj.totalAmount = hasFreeDelivery ? (subtotal - disc - adv) : ((ordObj.amount && Number(ordObj.amount) > 0) ? Number(ordObj.amount) : (subtotal + shipFee - disc - adv));
-      if (hasFreeDelivery && ord.save && ord.shippingCharge !== 0) {
-        ord.shippingCharge = 0;
-        ord.amount = ordObj.totalAmount;
-        await ord.save().catch(() => {});
-      }
+
+      const totals = calculateOrderTotals(products, ord.area, ord.discount, ord.advance);
+      ordObj.shippingCharge = totals.shippingCharge;
+      ordObj.subtotal = totals.subtotal;
+      ordObj.totalAmount = totals.totalAmount;
+
       orders.push(ordObj);
     }
 
@@ -538,22 +533,60 @@ exports.getOrders = async (req, res, next) => {
 };
 
 exports.postOrder = async (req, res, next) => {
-  const t = await sequelize.transaction().catch(() => null);
+  let t = null;
+  try {
+    t = await sequelize.transaction();
+  } catch (txErr) {
+    console.error("Failed to start DB transaction:", txErr.message);
+    return res.redirect('/cart');
+  }
+
   try {
     const { name, phone, address, area, payment_method, productId, quantity, cartItemsJson } = req.body;
-    const cart = await getUserCart(req);
 
+    if (quantity !== undefined && quantity !== null && quantity !== '') {
+      const parsedQty = parseInt(quantity);
+      if (isNaN(parsedQty) || parsedQty <= 0 || parsedQty > 100) {
+        await t.rollback();
+        return res.redirect('/cart');
+      }
+    }
+
+    const cart = await getUserCart(req);
     let products = [];
 
-    // Priority 1: Form Payload (cartItemsJson)
-    if (cartItemsJson) {
+    // Priority 1: DB Cart is Authoritative
+    if (cart) {
+      products = await getCartProducts(cart);
+    }
+
+    // Priority 2: Direct Single Product Order Submission
+    if ((!products || products.length === 0) && productId) {
+      const pId = parseInt(productId);
+      const pQty = quantity ? parseInt(quantity) : 1;
+
+      if (isNaN(pId) || pId <= 0 || isNaN(pQty) || pQty <= 0 || pQty > 100) {
+        await t.rollback();
+        return res.redirect('/cart');
+      }
+
+      const singleProd = await safeFindProductById(pId);
+      if (singleProd) {
+        const prodObj = singleProd.get ? singleProd.get({ plain: true }) : singleProd;
+        prodObj.cartItem = { quantity: pQty };
+        products = [prodObj];
+      }
+    }
+
+    // Priority 3: Form Payload Fallback (only if DB cart & productId absent)
+    if ((!products || products.length === 0) && cartItemsJson) {
       try {
         const parsed = JSON.parse(cartItemsJson);
         if (Array.isArray(parsed) && parsed.length > 0) {
           for (const item of parsed) {
             const pId = parseInt(item.productId || item.id);
-            const pQty = Math.max(1, parseInt(item.quantity) || 1);
-            if (pId && !isNaN(pId)) {
+            const pQty = parseInt(item.quantity) || 1;
+            if (pId && !isNaN(pId) && pQty > 0 && pQty <= 100) {
               const prod = await safeFindProductById(pId);
               if (prod) {
                 const prodObj = prod.get ? prod.get({ plain: true }) : prod;
@@ -568,41 +601,13 @@ exports.postOrder = async (req, res, next) => {
       }
     }
 
-    // Priority 2: Session Cart
-    if (products.length === 0 && cart) {
-      products = await getCartProducts(cart);
-    }
-
-    // Priority 3: Direct productId submission from single-product buy
-    if (products.length === 0 && productId) {
-      const pId = parseInt(productId);
-      const pQty = Math.max(1, parseInt(quantity) || 1);
-      if (pId && !isNaN(pId)) {
-        const singleProd = await safeFindProductById(pId);
-        if (singleProd) {
-          const prodObj = singleProd.get ? singleProd.get({ plain: true }) : singleProd;
-          prodObj.cartItem = { quantity: pQty };
-          products = [prodObj];
-        }
-      }
-    }
-
-    // Strict Validation: If no valid products found in customer cart/payload, cancel cleanly
+    // Strict Validation: Cancel cleanly if no valid products exist
     if (!products || products.length === 0) {
-      if (t) await t.rollback().catch(() => {});
+      await t.rollback();
       return res.redirect('/cart');
     }
 
-    const hasFreeDelivery = products.some(p => p.isFreeDelivery === true || p.isFreeDelivery === 1 || p.isFreeDelivery === 'true');
-    const selectedAreaFee = area ? parseInt(area) : 60;
-    const shippingFee = hasFreeDelivery ? 0 : (isNaN(selectedAreaFee) ? 60 : selectedAreaFee);
-
-    let subtotal = 0;
-    products.forEach(p => {
-      const qty = p.cartItem ? p.cartItem.quantity : 1;
-      subtotal += (p.price || 0) * qty;
-    });
-    const totalAmount = subtotal + shippingFee;
+    const totals = calculateOrderTotals(products, area);
 
     const Order = require("../models/order");
     const orderData = {
@@ -613,63 +618,132 @@ exports.postOrder = async (req, res, next) => {
       area: area || '60',
       paymentMethod: payment_method || 'Cash On Delivery',
       status: 'Pending',
-      shippingCharge: shippingFee,
-      amount: totalAmount
+      shippingCharge: totals.shippingCharge,
+      amount: totals.totalAmount
     };
 
-    const options = t ? { transaction: t } : {};
-    let order = await Order.create(orderData, options).catch((err) => {
-      console.log("Error in Order.create:", err.message);
-      return null;
-    });
+    const order = await Order.create(orderData, { transaction: t });
 
-    if (order) {
-      order.invoiceId = 'INV-' + order.id;
-      await order.save(options).catch(() => {});
+    order.invoiceId = 'INV-' + order.id;
+    await order.save({ transaction: t });
 
-      const OrderItem = require("../models/order-item");
-      const CartItem = require("../models/cart-item");
+    const OrderItem = require("../models/order-item");
+    const CartItem = require("../models/cart-item");
 
-      for (const prod of products) {
-        const qty = prod.cartItem ? prod.cartItem.quantity : 1;
-        const itemCreated = await OrderItem.create({
-          orderId: order.id,
-          productId: prod.id,
-          quantity: qty
-        }, options).catch((err) => {
-          console.log("Error creating OrderItem:", err.message);
-          return null;
-        });
-
-        if (!itemCreated && t) {
-          throw new Error("Failed to create OrderItem for product " + prod.id);
-        }
-      }
-
-      if (cart) {
-        await CartItem.destroy({ where: { cartId: cart.id }, ...(t ? { transaction: t } : {}) }).catch(() => {});
-      }
-
-      if (t) await t.commit();
-
-      if (req && req.session) {
-        req.session.orderIds = req.session.orderIds || [];
-        req.session.orderIds.push(order.id);
-        if (typeof req.session.save === 'function') req.session.save(() => {});
-      }
-
-      return res.redirect('/orders-success?orderId=' + order.id);
+    for (const prod of products) {
+      const qty = prod.cartItem ? prod.cartItem.quantity : 1;
+      await OrderItem.create({
+        orderId: order.id,
+        productId: prod.id,
+        quantity: qty
+      }, { transaction: t });
     }
 
-    if (t) await t.rollback().catch(() => {});
-    return res.redirect('/cart');
+    if (cart) {
+      await CartItem.destroy({ where: { cartId: cart.id }, transaction: t });
+    }
+
+    await t.commit();
+
+    if (req && req.session) {
+      req.session.orderIds = req.session.orderIds || [];
+      req.session.orderIds.push(order.id);
+      if (typeof req.session.save === 'function') req.session.save(() => {});
+    }
+
+    return res.redirect('/orders-success?orderId=' + order.id);
+
   } catch (err) {
     if (t) await t.rollback().catch(() => {});
-    console.log("Error in postOrder transaction:", err);
+    console.error("Error in postOrder transaction:", err);
     return res.redirect('/cart');
   }
 };
 
+exports.getOrderTrack = async (req, res, next) => {
+  try {
+    const Order = require("../models/order");
+    const query = req.query.orderId ? req.query.orderId.trim() : '';
 
+    if (!query) {
+      return res.render('shop/order-track', {
+        path: '/order-track',
+        pageTitle: 'Order Tracking - One Commerce',
+        orders: [],
+        order: null,
+        searchQuery: '',
+        orderId: '',
+        searched: false
+      });
+    }
 
+    let whereConditions = [];
 
+    if (query.toUpperCase().startsWith('INV-')) {
+      whereConditions.push({ invoiceId: query.toUpperCase() });
+    } else {
+      const cleanDigits = query.replace(/\D/g, '');
+      if (cleanDigits.length >= 10) {
+        whereConditions.push({ phone: cleanDigits });
+      } else if (cleanDigits.length > 0) {
+        whereConditions.push({ id: parseInt(cleanDigits) });
+        whereConditions.push({ invoiceId: 'INV-' + cleanDigits });
+      }
+    }
+
+    let rawOrders = [];
+    if (whereConditions.length > 0) {
+      const { Op } = require("sequelize");
+      rawOrders = await Order.findAll({
+        where: { [Op.or]: whereConditions },
+        order: [['id', 'DESC']]
+      }).catch(() => []);
+    }
+
+    const orders = [];
+    for (const ord of rawOrders) {
+      const ordObj = ord.get ? ord.get({ plain: true }) : ord;
+      const OrderItem = require("../models/order-item");
+      const orderItems = await OrderItem.findAll({ where: { orderId: ord.id } }).catch(() => []);
+
+      const products = [];
+      for (const item of orderItems) {
+        const prod = await safeFindProductById(item.productId);
+        if (prod) {
+          const prodObj = prod.get ? prod.get({ plain: true }) : prod;
+          prodObj.cartItem = { quantity: item.quantity || 1 };
+          products.push(prodObj);
+        }
+      }
+      ordObj.products = products;
+
+      const totals = calculateOrderTotals(products, ord.area, ord.discount, ord.advance);
+      ordObj.shippingCharge = totals.shippingCharge;
+      ordObj.subtotal = totals.subtotal;
+      ordObj.totalAmount = totals.totalAmount;
+
+      orders.push(ordObj);
+    }
+
+    return res.render('shop/order-track', {
+      path: '/order-track',
+      pageTitle: 'Order Tracking - One Commerce',
+      orders: orders,
+      order: orders.length > 0 ? orders[0] : null,
+      searchQuery: query,
+      orderId: query,
+      searched: true
+    });
+  } catch (err) {
+    console.log("Error in getOrderTrack:", err);
+    return res.render('shop/order-track', {
+      path: '/order-track',
+      pageTitle: 'Order Tracking - One Commerce',
+      orders: [],
+      order: null,
+      searchQuery: req.query.orderId || '',
+      orderId: req.query.orderId || '',
+      searched: true
+    });
+  }
+};
