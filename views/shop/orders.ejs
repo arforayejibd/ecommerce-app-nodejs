@@ -307,7 +307,7 @@
                             </tr>
                             <tr>
                                 <th colspan="2" style="text-align: right;"><%= typeof __ !== 'undefined' ? __('Delivery Charge') : 'Delivery Charge' %>:</th>
-                                <td style="text-align: right; font-weight: 800; color: #0284c7;">৳ <%= order.shippingCharge !== undefined ? order.shippingCharge : (parseInt(order.area) || 60) %></td>
+                                <td style="text-align: right; font-weight: 800; color: #0284c7;"><%= (order.shippingCharge === 0 || order.shippingCharge === '0') ? (typeof __ !== 'undefined' ? __('Free Delivery') : 'FREE (৳ 0)') : ('৳ ' + order.shippingCharge) %></td>
                             </tr>
                             <% if (order.discount && Number(order.discount) > 0) { %>
                             <tr>

@@ -236,14 +236,20 @@ exports.getOrderTrack = async (req, res, next) => {
         }
       }
       ordObj.products = products;
-      const shipFee = (ordObj.shippingCharge !== null && ordObj.shippingCharge !== undefined) ? Number(ordObj.shippingCharge) : (isNaN(parseInt(ordObj.area)) ? 60 : parseInt(ordObj.area));
+      const hasFreeDelivery = (products || []).some(p => p.isFreeDelivery === true || p.isFreeDelivery === 1 || p.isFreeDelivery === 'true');
+      const shipFee = hasFreeDelivery ? 0 : ((ordObj.shippingCharge !== null && ordObj.shippingCharge !== undefined) ? Number(ordObj.shippingCharge) : (isNaN(parseInt(ordObj.area)) ? 60 : parseInt(ordObj.area)));
       const disc = Number(ordObj.discount || 0);
       const adv = Number(ordObj.advance || 0);
       ordObj.subtotal = subtotal;
       ordObj.shippingCharge = shipFee;
       ordObj.discount = disc;
       ordObj.advance = adv;
-      ordObj.totalAmount = (ordObj.amount && Number(ordObj.amount) > 0) ? Number(ordObj.amount) : (subtotal + shipFee - disc - adv);
+      ordObj.totalAmount = hasFreeDelivery ? (subtotal - disc - adv) : ((ordObj.amount && Number(ordObj.amount) > 0) ? Number(ordObj.amount) : (subtotal + shipFee - disc - adv));
+      if (hasFreeDelivery && ord.save && ord.shippingCharge !== 0) {
+        ord.shippingCharge = 0;
+        ord.amount = ordObj.totalAmount;
+        await ord.save().catch(() => {});
+      }
       orders.push(ordObj);
     }
 
@@ -481,12 +487,20 @@ exports.getOrders = async (req, res, next) => {
         }
       }
       ordObj.products = products;
-      const shipFee = (ordObj.shippingCharge !== null && ordObj.shippingCharge !== undefined) ? Number(ordObj.shippingCharge) : (isNaN(parseInt(ordObj.area)) ? 60 : parseInt(ordObj.area));
+      const hasFreeDelivery = (products || []).some(p => p.isFreeDelivery === true || p.isFreeDelivery === 1 || p.isFreeDelivery === 'true');
+      const shipFee = hasFreeDelivery ? 0 : ((ordObj.shippingCharge !== null && ordObj.shippingCharge !== undefined) ? Number(ordObj.shippingCharge) : (isNaN(parseInt(ordObj.area)) ? 60 : parseInt(ordObj.area)));
       const disc = Number(ordObj.discount || 0);
       const adv = Number(ordObj.advance || 0);
       ordObj.shippingCharge = shipFee;
       ordObj.subtotal = subtotal;
-      ordObj.totalAmount = (ordObj.amount && Number(ordObj.amount) > 0) ? Number(ordObj.amount) : (subtotal + shipFee - disc - adv);
+      ordObj.discount = disc;
+      ordObj.advance = adv;
+      ordObj.totalAmount = hasFreeDelivery ? (subtotal - disc - adv) : ((ordObj.amount && Number(ordObj.amount) > 0) ? Number(ordObj.amount) : (subtotal + shipFee - disc - adv));
+      if (hasFreeDelivery && ord.save && ord.shippingCharge !== 0) {
+        ord.shippingCharge = 0;
+        ord.amount = ordObj.totalAmount;
+        await ord.save().catch(() => {});
+      }
       orders.push(ordObj);
     }
 
