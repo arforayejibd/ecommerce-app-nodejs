@@ -28,6 +28,8 @@ const IGNORED = [
   'courier-config.json',
   'footer-config.json',
   'media.json',
+  'payment-config.json',
+  'sms-config.json',
   'uploads',
   'database.sqlite',
   'db.sqlite'

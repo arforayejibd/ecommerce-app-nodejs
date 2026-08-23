@@ -1337,11 +1337,12 @@ exports.getOrderStatuses = (req, res, next) => {
 
 // 10. API Integrations
 exports.getPaymentGateways = (req, res, next) => {
+  const currentConfig = loadPaymentConfig();
   res.render("admin/payment-gateways", {
     pageTitle: "Payment Gateways",
     path: "/admin/paymentgeteway/manage",
-    bkash: req.app.locals.bkashConfig || { username: '01700000000', app_key: 'bkash_app_key_837492810', app_secret: 'bkash_secret_739201948', base_url: 'https://tokenized.pay.bKash.com/v1.2.0-beta', password: 'bkash_password_92841', logo: 'https://raw.githubusercontent.com/tahmid-ul/bkash-logo/main/bkash-logo.png', status: true },
-    shurjopay: req.app.locals.shurjopayConfig || { base_url: 'https://shurjopay.com', username: 'sp_merchant_user', password: 'sp_password_83749', prefix: 'NO', success_url: 'http://127.0.0.1:3000/payment/shurjopay/success', return_url: 'http://127.0.0.1:3000/payment/shurjopay/cancel', logo: 'https://shurjopay.com/favicon.ico', status: true }
+    bkash: currentConfig.bkash,
+    shurjopay: currentConfig.shurjopay
   });
 };
 
@@ -1350,65 +1351,85 @@ exports.postPaymentGatewayUpdate = (req, res, next) => {
           bkash_username, bkash_app_key, bkash_app_secret, bkash_base_url, bkash_password, bkash_logo, bkash_status,
           shurjopay_base_url, shurjopay_username, shurjopay_password, shurjopay_prefix, shurjopay_success_url, shurjopay_return_url, shurjopay_logo, shurjopay_status } = req.body;
 
+  const currentConfig = loadPaymentConfig();
+
   if (type === 'bkash') {
-    req.app.locals.bkashConfig = {
-      username: username || bkash_username,
-      app_key: app_key || bkash_app_key,
-      app_secret: app_secret || bkash_app_secret,
-      base_url: base_url || bkash_base_url,
-      password: password || bkash_password,
-      logo: logo || bkash_logo || 'https://raw.githubusercontent.com/tahmid-ul/bkash-logo/main/bkash-logo.png',
-      status: status === 'on' || status === '1'
+    currentConfig.bkash = {
+      username: username || bkash_username || currentConfig.bkash.username,
+      app_key: app_key || bkash_app_key || currentConfig.bkash.app_key,
+      app_secret: app_secret || bkash_app_secret || currentConfig.bkash.app_secret,
+      base_url: base_url || bkash_base_url || currentConfig.bkash.base_url,
+      password: password || bkash_password || currentConfig.bkash.password,
+      logo: logo || bkash_logo || currentConfig.bkash.logo,
+      status: status === 'on' || status === '1' || status === true
     };
   } else if (type === 'shurjopay') {
-    req.app.locals.shurjopayConfig = {
-      username: username || shurjopay_username,
-      base_url: base_url || shurjopay_base_url,
-      password: password || shurjopay_password,
-      prefix: prefix || shurjopay_prefix,
-      success_url: success_url || shurjopay_success_url,
-      return_url: return_url || shurjopay_return_url,
-      logo: logo || shurjopay_logo || 'https://shurjopay.com/favicon.ico',
-      status: status === 'on' || status === '1'
+    currentConfig.shurjopay = {
+      username: username || shurjopay_username || currentConfig.shurjopay.username,
+      base_url: base_url || shurjopay_base_url || currentConfig.shurjopay.base_url,
+      password: password || shurjopay_password || currentConfig.shurjopay.password,
+      prefix: prefix || shurjopay_prefix || currentConfig.shurjopay.prefix,
+      success_url: success_url || shurjopay_success_url || currentConfig.shurjopay.success_url,
+      return_url: return_url || shurjopay_return_url || currentConfig.shurjopay.return_url,
+      logo: logo || shurjopay_logo || currentConfig.shurjopay.logo,
+      status: status === 'on' || status === '1' || status === true
     };
   } else {
-    if (bkash_username) {
-      req.app.locals.bkashConfig = {
-        username: bkash_username, app_key: bkash_app_key, app_secret: bkash_app_secret, base_url: bkash_base_url, password: bkash_password,
-        logo: bkash_logo || 'https://raw.githubusercontent.com/tahmid-ul/bkash-logo/main/bkash-logo.png',
-        status: bkash_status === 'on' || bkash_status === '1'
+    if (bkash_username !== undefined || bkash_status !== undefined) {
+      currentConfig.bkash = {
+        username: bkash_username || currentConfig.bkash.username,
+        app_key: bkash_app_key || currentConfig.bkash.app_key,
+        app_secret: bkash_app_secret || currentConfig.bkash.app_secret,
+        base_url: bkash_base_url || currentConfig.bkash.base_url,
+        password: bkash_password || currentConfig.bkash.password,
+        logo: bkash_logo || currentConfig.bkash.logo,
+        status: bkash_status === 'on' || bkash_status === '1' || bkash_status === true
       };
     }
-    if (shurjopay_username) {
-      req.app.locals.shurjopayConfig = {
-        username: shurjopay_username, base_url: shurjopay_base_url, password: shurjopay_password, prefix: shurjopay_prefix,
-        success_url: shurjopay_success_url, return_url: shurjopay_return_url,
-        logo: shurjopay_logo || 'https://shurjopay.com/favicon.ico',
-        status: shurjopay_status === 'on' || shurjopay_status === '1'
+    if (shurjopay_username !== undefined || shurjopay_status !== undefined) {
+      currentConfig.shurjopay = {
+        username: shurjopay_username || currentConfig.shurjopay.username,
+        base_url: shurjopay_base_url || currentConfig.shurjopay.base_url,
+        password: shurjopay_password || currentConfig.shurjopay.password,
+        prefix: shurjopay_prefix || currentConfig.shurjopay.prefix,
+        success_url: shurjopay_success_url || currentConfig.shurjopay.success_url,
+        return_url: shurjopay_return_url || currentConfig.shurjopay.return_url,
+        logo: shurjopay_logo || currentConfig.shurjopay.logo,
+        status: shurjopay_status === 'on' || shurjopay_status === '1' || shurjopay_status === true
       };
     }
   }
+
+  savePaymentConfig(currentConfig);
+  req.app.locals.bkashConfig = currentConfig.bkash;
+  req.app.locals.shurjopayConfig = currentConfig.shurjopay;
 
   res.redirect('/admin/paymentgeteway/manage');
 };
 
 exports.getSmsGateways = (req, res, next) => {
+  const sms = loadSmsConfig();
   res.render("admin/sms-gateways", {
     pageTitle: "SMS Gateways",
     path: "/admin/smsgeteway/manage",
-    sms: req.app.locals.smsConfig || { url: 'https://api.sms.net.bd/sendsms', api_key: 'sms_net_bd_api_key_83749102', serderid: 'ROSEDRAPE', status: true, order: true, forget_pass: true, password_g: true }
+    sms: sms
   });
 };
 
 exports.postSmsGatewayUpdate = (req, res, next) => {
   const { url, api_key, serderid, status, order, forget_pass, password_g } = req.body;
-  req.app.locals.smsConfig = {
-    url, api_key, serderid,
-    status: status === 'on' || status === '1',
-    order: order === 'on' || order === '1',
-    forget_pass: forget_pass === 'on' || forget_pass === '1',
-    password_g: password_g === 'on' || password_g === '1'
-  };
+  const currentSms = loadSmsConfig();
+  currentSms.url = url || currentSms.url;
+  currentSms.api_key = api_key || currentSms.api_key;
+  currentSms.serderid = serderid || currentSms.serderid;
+  currentSms.status = status === 'on' || status === '1' || status === true;
+  currentSms.order = order === 'on' || order === '1' || order === true;
+  currentSms.forget_pass = forget_pass === 'on' || forget_pass === '1' || forget_pass === true;
+  currentSms.password_g = password_g === 'on' || password_g === '1' || password_g === true;
+
+  saveSmsConfig(currentSms);
+  req.app.locals.smsConfig = currentSms;
+
   res.redirect('/admin/smsgeteway/manage');
 };
 
@@ -1447,6 +1468,40 @@ exports.postCourierApiUpdate = (req, res, next) => {
   saveCourierConfig(newConfig);
   res.redirect('/admin/courierapi/manage');
 };
+
+// Payment & SMS Config Helpers
+const getPaymentFilePath = () => path.join(__dirname, '..', 'util', 'payment-config.json');
+const getSmsFilePath = () => path.join(__dirname, '..', 'util', 'sms-config.json');
+
+const loadPaymentConfig = () => {
+  try {
+    const file = getPaymentFilePath();
+    if (fs.existsSync(file)) return JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch (e) {}
+  return {
+    bkash: { username: '', app_key: '', app_secret: '', base_url: 'https://tokenized.pay.bKash.com/v1.2.0-beta', password: '', logo: 'https://raw.githubusercontent.com/tahmid-ul/bkash-logo/main/bkash-logo.png', status: false },
+    shurjopay: { base_url: 'https://shurjopay.com', username: '', password: '', prefix: 'NO', success_url: 'http://127.0.0.1:3000/payment/shurjopay/success', return_url: 'http://127.0.0.1:3000/payment/shurjopay/cancel', logo: '/frontEnd/images/onlinepay.png', status: false }
+  };
+};
+
+const savePaymentConfig = (data) => {
+  try { fs.writeFileSync(getPaymentFilePath(), JSON.stringify(data, null, 2), 'utf8'); } catch (e) {}
+};
+
+const loadSmsConfig = () => {
+  try {
+    const file = getSmsFilePath();
+    if (fs.existsSync(file)) return JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch (e) {}
+  return { url: 'https://api.sms.net.bd/sendsms', api_key: '', serderid: 'ROSEDRAPE', status: false, order: false, forget_pass: false, password_g: false };
+};
+
+const saveSmsConfig = (data) => {
+  try { fs.writeFileSync(getSmsFilePath(), JSON.stringify(data, null, 2), 'utf8'); } catch (e) {}
+};
+
+exports.loadPaymentConfig = loadPaymentConfig;
+exports.loadSmsConfig = loadSmsConfig;
 
 // GTM & Pixel Config Helpers
 const getGtmFilePath = () => path.join(__dirname, '..', 'util', 'gtm-config.json');
