@@ -42,8 +42,8 @@ app.use(express.static(path.join(__dirname, "public")));app.set('trust proxy', 1
 app.use(
   session({
     secret: "onecommerce_secret_session_key_987",
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     cookie: {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       secure: false,

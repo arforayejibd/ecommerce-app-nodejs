@@ -301,6 +301,9 @@ const getUserCart = async (req) => {
 
   if (cart && req && req.session) {
     req.session.cartId = cart.id;
+    if (typeof req.session.save === 'function') {
+      req.session.save(() => {});
+    }
   }
   return cart;
 };
@@ -480,20 +483,10 @@ exports.getOrders = async (req, res, next) => {
     }
 
     if ((!rawOrders || rawOrders.length === 0) && req.session && req.session.orderIds && req.session.orderIds.length > 0) {
+      const { Op } = require("sequelize");
       rawOrders = await Order.findAll({
         where: { id: { [Op.in]: req.session.orderIds } },
         order: [['createdAt', 'DESC']]
-      }).catch(() => []);
-    }
-
-    if (!rawOrders || rawOrders.length === 0) {
-      const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000);
-      rawOrders = await Order.findAll({
-        where: {
-          createdAt: { [Op.gte]: fifteenMinsAgo }
-        },
-        order: [['createdAt', 'DESC']],
-        limit: 1
       }).catch(() => []);
     }
 
