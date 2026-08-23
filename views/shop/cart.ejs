@@ -492,6 +492,9 @@
 
                 <div class="card-body-content">
                     <form action="/create-order" method="POST" id="checkout-main-form">
+                        <% if (typeof products !== 'undefined' && products && products.length > 0) { %>
+                            <input type="hidden" name="cartItemsJson" id="cart-items-json" value='<%= JSON.stringify(products.map(p => ({ productId: p.id, quantity: p.cartItem ? p.cartItem.quantity : 1 }))) %>'>
+                        <% } %>
 
                         <div class="form-group-mb">
                             <label class="form-label-txt"><%= typeof __ !== 'undefined' ? __('Your Name') : 'Full Name' %> <span style="color:#ef4444;">*</span></label>

@@ -541,12 +541,36 @@ exports.getOrders = async (req, res, next) => {
 
 exports.postOrder = async (req, res, next) => {
   try {
-    const { name, phone, address, area, payment_method, productId, quantity } = req.body;
+    const { name, phone, address, area, payment_method, productId, quantity, cartItemsJson } = req.body;
     const cart = await getUserCart(req);
 
     let products = cart ? await getCartProducts(cart) : [];
 
-    // Fallback: Direct order submission from product card if cart is empty
+    // Fallback 1: Parse cartItemsJson sent directly from checkout form
+    if ((!products || products.length === 0) && cartItemsJson) {
+      try {
+        const parsedItems = JSON.parse(cartItemsJson);
+        if (Array.isArray(parsedItems) && parsedItems.length > 0) {
+          products = [];
+          for (const item of parsedItems) {
+            const pId = item.productId || item.id;
+            const pQty = parseInt(item.quantity) || 1;
+            if (pId) {
+              const prod = await safeFindProductById(pId);
+              if (prod) {
+                const prodObj = prod.get ? prod.get({ plain: true }) : prod;
+                prodObj.cartItem = { quantity: pQty };
+                products.push(prodObj);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.log("Error parsing cartItemsJson:", e.message);
+      }
+    }
+
+    // Fallback 2: Direct order submission from product card if cart is empty
     if ((!products || products.length === 0) && productId) {
       const singleProd = await safeFindProductById(productId);
       if (singleProd) {
@@ -590,14 +614,13 @@ exports.postOrder = async (req, res, next) => {
       userId: userIdVal
     };
 
-    let order = null;
-    if (user && typeof user.createOrder === 'function') {
-      order = await user.createOrder(orderData).catch(async () => {
-        return await Order.create(orderData).catch(() => null);
-      });
-    } else {
-      order = await Order.create(orderData).catch(() => null);
-    }
+    let order = await Order.create(orderData).catch(async (err) => {
+      console.log("Error in Order.create:", err.message);
+      if (user && typeof user.createOrder === 'function') {
+        return await user.createOrder(orderData).catch(() => null);
+      }
+      return null;
+    });
 
     if (order) {
       order.invoiceId = 'INV-' + order.id;
