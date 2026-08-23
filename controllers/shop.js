@@ -98,7 +98,7 @@ const getUserCart = async (req) => {
   } else {
     let cartId = (req && req.session) ? req.session.cartId : null;
     if (cartId) {
-      cart = await Cart.findOne({ where: { id: cartId, userId: null } }).catch(() => null);
+      cart = await Cart.findByPk(cartId).catch(() => null);
     }
     if (!cart) {
       cart = await Cart.create({ userId: null }).catch(() => null);
@@ -246,7 +246,7 @@ exports.getIndex = async (req, res, next) => {
       console.log("Error loading sliderBanners:", e.message);
     }
 
-    // 2. Load Banner Categories
+    // 2. Load Banner Categories and merge all DB product categories
     let categoriesList = [];
     try {
       const catFile = path.join(__dirname, '..', 'util', 'banner-categories.json');
@@ -258,14 +258,18 @@ exports.getIndex = async (req, res, next) => {
       console.log("Error loading banner-categories.json:", e.message);
     }
 
-    if (!categoriesList || categoriesList.length === 0) {
-      const uniqueCatNames = Array.from(new Set((prods || []).map(p => p.category).filter(Boolean)));
-      categoriesList = uniqueCatNames.map((name, i) => ({
-        id: i + 1,
-        name: name,
-        img: '/images/placeholder.jpg'
-      }));
-    }
+    const dbCatNames = Array.from(new Set((prods || []).map(p => p && p.category ? String(p.category).trim() : null).filter(Boolean)));
+    
+    dbCatNames.forEach(dbCat => {
+      const exists = categoriesList.some(c => c.name && c.name.trim().toLowerCase() === dbCat.toLowerCase());
+      if (!exists) {
+        categoriesList.push({
+          id: dbCat,
+          name: dbCat,
+          img: '/images/placeholder.jpg'
+        });
+      }
+    });
 
     // 3. Hot Deals
     const hotDeals = (prods || []).filter(p => p.isHotDeal === true || p.isHotDeal === 1 || p.isHotDeal === 'true');
@@ -616,6 +620,28 @@ exports.postOrder = async (req, res, next) => {
         prodObj.cartItem = { quantity: pQty };
         products = [prodObj];
       }
+    }
+  }
+
+  if ((!products || products.length === 0) && req.body.cartItemsJson) {
+    try {
+      const parsed = JSON.parse(req.body.cartItemsJson);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        for (const item of parsed) {
+          const pId = parseInt(item.productId || item.id);
+          const pQty = parseInt(item.quantity) || 1;
+          if (pId && !isNaN(pId) && Number.isInteger(pQty) && pQty > 0 && pQty <= 100) {
+            const prod = await safeFindProductById(pId);
+            if (prod) {
+              const prodObj = prod.get ? prod.get({ plain: true }) : prod;
+              prodObj.cartItem = { quantity: pQty };
+              products.push(prodObj);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.log("Error parsing cartItemsJson in postOrder:", e.message);
     }
   }
 

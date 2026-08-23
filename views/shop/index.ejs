@@ -256,7 +256,7 @@
 
   <% if (typeof categoriesList !== 'undefined' && categoriesList.length > 0) { %>
     <% categoriesList.forEach(cat => { %>
-      <% const catProds = prods.filter(p => p.category === cat.name).slice(0, 4); %>
+      <% const catProds = prods.filter(p => p.category && String(p.category).trim().toLowerCase() === String(cat.name).trim().toLowerCase()).slice(0, 8); %>
       <% if (catProds.length > 0) { %>
       <section class="cat-section">
         <div class="sec-header">
