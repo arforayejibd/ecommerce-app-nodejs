@@ -296,7 +296,7 @@ const getCartProducts = async (cart) => {
     console.log("Fallback cart.getProducts:", err.message);
     try {
       return await cart.getProducts({
-        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal']
+        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal', 'isFreeDelivery']
       });
     } catch (err2) {
       console.log("Secondary fallback cart.getProducts failed:", err2.message);
@@ -522,13 +522,16 @@ exports.postOrder = async (req, res, next) => {
     const user = req.user || await User.findByPk(1).catch(() => null);
     const userIdVal = user ? user.id : 1;
 
-    const shippingFee = area ? parseInt(area) : 60;
+    const hasFreeDelivery = (products || []).some(p => p.isFreeDelivery === true || p.isFreeDelivery === 1 || p.isFreeDelivery === 'true');
+    const selectedAreaFee = area ? parseInt(area) : 60;
+    const shippingFee = hasFreeDelivery ? 0 : (isNaN(selectedAreaFee) ? 60 : selectedAreaFee);
+
     let subtotal = 0;
     products.forEach(p => {
       const qty = p.cartItem ? p.cartItem.quantity : 1;
       subtotal += (p.price || 0) * qty;
     });
-    const totalAmount = subtotal + (isNaN(shippingFee) ? 60 : shippingFee);
+    const totalAmount = subtotal + shippingFee;
     const invoiceId = 'INV-' + Date.now().toString().slice(-6);
 
     const Order = require("../models/order");
@@ -540,7 +543,7 @@ exports.postOrder = async (req, res, next) => {
       area: area || '60',
       paymentMethod: payment_method || 'Cash On Delivery',
       status: 'Pending',
-      shippingCharge: isNaN(shippingFee) ? 60 : shippingFee,
+      shippingCharge: shippingFee,
       amount: totalAmount,
       userId: userIdVal
     };
