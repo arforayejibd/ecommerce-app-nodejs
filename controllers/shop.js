@@ -1,10 +1,23 @@
 const Product = require("../models/product");
 const Cart = require("../models/cart");
+const Order = require("../models/order");
+const OrderItem = require("../models/order-item");
+const CartItem = require("../models/cart-item");
+const Setting = require("../models/setting");
 const sequelize = require("../util/database");
+const crypto = require("crypto");
+const { Op } = require("sequelize");
 
 const ERROR_PREFIX = "In shop controller, ";
 
-const { Op } = require("sequelize");
+const normalizePhone = (phone) => {
+  if (!phone) return "";
+  let clean = String(phone).replace(/\D/g, "");
+  if (clean.startsWith("880")) {
+    clean = "0" + clean.slice(3);
+  }
+  return clean;
+};
 
 const safeFindAllProducts = async (whereObj = {}) => {
   try {
@@ -13,7 +26,7 @@ const safeFindAllProducts = async (whereObj = {}) => {
     console.log("Fallback safeFindAllProducts:", err.message);
     try {
       return await Product.findAll({
-        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal', 'isFreeDelivery'],
+        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'subCategory', 'oldPrice', 'isHotDeal', 'isFreeDelivery', 'stock'],
         where: whereObj,
         order: [['id', 'DESC']]
       });
@@ -31,7 +44,7 @@ const safeFindProductById = async (id) => {
     console.log("Fallback safeFindProductById for id:", id, err.message);
     try {
       return await Product.findByPk(id, {
-        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal', 'isFreeDelivery']
+        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'subCategory', 'oldPrice', 'isHotDeal', 'isFreeDelivery', 'stock']
       });
     } catch (err2) {
       console.log("Secondary fallback safeFindProductById failed:", err2.message);
@@ -40,10 +53,98 @@ const safeFindProductById = async (id) => {
   }
 };
 
+const calculateOrderTotals = (products, area, discount = 0, advance = 0) => {
+  let subtotal = 0;
+  let hasFreeDelivery = false;
+
+  (products || []).forEach(p => {
+    const qty = p.cartItem ? p.cartItem.quantity : (p.orderItem ? p.orderItem.quantity : 1);
+    const price = (p.orderItem && p.orderItem.price !== undefined && p.orderItem.price !== null)
+      ? parseFloat(p.orderItem.price)
+      : (p.price || 0);
+
+    subtotal += price * qty;
+
+    if (p.isFreeDelivery === true || p.isFreeDelivery === 1 || p.isFreeDelivery === 'true') {
+      hasFreeDelivery = true;
+    }
+  });
+
+  const selectedAreaFee = area ? parseInt(area) : 60;
+  const shippingCharge = hasFreeDelivery ? 0 : (isNaN(selectedAreaFee) ? 60 : selectedAreaFee);
+  const totalAmount = Math.max(0, subtotal + shippingCharge - (parseFloat(discount) || 0) - (parseFloat(advance) || 0));
+
+  return {
+    subtotal,
+    hasFreeDelivery,
+    shippingCharge,
+    discount: parseFloat(discount) || 0,
+    advance: parseFloat(advance) || 0,
+    totalAmount
+  };
+};
+
+const getUserCart = async (req) => {
+  let cart = null;
+
+  if (req && req.user) {
+    cart = await Cart.findOne({ where: { userId: req.user.id } }).catch(() => null);
+    if (!cart && typeof req.user.createCart === 'function') {
+      cart = await req.user.createCart().catch(() => null);
+    }
+    if (!cart) {
+      cart = await Cart.create({ userId: req.user.id }).catch(() => null);
+    }
+  } else {
+    let cartId = (req && req.session) ? req.session.cartId : null;
+    if (cartId) {
+      cart = await Cart.findOne({ where: { id: cartId, userId: null } }).catch(() => null);
+    }
+    if (!cart) {
+      cart = await Cart.create({ userId: null }).catch(() => null);
+    }
+  }
+
+  if (cart && req && req.session) {
+    req.session.cartId = cart.id;
+    if (typeof req.session.save === 'function') {
+      req.session.save(() => {});
+    }
+  }
+  return cart;
+};
+
+const getCartProducts = async (cart) => {
+  if (!cart) return [];
+  try {
+    const products = await cart.getProducts();
+    if (products && products.length > 0) return products;
+  } catch (err) {
+    console.log("Fallback cart.getProducts:", err.message);
+  }
+
+  try {
+    const cartItems = await CartItem.findAll({ where: { cartId: cart.id } }).catch(() => []);
+    const products = [];
+    for (const item of cartItems) {
+      const prod = await safeFindProductById(item.productId);
+      if (prod) {
+        const prodObj = prod.get ? prod.get({ plain: true }) : prod;
+        prodObj.cartItem = { quantity: item.quantity || 1 };
+        products.push(prodObj);
+      }
+    }
+    return products;
+  } catch (err2) {
+    console.log("Secondary fallback getCartProducts failed:", err2.message);
+    return [];
+  }
+};
+
 exports.getProducts = async (req, res, next) => {
   try {
     const category = req.query.category;
-    const subcategory = req.query.subcategory;
+    const subcategory = req.query.subcategory || req.query.subCategory;
     const search = req.query.search;
     let whereCondition = {};
 
@@ -51,7 +152,7 @@ exports.getProducts = async (req, res, next) => {
       whereCondition.category = category;
     }
     if (subcategory) {
-      whereCondition.subcategory = subcategory;
+      whereCondition.subCategory = subcategory;
     }
     if (search) {
       whereCondition.title = { [Op.like]: `%${search}%` };
@@ -103,173 +204,83 @@ exports.getProduct = async (req, res, next) => {
       return res.redirect("/products");
     }
 
-    const allProducts = await safeFindAllProducts();
-    const related = (allProducts || []).filter(p => p.id !== product.id).slice(0, 4);
+    let relatedProducts = [];
+    try {
+      relatedProducts = await safeFindAllProducts({
+        category: product.category,
+        id: { [Op.ne]: product.id }
+      });
+    } catch (e) {
+      console.log("Fallback related products failed:", e.message);
+    }
 
     res.render("shop/product-detail", {
       product: product,
-      relatedProducts: related,
-      pageTitle: product.title,
+      pageTitle: product.title + " - One Commerce",
       path: "/products",
+      relatedProducts: relatedProducts.slice(0, 4)
     });
   } catch (error) {
-    console.log("Error in getProduct: ", error);
+    console.log(ERROR_PREFIX + "getProduct: ", error);
     res.redirect("/products");
   }
 };
 
-const path = require("path");
-const fs = require("fs");
-
-const getBannersFilePath = () => path.join(__dirname, "..", "util", "banners.json");
-
-const loadBanners = () => {
-  try {
-    const file = getBannersFilePath();
-    if (fs.existsSync(file)) {
-      return JSON.parse(fs.readFileSync(file, 'utf8'));
-    }
-  } catch (err) {
-    console.log("Error reading banners.json in shop controller:", err);
-  }
-  return [];
-};
-
 exports.getIndex = async (req, res, next) => {
   try {
-    const products = await safeFindAllProducts();
-    const hotDeals = (products || []).filter(p => p.isHotDeal === true || p.isHotDeal === 1 || p.isHotDeal === 'true' || p.hotDeal === true);
-    
-    const categoryMap = {};
-    (products || []).forEach(p => {
-      const cat = p.category || "General";
-      if (!categoryMap[cat]) {
-        categoryMap[cat] = [];
+    let setting = await Setting.findOne().catch(() => null);
+
+    const prods = await safeFindAllProducts();
+
+    let bannerCategories = [];
+    try {
+      const bannerCategoriesFile = require("../util/path") + "/util/banner-categories.json";
+      const fs = require("fs");
+      if (fs.existsSync(bannerCategoriesFile)) {
+        bannerCategories = JSON.parse(fs.readFileSync(bannerCategoriesFile, "utf8"));
       }
-      categoryMap[cat].push(p);
-    });
+    } catch (e) {}
 
-    const categoriesList = Object.keys(categoryMap).map(catName => ({
-      name: catName,
-      img: categoryMap[catName][0] ? categoryMap[catName][0].imageUrl : ''
-    }));
+    let banners = [];
+    try {
+      const bannersFile = require("../util/path") + "/util/banners.json";
+      const fs = require("fs");
+      if (fs.existsSync(bannersFile)) {
+        banners = JSON.parse(fs.readFileSync(bannersFile, "utf8"));
+      }
+    } catch (e) {}
 
-    // Filter active banners under 'Main Slider Banner' category
-    const allBanners = loadBanners();
-    let sliderBanners = allBanners.filter(b => (b.status == 1 || b.status === true || b.status === '1') && (b.category_id == 1 || (b.category_name && b.category_name.toLowerCase().includes('slider'))));
-    if (sliderBanners.length === 0) {
-      sliderBanners = allBanners.filter(b => b.status == 1 || b.status === true || b.status === '1');
-    }
+    let footerConfig = {
+      about_text: 'Adiba\'s Collection offers authentic lifestyle, clothing, and home appliances nationwide.',
+      phone: '01700000000',
+      email: 'support@adibacollection.top',
+      address: 'Dhaka, Bangladesh',
+      facebook: '',
+      youtube: '',
+      instagram: '',
+      whatsapp: '8801700000000',
+      copyright: '© 2026 Adiba\'s Collection. All Rights Reserved.',
+      developer_name: 'OneHost BD',
+      developer_url: 'https://onehostbd.com'
+    };
+    try {
+      const adminController = require("./admin");
+      footerConfig = adminController.loadFooterConfig();
+    } catch (e) {}
 
     res.render("shop/index", {
-      prods: products,
-      hotDeals: hotDeals,
-      categoryMap: categoryMap,
-      categoriesList: categoriesList,
-      sliderBanners: sliderBanners,
+      prods: prods,
       pageTitle: "Home - One Commerce",
       path: "/",
+      siteSettings: setting ? setting.get({ plain: true }) : {},
+      bannerCategories: bannerCategories || [],
+      banners: banners || [],
+      footerConfig: footerConfig
     });
   } catch (error) {
     console.log("In shop controller, getIndex: ", error);
     res.render("shop/index", {
       prods: [],
-      hotDeals: [],
-      categoryMap: {},
-      categoriesList: [],
-      sliderBanners: [],
-      pageTitle: "Home - One Commerce",
-      path: "/",
-    });
-  }
-};
-
-exports.getOrderTrack = async (req, res, next) => {
-  try {
-    const query = (req.query.orderId || req.query.phone || req.query.searchQuery || '').trim();
-    if (!query) {
-      return res.render('shop/order-track', {
-        path: '/order-track',
-        pageTitle: 'Order Tracking - One Commerce',
-        orders: [],
-        order: null,
-        searchQuery: '',
-        orderId: '',
-        searched: false
-      });
-    }
-
-    const Order = require('../models/order');
-    const OrderItem = require('../models/order-item');
-    const Sequelize = require('sequelize');
-    const Op = Sequelize.Op;
-
-    const cleanDigits = query.replace(/[^0-9]/g, '');
-
-    const whereConditions = [];
-    if (cleanDigits && !isNaN(parseInt(cleanDigits))) {
-      whereConditions.push({ id: parseInt(cleanDigits) });
-    }
-    whereConditions.push({ invoiceId: { [Op.like]: `%${query}%` } });
-
-    if (cleanDigits.length >= 6) {
-      whereConditions.push({ phone: { [Op.like]: `%${cleanDigits}%` } });
-    } else if (query.length >= 3) {
-      whereConditions.push({ phone: { [Op.like]: `%${query}%` } });
-    }
-
-    const rawOrders = await Order.findAll({
-      where: { [Op.or]: whereConditions },
-      order: [['createdAt', 'DESC']]
-    }).catch(() => []);
-
-    const orders = [];
-    for (const ord of rawOrders) {
-      const ordObj = ord.get ? ord.get({ plain: true }) : ord;
-      const items = await OrderItem.findAll({ where: { orderId: ordObj.id } }).catch(() => []);
-      const products = [];
-      let subtotal = 0;
-      for (const item of items) {
-        const prod = await safeFindProductById(item.productId);
-        if (prod) {
-          const prodObj = prod.get ? prod.get({ plain: true }) : prod;
-          const qty = item.quantity || 1;
-          prodObj.orderItem = { quantity: qty };
-          products.push(prodObj);
-          subtotal += (prodObj.price || 0) * qty;
-        }
-      }
-      ordObj.products = products;
-      const hasFreeDelivery = (products || []).some(p => p.isFreeDelivery === true || p.isFreeDelivery === 1 || p.isFreeDelivery === 'true');
-      const shipFee = hasFreeDelivery ? 0 : ((ordObj.shippingCharge !== null && ordObj.shippingCharge !== undefined) ? Number(ordObj.shippingCharge) : (isNaN(parseInt(ordObj.area)) ? 60 : parseInt(ordObj.area)));
-      const disc = Number(ordObj.discount || 0);
-      const adv = Number(ordObj.advance || 0);
-      ordObj.subtotal = subtotal;
-      ordObj.shippingCharge = shipFee;
-      ordObj.discount = disc;
-      ordObj.advance = adv;
-      ordObj.totalAmount = hasFreeDelivery ? (subtotal - disc - adv) : ((ordObj.amount && Number(ordObj.amount) > 0) ? Number(ordObj.amount) : (subtotal + shipFee - disc - adv));
-      if (hasFreeDelivery && ord.save && ord.shippingCharge !== 0) {
-        ord.shippingCharge = 0;
-        ord.amount = ordObj.totalAmount;
-        await ord.save().catch(() => {});
-      }
-      orders.push(ordObj);
-    }
-
-    return res.render('shop/order-track', {
-      path: '/order-track',
-      pageTitle: 'Order Tracking - One Commerce',
-      orders: orders,
-      order: orders.length > 0 ? orders[0] : null,
-      searchQuery: query,
-      orderId: query,
-      searched: true
-    });
-  } catch (err) {
-    console.log("Error in getOrderTrack:", err);
-    return res.render('shop/order-track', {
-      path: '/order-track',
       pageTitle: "Home - One Commerce",
       path: "/",
       siteSettings: {},
@@ -280,74 +291,11 @@ exports.getOrderTrack = async (req, res, next) => {
   }
 };
 
-const getUserCart = async (req) => {
-  const Cart = require("../models/cart");
-  let cartId = (req && req.session) ? req.session.cartId : null;
-
-  if (cartId) {
-    let cart = await Cart.findByPk(cartId).catch(() => null);
-    if (cart) {
-      if (req && req.user && cart.userId && cart.userId !== req.user.id) {
-        cart = await Cart.create({ userId: req.user.id }).catch(() => null);
-        if (cart && req.session) {
-          req.session.cartId = cart.id;
-          if (typeof req.session.save === 'function') req.session.save(() => {});
-        }
-      }
-      return cart;
-    }
-  }
-
-  let cart = null;
-  if (req && req.user && typeof req.user.createCart === 'function') {
-    cart = await req.user.createCart().catch(() => null);
-  }
-  if (!cart) {
-    cart = await Cart.create({ userId: (req && req.user) ? req.user.id : null }).catch(() => null);
-  }
-
-  if (cart && req && req.session) {
-    req.session.cartId = cart.id;
-    if (typeof req.session.save === 'function') {
-      req.session.save(() => {});
-    }
-  }
-  return cart;
-};
-
-const getCartProducts = async (cart) => {
-  if (!cart) return [];
-  try {
-    const products = await cart.getProducts();
-    if (products && products.length > 0) return products;
-  } catch (err) {
-    console.log("Fallback cart.getProducts:", err.message);
-  }
-
-  try {
-    const CartItem = require("../models/cart-item");
-    const cartItems = await CartItem.findAll({ where: { cartId: cart.id } }).catch(() => []);
-    const products = [];
-    for (const item of cartItems) {
-      const prod = await safeFindProductById(item.productId);
-      if (prod) {
-        const prodObj = prod.get ? prod.get({ plain: true }) : prod;
-        prodObj.cartItem = { quantity: item.quantity || 1 };
-        products.push(prodObj);
-      }
-    }
-    return products;
-  } catch (err2) {
-    console.log("Secondary fallback getCartProducts failed:", err2.message);
-    return [];
-  }
-};
-
 exports.getCart = async (req, res, next) => {
   try {
     const cart = await getUserCart(req);
     const products = await getCartProducts(cart);
-    
+
     return res.render("shop/cart", {
       pageTitle: "Cart - One Commerce",
       path: "/cart",
@@ -366,11 +314,24 @@ exports.getCart = async (req, res, next) => {
 exports.postCart = async (req, res, next) => {
   try {
     const productId = req.body.productId;
-    const qty = req.body.quantity ? parseInt(req.body.quantity) : 1;
-    const addQty = isNaN(qty) || qty < 1 ? 1 : Math.min(qty, 100);
-    const action = req.body.action;
+    const rawQty = req.body.quantity;
+    const parsedQty = rawQty ? parseInt(rawQty) : 1;
+    const addQty = isNaN(parsedQty) || !Number.isInteger(parsedQty) || parsedQty < 1 ? 1 : Math.min(parsedQty, 100);
 
     if (!productId) {
+      return res.redirect("/cart");
+    }
+
+    const product = await safeFindProductById(productId);
+    if (!product) {
+      return res.redirect("/cart");
+    }
+
+    // Verify stock when adding to cart
+    if (product.stock !== null && product.stock !== undefined && product.stock <= 0) {
+      if (req.xhr || (req.headers.accept && req.headers.accept.includes("json"))) {
+        return res.status(400).json({ success: false, message: "Out of stock!" });
+      }
       return res.redirect("/cart");
     }
 
@@ -379,23 +340,29 @@ exports.postCart = async (req, res, next) => {
       return res.redirect("/cart");
     }
 
-    const CartItem = require("../models/cart-item");
     const existingItem = await CartItem.findOne({
       where: { cartId: cart.id, productId: productId }
     }).catch(() => null);
 
+    let targetQty = addQty;
     if (existingItem) {
-      existingItem.quantity = Math.min((existingItem.quantity || 1) + addQty, 100);
+      targetQty = Math.min((existingItem.quantity || 1) + addQty, 100);
+      if (product.stock !== null && product.stock !== undefined && targetQty > product.stock) {
+        targetQty = Math.max(1, product.stock);
+      }
+      existingItem.quantity = targetQty;
       await existingItem.save();
     } else {
+      if (product.stock !== null && product.stock !== undefined && targetQty > product.stock) {
+        targetQty = Math.max(1, product.stock);
+      }
       await CartItem.create({
         cartId: cart.id,
         productId: productId,
-        quantity: addQty
+        quantity: targetQty
       }).catch(async () => {
-        const product = await safeFindProductById(productId);
-        if (product && typeof cart.addProduct === 'function') {
-          await cart.addProduct(product, { through: { quantity: addQty } });
+        if (typeof cart.addProduct === 'function') {
+          await cart.addProduct(product, { through: { quantity: targetQty } });
         }
       });
     }
@@ -405,10 +372,6 @@ exports.postCart = async (req, res, next) => {
 
     if (req.xhr || (req.headers.accept && req.headers.accept.includes("json"))) {
       return res.json({ success: true, message: "Product added to cart!", cartCount: totalCartCount });
-    }
-
-    if (action === 'order_now') {
-      return res.redirect('/cart');
     }
 
     return res.redirect('/cart');
@@ -426,7 +389,6 @@ exports.postCartDeleteProduct = async (req, res, next) => {
       return res.redirect("/cart");
     }
 
-    const CartItem = require("../models/cart-item");
     await CartItem.destroy({
       where: { cartId: cart.id, productId: productId }
     }).catch(async () => {
@@ -446,18 +408,26 @@ exports.postCartDeleteProduct = async (req, res, next) => {
 exports.postCartUpdateQty = async (req, res, next) => {
   try {
     const { productId, quantity } = req.body;
+    const parsedQty = parseInt(quantity);
+
+    if (!productId || isNaN(parsedQty) || !Number.isInteger(parsedQty) || parsedQty <= 0 || parsedQty > 100) {
+      return res.status(400).json({ success: false, message: 'Invalid quantity payload' });
+    }
+
+    const product = await safeFindProductById(productId);
+    if (product && product.stock !== null && product.stock !== undefined && parsedQty > product.stock) {
+      return res.status(400).json({ success: false, message: `Only ${product.stock} items available in stock` });
+    }
+
     const cart = await getUserCart(req);
     if (!cart) {
       return res.status(400).json({ success: false, message: 'Cart not found' });
     }
 
-    const newQty = Math.max(1, Math.min(parseInt(quantity) || 1, 100));
-
-    const CartItem = require("../models/cart-item");
     const item = await CartItem.findOne({ where: { cartId: cart.id, productId: productId } }).catch(() => null);
 
     if (item) {
-      item.quantity = newQty;
+      item.quantity = parsedQty;
       await item.save();
       return res.json({ success: true, message: 'Quantity updated' });
     }
@@ -470,24 +440,39 @@ exports.postCartUpdateQty = async (req, res, next) => {
 
 exports.getOrders = async (req, res, next) => {
   try {
-    const Order = require("../models/order");
-
     let targetOrderId = req.query.orderId ? parseInt(req.query.orderId) : null;
     let rawOrders = [];
 
     const sessionOrderIds = (req.session && req.session.orderIds) ? req.session.orderIds : [];
 
-    if (targetOrderId && !isNaN(targetOrderId)) {
-      const isAllowed = sessionOrderIds.includes(targetOrderId) || (req.user && req.user.isAdmin);
-      if (isAllowed) {
-        rawOrders = await Order.findAll({ where: { id: targetOrderId } }).catch(() => []);
+    let whereClause = null;
+    if (req.user && req.user.isAdmin) {
+      if (targetOrderId && !isNaN(targetOrderId)) {
+        whereClause = { id: targetOrderId };
+      } else {
+        whereClause = {};
+      }
+    } else if (req.user) {
+      if (targetOrderId && !isNaN(targetOrderId)) {
+        whereClause = { id: targetOrderId, userId: req.user.id };
+      } else {
+        whereClause = { userId: req.user.id };
+      }
+    } else if (sessionOrderIds.length > 0) {
+      if (targetOrderId && !isNaN(targetOrderId)) {
+        if (sessionOrderIds.includes(targetOrderId)) {
+          whereClause = { id: targetOrderId };
+        } else {
+          whereClause = { id: -1 }; 
+        }
+      } else {
+        whereClause = { id: { [Op.in]: sessionOrderIds } };
       }
     }
 
-    if ((!rawOrders || rawOrders.length === 0) && sessionOrderIds.length > 0) {
-      const { Op } = require("sequelize");
+    if (whereClause) {
       rawOrders = await Order.findAll({
-        where: { id: { [Op.in]: sessionOrderIds } },
+        where: whereClause,
         order: [['createdAt', 'DESC']]
       }).catch(() => []);
     }
@@ -495,27 +480,54 @@ exports.getOrders = async (req, res, next) => {
     const orders = [];
     for (const ord of rawOrders) {
       const ordObj = ord.get ? ord.get({ plain: true }) : ord;
-      const OrderItem = require("../models/order-item");
       const orderItems = await OrderItem.findAll({ where: { orderId: ord.id } }).catch(() => []);
 
       const products = [];
+      let subtotal = 0;
+
       for (const item of orderItems) {
         const prod = await safeFindProductById(item.productId);
-        if (prod) {
-          const prodObj = prod.get ? prod.get({ plain: true }) : prod;
-          prodObj.cartItem = { quantity: item.quantity || 1 };
-          products.push(prodObj);
-        }
-      }
-      ordObj.products = products;
+        const itemQty = item.quantity || 1;
+        const itemUnitPrice = (item.price !== null && item.price !== undefined) 
+          ? parseFloat(item.price) 
+          : (prod ? parseFloat(prod.price || 0) : 0);
 
-      const totals = calculateOrderTotals(products, ord.area, ord.discount, ord.advance);
-      ordObj.shippingCharge = totals.shippingCharge;
-      ordObj.subtotal = totals.subtotal;
-      ordObj.totalAmount = totals.totalAmount;
+        const lineTotal = itemUnitPrice * itemQty;
+        subtotal += lineTotal;
+
+        const prodObj = prod ? (prod.get ? prod.get({ plain: true }) : prod) : {
+          id: item.productId,
+          title: "Product #" + item.productId,
+          price: itemUnitPrice,
+          imageUrl: "/images/placeholder.jpg"
+        };
+
+        prodObj.orderItem = {
+          quantity: itemQty,
+          price: itemUnitPrice,
+          lineTotal: lineTotal
+        };
+
+        products.push(prodObj);
+      }
+
+      ordObj.products = products;
+      ordObj.subtotal = subtotal;
+
+      // Authoritative Stored Financial Values
+      ordObj.shippingCharge = (ordObj.shippingCharge !== null && ordObj.shippingCharge !== undefined)
+        ? parseFloat(ordObj.shippingCharge)
+        : 60;
+      ordObj.discount = parseFloat(ordObj.discount || 0);
+      ordObj.advance = parseFloat(ordObj.advance || 0);
+      ordObj.totalAmount = (ordObj.amount !== null && ordObj.amount !== undefined && parseFloat(ordObj.amount) >= 0)
+        ? parseFloat(ordObj.amount)
+        : Math.max(0, subtotal + ordObj.shippingCharge - ordObj.discount - ordObj.advance);
 
       orders.push(ordObj);
     }
+
+    // STRICTLY READ-ONLY (No DB mutations)
 
     return res.render('shop/orders', {
       path: '/orders',
@@ -533,6 +545,58 @@ exports.getOrders = async (req, res, next) => {
 };
 
 exports.postOrder = async (req, res, next) => {
+  const { name, phone, address, area, payment_method, productId, quantity } = req.body;
+  const normalizedPhone = normalizePhone(phone);
+
+  if (quantity !== undefined && quantity !== null && quantity !== '') {
+    const parsedQty = parseInt(quantity);
+    if (isNaN(parsedQty) || !Number.isInteger(parsedQty) || parsedQty <= 0 || parsedQty > 100) {
+      return res.redirect('/cart');
+    }
+  }
+
+  const cart = await getUserCart(req);
+
+  // Idempotency Protection
+  const payloadHash = crypto.createHash("md5").update(JSON.stringify({
+    productId: productId || "",
+    name: name || "",
+    phone: normalizedPhone,
+    area: area || "",
+    address: address || "",
+    cartId: cart ? cart.id : ""
+  })).digest("hex");
+
+  const now = Date.now();
+  if (req.session && req.session.lastOrderHash === payloadHash && (now - (req.session.lastOrderTime || 0)) < 5000) {
+    if (req.session.lastOrderId) {
+      return res.redirect('/orders-success?orderId=' + req.session.lastOrderId);
+    }
+  }
+
+  let products = [];
+  if (cart) {
+    products = await getCartProducts(cart);
+  }
+
+  if ((!products || products.length === 0) && productId) {
+    const pId = parseInt(productId);
+    const pQty = quantity ? parseInt(quantity) : 1;
+
+    if (!isNaN(pId) && pId > 0 && Number.isInteger(pQty) && pQty > 0 && pQty <= 100) {
+      const singleProd = await safeFindProductById(pId);
+      if (singleProd) {
+        const prodObj = singleProd.get ? singleProd.get({ plain: true }) : singleProd;
+        prodObj.cartItem = { quantity: pQty };
+        products = [prodObj];
+      }
+    }
+  }
+
+  if (!products || products.length === 0) {
+    return res.redirect('/cart');
+  }
+
   let t = null;
   try {
     t = await sequelize.transaction();
@@ -542,78 +606,33 @@ exports.postOrder = async (req, res, next) => {
   }
 
   try {
-    const { name, phone, address, area, payment_method, productId, quantity, cartItemsJson } = req.body;
+    // Atomic Row Lock & Stock Verification inside Transaction
+    for (const prod of products) {
+      const qty = prod.cartItem ? prod.cartItem.quantity : 1;
+      const dbProd = await Product.findByPk(prod.id, {
+        transaction: t,
+        lock: t.LOCK ? t.LOCK.UPDATE : undefined
+      });
 
-    if (quantity !== undefined && quantity !== null && quantity !== '') {
-      const parsedQty = parseInt(quantity);
-      if (isNaN(parsedQty) || parsedQty <= 0 || parsedQty > 100) {
-        await t.rollback();
-        return res.redirect('/cart');
-      }
-    }
-
-    const cart = await getUserCart(req);
-    let products = [];
-
-    // Priority 1: DB Cart is Authoritative
-    if (cart) {
-      products = await getCartProducts(cart);
-    }
-
-    // Priority 2: Direct Single Product Order Submission
-    if ((!products || products.length === 0) && productId) {
-      const pId = parseInt(productId);
-      const pQty = quantity ? parseInt(quantity) : 1;
-
-      if (isNaN(pId) || pId <= 0 || isNaN(pQty) || pQty <= 0 || pQty > 100) {
-        await t.rollback();
-        return res.redirect('/cart');
+      if (!dbProd) {
+        throw new Error(`Product ${prod.id} no longer exists.`);
       }
 
-      const singleProd = await safeFindProductById(pId);
-      if (singleProd) {
-        const prodObj = singleProd.get ? singleProd.get({ plain: true }) : singleProd;
-        prodObj.cartItem = { quantity: pQty };
-        products = [prodObj];
-      }
-    }
-
-    // Priority 3: Form Payload Fallback (only if DB cart & productId absent)
-    if ((!products || products.length === 0) && cartItemsJson) {
-      try {
-        const parsed = JSON.parse(cartItemsJson);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          for (const item of parsed) {
-            const pId = parseInt(item.productId || item.id);
-            const pQty = parseInt(item.quantity) || 1;
-            if (pId && !isNaN(pId) && pQty > 0 && pQty <= 100) {
-              const prod = await safeFindProductById(pId);
-              if (prod) {
-                const prodObj = prod.get ? prod.get({ plain: true }) : prod;
-                prodObj.cartItem = { quantity: pQty };
-                products.push(prodObj);
-              }
-            }
-          }
+      if (dbProd.stock !== null && dbProd.stock !== undefined) {
+        if (dbProd.stock < qty) {
+          throw new Error(`Insufficient stock for ${dbProd.title}. Requested: ${qty}, Available: ${dbProd.stock}`);
         }
-      } catch (e) {
-        console.log("Error parsing cartItemsJson:", e.message);
+        dbProd.stock = Math.max(0, dbProd.stock - qty);
+        await dbProd.save({ transaction: t });
       }
     }
 
-    // Strict Validation: Cancel cleanly if no valid products exist
-    if (!products || products.length === 0) {
-      await t.rollback();
-      return res.redirect('/cart');
-    }
+    const totals = calculateOrderTotals(products, area, 0, 0);
 
-    const totals = calculateOrderTotals(products, area);
-
-    const Order = require("../models/order");
     const orderData = {
       invoiceId: 'INV-TEMP',
       name: (name && name.trim()) ? name.trim() : 'Customer',
-      phone: (phone && phone.trim()) ? phone.trim() : '01700000000',
+      phone: normalizedPhone || '01700000000',
       address: (address && address.trim()) ? address.trim() : 'Dhaka',
       area: area || '60',
       paymentMethod: payment_method || 'Cash On Delivery',
@@ -622,20 +641,25 @@ exports.postOrder = async (req, res, next) => {
       amount: totals.totalAmount
     };
 
-    const order = await Order.create(orderData, { transaction: t });
+    let order = null;
+    try {
+      order = await Order.create({ ...orderData, userId: (req && req.user) ? req.user.id : null }, { transaction: t });
+    } catch (userColErr) {
+      console.log("Creating order without userId column fallback:", userColErr.message);
+      order = await Order.create(orderData, { transaction: t });
+    }
 
     order.invoiceId = 'INV-' + order.id;
     await order.save({ transaction: t });
 
-    const OrderItem = require("../models/order-item");
-    const CartItem = require("../models/cart-item");
-
     for (const prod of products) {
       const qty = prod.cartItem ? prod.cartItem.quantity : 1;
+      const unitPrice = prod.price || 0;
       await OrderItem.create({
         orderId: order.id,
         productId: prod.id,
-        quantity: qty
+        quantity: qty,
+        price: unitPrice
       }, { transaction: t });
     }
 
@@ -646,6 +670,9 @@ exports.postOrder = async (req, res, next) => {
     await t.commit();
 
     if (req && req.session) {
+      req.session.lastOrderHash = payloadHash;
+      req.session.lastOrderTime = now;
+      req.session.lastOrderId = order.id;
       req.session.orderIds = req.session.orderIds || [];
       req.session.orderIds.push(order.id);
       if (typeof req.session.save === 'function') req.session.save(() => {});
@@ -655,14 +682,13 @@ exports.postOrder = async (req, res, next) => {
 
   } catch (err) {
     if (t) await t.rollback().catch(() => {});
-    console.error("Error in postOrder transaction:", err);
+    console.error("Error in postOrder transaction:", err.message);
     return res.redirect('/cart');
   }
 };
 
 exports.getOrderTrack = async (req, res, next) => {
   try {
-    const Order = require("../models/order");
     const query = req.query.orderId ? req.query.orderId.trim() : '';
 
     if (!query) {
@@ -682,7 +708,7 @@ exports.getOrderTrack = async (req, res, next) => {
     if (query.toUpperCase().startsWith('INV-')) {
       whereConditions.push({ invoiceId: query.toUpperCase() });
     } else {
-      const cleanDigits = query.replace(/\D/g, '');
+      const cleanDigits = normalizePhone(query);
       if (cleanDigits.length >= 10) {
         whereConditions.push({ phone: cleanDigits });
       } else if (cleanDigits.length > 0) {
@@ -693,7 +719,6 @@ exports.getOrderTrack = async (req, res, next) => {
 
     let rawOrders = [];
     if (whereConditions.length > 0) {
-      const { Op } = require("sequelize");
       rawOrders = await Order.findAll({
         where: { [Op.or]: whereConditions },
         order: [['id', 'DESC']]
@@ -703,27 +728,54 @@ exports.getOrderTrack = async (req, res, next) => {
     const orders = [];
     for (const ord of rawOrders) {
       const ordObj = ord.get ? ord.get({ plain: true }) : ord;
-      const OrderItem = require("../models/order-item");
       const orderItems = await OrderItem.findAll({ where: { orderId: ord.id } }).catch(() => []);
 
       const products = [];
+      let subtotal = 0;
+
       for (const item of orderItems) {
         const prod = await safeFindProductById(item.productId);
-        if (prod) {
-          const prodObj = prod.get ? prod.get({ plain: true }) : prod;
-          prodObj.cartItem = { quantity: item.quantity || 1 };
-          products.push(prodObj);
-        }
-      }
-      ordObj.products = products;
+        const itemQty = item.quantity || 1;
+        const itemUnitPrice = (item.price !== null && item.price !== undefined) 
+          ? parseFloat(item.price) 
+          : (prod ? parseFloat(prod.price || 0) : 0);
 
-      const totals = calculateOrderTotals(products, ord.area, ord.discount, ord.advance);
-      ordObj.shippingCharge = totals.shippingCharge;
-      ordObj.subtotal = totals.subtotal;
-      ordObj.totalAmount = totals.totalAmount;
+        const lineTotal = itemUnitPrice * itemQty;
+        subtotal += lineTotal;
+
+        const prodObj = prod ? (prod.get ? prod.get({ plain: true }) : prod) : {
+          id: item.productId,
+          title: "Product #" + item.productId,
+          price: itemUnitPrice,
+          imageUrl: "/images/placeholder.jpg"
+        };
+
+        prodObj.orderItem = {
+          quantity: itemQty,
+          price: itemUnitPrice,
+          lineTotal: lineTotal
+        };
+
+        products.push(prodObj);
+      }
+
+      ordObj.products = products;
+      ordObj.subtotal = subtotal;
+
+      // Authoritative Stored Financial Values
+      ordObj.shippingCharge = (ordObj.shippingCharge !== null && ordObj.shippingCharge !== undefined)
+        ? parseFloat(ordObj.shippingCharge)
+        : 60;
+      ordObj.discount = parseFloat(ordObj.discount || 0);
+      ordObj.advance = parseFloat(ordObj.advance || 0);
+      ordObj.totalAmount = (ordObj.amount !== null && ordObj.amount !== undefined && parseFloat(ordObj.amount) >= 0)
+        ? parseFloat(ordObj.amount)
+        : Math.max(0, subtotal + ordObj.shippingCharge - ordObj.discount - ordObj.advance);
 
       orders.push(ordObj);
     }
+
+    // STRICTLY READ-ONLY (No DB mutations)
 
     return res.render('shop/order-track', {
       path: '/order-track',
