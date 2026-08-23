@@ -707,12 +707,21 @@ exports.postOrder = async (req, res, next) => {
     for (const prod of products) {
       const qty = prod.cartItem ? prod.cartItem.quantity : 1;
       const unitPrice = prod.price || 0;
-      await OrderItem.create({
-        orderId: order.id,
-        productId: prod.id,
-        quantity: qty,
-        price: unitPrice
-      }, { transaction: t });
+      try {
+        await OrderItem.create({
+          orderId: order.id,
+          productId: prod.id,
+          quantity: qty,
+          price: unitPrice
+        }, { transaction: t });
+      } catch (itemErr) {
+        console.log("Fallback OrderItem.create without price column:", itemErr.message);
+        await OrderItem.create({
+          orderId: order.id,
+          productId: prod.id,
+          quantity: qty
+        }, { transaction: t });
+      }
     }
 
     if (cart) {

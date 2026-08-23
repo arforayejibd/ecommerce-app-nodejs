@@ -265,6 +265,9 @@ sequelize
     sequelize.query("ALTER TABLE products ADD COLUMN stock INT DEFAULT 50;").catch(e => {});
     sequelize.query("ALTER TABLE products ADD COLUMN purchasePrice DOUBLE DEFAULT 0;").catch(e => {});
     sequelize.query("ALTER TABLE settings ADD COLUMN language VARCHAR(20) DEFAULT 'bn';").catch(e => {});
+    sequelize.query("ALTER TABLE order_items ADD COLUMN price DOUBLE NULL;").catch(e => {});
+    sequelize.query("ALTER TABLE orderItems ADD COLUMN price DOUBLE NULL;").catch(e => {});
+    sequelize.query("ALTER TABLE orders ADD COLUMN userId INT NULL;").catch(e => {});
     // Seed default categories if empty
     return Category.count().then(count => {
       if (count === 0) {
