@@ -634,17 +634,27 @@ exports.postOrder = async (req, res, next) => {
       paymentMethod: payment_method || 'Cash On Delivery',
       status: 'Pending',
       shippingCharge: shippingFee,
-      amount: totalAmount,
-      userId: userIdVal
+      amount: totalAmount
     };
 
-    let order = await Order.create(orderData).catch(async (err) => {
+    let order = await Order.create(orderData).catch((err) => {
       console.log("Error in Order.create:", err.message);
-      if (user && typeof user.createOrder === 'function') {
-        return await user.createOrder(orderData).catch(() => null);
-      }
       return null;
     });
+
+    if (!order) {
+      // Emergency fallback without non-essential fields if DB schema differs
+      order = await Order.create({
+        invoiceId: invoiceId,
+        name: (name && name.trim()) ? name.trim() : 'Customer',
+        phone: (phone && phone.trim()) ? phone.trim() : '01700000000',
+        address: (address && address.trim()) ? address.trim() : 'Dhaka',
+        amount: totalAmount
+      }).catch((e) => {
+        console.log("Emergency Order.create failed:", e.message);
+        return null;
+      });
+    }
 
     if (order) {
       order.invoiceId = 'INV-' + order.id;
