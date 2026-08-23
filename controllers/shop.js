@@ -308,17 +308,28 @@ const getUserCart = async (req) => {
 const getCartProducts = async (cart) => {
   if (!cart) return [];
   try {
-    return await cart.getProducts();
+    const products = await cart.getProducts();
+    if (products && products.length > 0) return products;
   } catch (err) {
     console.log("Fallback cart.getProducts:", err.message);
-    try {
-      return await cart.getProducts({
-        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal', 'isFreeDelivery']
-      });
-    } catch (err2) {
-      console.log("Secondary fallback cart.getProducts failed:", err2.message);
-      return [];
+  }
+
+  try {
+    const CartItem = require("../models/cart-item");
+    const cartItems = await CartItem.findAll({ where: { cartId: cart.id } }).catch(() => []);
+    const products = [];
+    for (const item of cartItems) {
+      const prod = await safeFindProductById(item.productId);
+      if (prod) {
+        const prodObj = prod.get ? prod.get({ plain: true }) : prod;
+        prodObj.cartItem = { quantity: item.quantity || 1 };
+        products.push(prodObj);
+      }
     }
+    return products;
+  } catch (err2) {
+    console.log("Secondary fallback getCartProducts failed:", err2.message);
+    return [];
   }
 };
 
@@ -469,10 +480,20 @@ exports.getOrders = async (req, res, next) => {
     }
 
     if ((!rawOrders || rawOrders.length === 0) && req.session && req.session.orderIds && req.session.orderIds.length > 0) {
-      const { Op } = require("sequelize");
       rawOrders = await Order.findAll({
         where: { id: { [Op.in]: req.session.orderIds } },
         order: [['createdAt', 'DESC']]
+      }).catch(() => []);
+    }
+
+    if (!rawOrders || rawOrders.length === 0) {
+      const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000);
+      rawOrders = await Order.findAll({
+        where: {
+          createdAt: { [Op.gte]: fifteenMinsAgo }
+        },
+        order: [['createdAt', 'DESC']],
+        limit: 1
       }).catch(() => []);
     }
 
