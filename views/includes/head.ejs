@@ -53,6 +53,20 @@
         <% } %>
     <% } %>
 
+    <!-- Global Meta Pixel Event Tracker Helper -->
+    <script>
+    window.trackFbq = function(eventName, payload) {
+        if (typeof window.fbq === 'function') {
+            try {
+                window.fbq('track', eventName, payload || {});
+                console.log('📊 [Meta Pixel Event]:', eventName, payload);
+            } catch(e) {
+                console.error('⚠️ [Meta Pixel Error]:', e);
+            }
+        }
+    };
+    </script>
+
     <!-- Google Fonts -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css" />

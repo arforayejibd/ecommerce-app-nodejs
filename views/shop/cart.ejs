@@ -722,8 +722,29 @@
             });
         });
 
-        // Smart LocalStorage Customer Info Auto-Fill for returning clients
+        // Smart LocalStorage Customer Info Auto-Fill for returning clients & InitiateCheckout Meta Pixel Event
         document.addEventListener('DOMContentLoaded', function() {
+            <% 
+              let totalCartVal = 0;
+              const cartProdIds = [];
+              if (typeof products !== 'undefined' && products && products.length > 0) {
+                products.forEach(p => {
+                  const qty = p.cartItem ? p.cartItem.quantity : 1;
+                  totalCartVal += (p.price || 0) * qty;
+                  cartProdIds.push(String(p.id));
+                });
+              }
+            %>
+            if (typeof window.trackFbq === 'function') {
+                window.trackFbq('InitiateCheckout', {
+                    content_type: 'product',
+                    content_ids: <%- JSON.stringify(cartProdIds) %>,
+                    value: <%= totalCartVal %>,
+                    currency: 'BDT',
+                    num_items: <%= cartProdIds.length %>
+                });
+            }
+
             const form = document.getElementById('checkout-main-form');
             const nameInput = document.getElementById('cust-name');
             const phoneInput = document.getElementById('cust-phone');

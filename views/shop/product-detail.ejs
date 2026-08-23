@@ -758,11 +758,35 @@
 </div>
 
 <script>
+// Meta Pixel ViewContent Event
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof window.trackFbq === 'function') {
+        window.trackFbq('ViewContent', {
+            content_name: <%- JSON.stringify(product.title) %>,
+            content_ids: ['<%- product.id %>'],
+            content_type: 'product',
+            value: <%= product.price || 0 %>,
+            currency: 'BDT'
+        });
+    }
+});
+
 function handleAddToCart(e, prodId) {
     if (e) e.preventDefault();
     const qtyInput = document.getElementById('qty-counter');
     const qty = qtyInput ? qtyInput.value : 1;
     const btn = e ? e.currentTarget : null;
+
+    if (typeof window.trackFbq === 'function') {
+        window.trackFbq('AddToCart', {
+            content_name: <%- JSON.stringify(product.title) %>,
+            content_ids: [String(prodId)],
+            content_type: 'product',
+            value: (<%= product.price || 0 %>) * (parseInt(qty) || 1),
+            currency: 'BDT'
+        });
+    }
+
     if (btn) {
         btn.disabled = true;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Adding...';

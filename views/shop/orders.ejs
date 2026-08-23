@@ -373,4 +373,26 @@
 
     </main>
 
+    <!-- Meta Pixel Purchase Event Tracking -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        <% if (orders && orders.length > 0 && orders[0]) { %>
+            <% 
+                const orderObj = orders[0];
+                const pIds = (orderObj.products || []).map(p => String(p.id));
+            %>
+            if (typeof window.trackFbq === 'function') {
+                window.trackFbq('Purchase', {
+                    content_type: 'product',
+                    content_ids: <%- JSON.stringify(pIds) %>,
+                    value: <%= orderObj.totalAmount || 0 %>,
+                    currency: 'BDT',
+                    num_items: <%= pIds.length %>,
+                    order_id: <%- JSON.stringify(orderObj.invoiceId || ('INV-' + orderObj.id)) %>
+                });
+            }
+        <% } %>
+    });
+    </script>
+
 <%- include('../includes/end.ejs') %>
