@@ -609,8 +609,6 @@ exports.postOrder = async (req, res, next) => {
       }
       return res.redirect('/orders-success?orderId=' + order.id);
     }
-      return res.redirect('/orders-success?orderId=' + order.id);
-    }
 
     return res.redirect('/orders-success');
   } catch (err) {
