@@ -20,7 +20,14 @@ const IGNORED = [
   'access.log',
   'cookies.txt',
   'deploy.js',
-  'package-lock.json'
+  'package-lock.json',
+  'pixel-config.json',
+  'gtm-config.json',
+  'banners.json',
+  'banner-categories.json',
+  'courier-config.json',
+  'footer-config.json',
+  'media.json'
 ];
 
 async function syncDir(sftp, localDir, remoteDir) {
