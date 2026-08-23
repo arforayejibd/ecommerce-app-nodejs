@@ -558,8 +558,12 @@ exports.postProcessOrder = async (req, res, next) => {
     order.paymentMethod = payment_method || order.paymentMethod;
     order.discount = discount !== undefined ? parseFloat(discount) : order.discount;
     order.advance = advance_payment !== undefined ? parseFloat(advance_payment) : (order.advance || 0);
-    order.assignee = assignee || order.assignee;
-    order.adminNote = admin_note || order.adminNote;
+    order.assignee = assignee || order.assignee || 'Super Admin';
+    if (admin_note !== undefined && admin_note !== null) {
+      order.adminNote = admin_note;
+    } else if (req.body.adminNote !== undefined) {
+      order.adminNote = req.body.adminNote;
+    }
 
     // Handle updating products in order
     if (product_ids) {

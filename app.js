@@ -272,6 +272,9 @@ sequelize
     sequelize.query("ALTER TABLE order_items ADD COLUMN price DOUBLE NULL;").catch(e => {});
     sequelize.query("ALTER TABLE orderItems ADD COLUMN price DOUBLE NULL;").catch(e => {});
     sequelize.query("ALTER TABLE orders ADD COLUMN userId INT NULL;").catch(e => {});
+    sequelize.query("ALTER TABLE orders ADD COLUMN adminNote TEXT NULL;").catch(e => {});
+    sequelize.query("ALTER TABLE orders ADD COLUMN assignee VARCHAR(255) DEFAULT 'Super Admin';").catch(e => {});
+    sequelize.query("ALTER TABLE orders ADD COLUMN shippingCharge DOUBLE DEFAULT 60;").catch(e => {});
     // Seed default categories if empty
     return Category.count().then(count => {
       if (count === 0) {
