@@ -591,10 +591,11 @@ exports.postProcessOrder = async (req, res, next) => {
         }
       }
 
-      const shippingFee = parseInt(area) || order.shippingCharge || 60;
+      const shippingFee = (area !== undefined && area !== null && area !== '' && !isNaN(parseInt(area))) ? parseInt(area) : (order.shippingCharge !== undefined && order.shippingCharge !== null ? parseFloat(order.shippingCharge) : 0);
+      order.shippingCharge = shippingFee;
       const discountVal = parseFloat(discount) || 0;
       const advanceVal = parseFloat(advance_payment) || 0;
-      order.amount = itemsSubtotal + shippingFee - discountVal - advanceVal;
+      order.amount = Math.max(0, itemsSubtotal + shippingFee - discountVal - advanceVal);
     }
 
     await order.save();

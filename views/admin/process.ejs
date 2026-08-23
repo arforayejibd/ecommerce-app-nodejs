@@ -411,9 +411,10 @@
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                                     <div>
                                         <label class="form-label">Delivery Area / Shipping Fee</label>
-                                        <select name="area" id="area-select" class="form-control-custom" onchange="recalculateTotals()">
-                                            <option value="60" <%= (order.area == '60' || order.area == 'Inside Dhaka') ? 'selected' : '' %>>Inside Dhaka (৳60)</option>
-                                            <option value="120" <%= (order.area == '120' || order.area == 'Outside Dhaka') ? 'selected' : '' %>>Outside Dhaka (৳120)</option>
+                                        <select name="area" id="area-select" class="form-ctrl-input form-control-custom" onchange="recalculateTotals()">
+                                            <option value="0" <%= (order.shippingCharge === 0 || order.shippingCharge === '0' || order.shippingCharge === 0.0) ? 'selected' : '' %>>🎉 Free Delivery (৳0)</option>
+                                            <option value="60" <%= (order.shippingCharge !== 0 && order.shippingCharge !== '0' && (order.area == '60' || order.area == 'Inside Dhaka')) ? 'selected' : '' %>>Inside Dhaka (৳60)</option>
+                                            <option value="120" <%= (order.shippingCharge !== 0 && order.shippingCharge !== '0' && (order.area == '120' || order.area == 'Outside Dhaka')) ? 'selected' : '' %>>Outside Dhaka (৳120)</option>
                                         </select>
                                     </div>
 
@@ -656,7 +657,7 @@
             });
 
             const areaSelect = document.getElementById('area-select');
-            const shippingFee = parseInt(areaSelect ? areaSelect.value : 60) || 60;
+            const shippingFee = (areaSelect && areaSelect.value !== '') ? (parseInt(areaSelect.value) || 0) : 0;
 
             const discountInput = document.getElementById('discount-input');
             const discountVal = parseFloat(discountInput ? discountInput.value : 0) || 0;
@@ -669,7 +670,7 @@
 
             document.getElementById('display-subtotal').innerText = '৳' + subtotal;
             document.getElementById('display-area-label').innerText = shippingFee;
-            document.getElementById('display-shipping').innerText = '+ ৳' + shippingFee;
+            document.getElementById('display-shipping').innerText = (shippingFee === 0) ? 'Free Delivery (৳0)' : ('+ ৳' + shippingFee);
             document.getElementById('display-discount').innerText = '- ৳' + discountVal;
             document.getElementById('display-advance').innerText = '- ৳' + advanceVal;
             document.getElementById('display-grand-total').innerText = '৳' + dueAmount;
