@@ -1,4 +1,4 @@
-<form action="/cart" method="POST" style="width: 100%;" onsubmit="if(typeof window.trackFbq==='function'){window.trackFbq('AddToCart',{content_name:<%- JSON.stringify(product.title) %>,content_ids:['<%- product.id %>'],content_type:'product',value:<%= product.price || 0 %>,currency:'BDT'});}">
+<form action="/cart" method="POST" style="width: 100%;" data-prod-id="<%= product.id %>" data-prod-title="<%= product.title %>" data-prod-price="<%= product.price %>">
     <input type="hidden" name="productId" value="<%= product.id %>">
     <button class="btn btn-primary" type="submit">
         <span>🛒 <%= typeof __ !== 'undefined' ? __('Add to Cart') : 'Add to Cart' %></span>
