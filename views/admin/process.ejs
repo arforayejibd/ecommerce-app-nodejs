@@ -411,10 +411,20 @@
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                                     <div>
                                         <label class="form-label">Delivery Area / Shipping Fee</label>
+                                        <% 
+                                          let currentShipping = 60;
+                                          if (order.shippingCharge !== null && order.shippingCharge !== undefined && order.shippingCharge !== '') {
+                                            currentShipping = parseFloat(order.shippingCharge);
+                                          } else if (String(order.area).includes('120') || String(order.area).toLowerCase().includes('outside')) {
+                                            currentShipping = 120;
+                                          } else if (String(order.area) === '0' || String(order.area).toLowerCase().includes('free')) {
+                                            currentShipping = 0;
+                                          }
+                                        %>
                                         <select name="area" id="area-select" class="form-ctrl-input form-control-custom" onchange="recalculateTotals()">
-                                            <option value="0" <%= (order.shippingCharge === 0 || order.shippingCharge === '0' || order.shippingCharge === 0.0) ? 'selected' : '' %>>🎉 Free Delivery (৳0)</option>
-                                            <option value="60" <%= (order.shippingCharge !== 0 && order.shippingCharge !== '0' && (order.area == '60' || order.area == 'Inside Dhaka')) ? 'selected' : '' %>>Inside Dhaka (৳60)</option>
-                                            <option value="120" <%= (order.shippingCharge !== 0 && order.shippingCharge !== '0' && (order.area == '120' || order.area == 'Outside Dhaka')) ? 'selected' : '' %>>Outside Dhaka (৳120)</option>
+                                            <option value="60" <%= (currentShipping === 60) ? 'selected' : '' %>>Inside Dhaka (৳60)</option>
+                                            <option value="120" <%= (currentShipping === 120) ? 'selected' : '' %>>Outside Dhaka (৳120)</option>
+                                            <option value="0" <%= (currentShipping === 0) ? 'selected' : '' %>>🎉 Free Delivery (৳0)</option>
                                         </select>
                                     </div>
 
