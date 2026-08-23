@@ -12,7 +12,7 @@ const safeFindAllProducts = async (whereObj = {}) => {
     console.log("Fallback safeFindAllProducts:", err.message);
     try {
       return await Product.findAll({
-        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal'],
+        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal', 'isFreeDelivery'],
         where: whereObj,
         order: [['id', 'DESC']]
       });
@@ -30,7 +30,7 @@ const safeFindProductById = async (id) => {
     console.log("Fallback safeFindProductById for id:", id, err.message);
     try {
       return await Product.findByPk(id, {
-        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal']
+        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal', 'isFreeDelivery']
       });
     } catch (err2) {
       console.log("Secondary fallback safeFindProductById failed:", err2.message);
