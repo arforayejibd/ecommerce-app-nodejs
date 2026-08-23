@@ -72,8 +72,12 @@ app.use((req, res, next) => {
     try {
       console.log("📥 Request:", req.method, req.url);
 
-      const user = await User.findByPk(1).catch(() => null);
-      req.user = user || null;
+      if (req.session && (req.session.userId || (req.session.user && req.session.user.id))) {
+        const uId = req.session.userId || req.session.user.id;
+        req.user = await User.findByPk(uId).catch(() => null);
+      } else {
+        req.user = null;
+      }
 
       let setting = await Setting.findOne().catch(() => null);
       if (!setting) {
