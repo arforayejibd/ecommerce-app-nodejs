@@ -12,7 +12,8 @@ const ERROR_PREFIX = "In shop controller, ";
 
 const normalizePhone = (phone) => {
   if (!phone) return "";
-  let clean = String(phone).replace(/\D/g, "");
+  let str = String(phone).replace(/[০-৯]/g, d => String.fromCharCode(d.charCodeAt(0) - 2534 + 48));
+  let clean = str.replace(/\D/g, "");
   if (clean.startsWith("880")) {
     clean = "0" + clean.slice(3);
   }

@@ -267,6 +267,12 @@ sequelize
   .sync()
   .then((result) => {
     sequelize.query("ALTER TABLE products CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;").catch(e => console.log("products table alter utf8mb4 info:", e.message));
+    sequelize.query("ALTER TABLE orders CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;").catch(e => {});
+    sequelize.query("ALTER TABLE order_items CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;").catch(e => {});
+    sequelize.query("ALTER TABLE orderItems CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;").catch(e => {});
+    sequelize.query("ALTER TABLE users CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;").catch(e => {});
+    sequelize.query("ALTER TABLE settings CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;").catch(e => {});
+    sequelize.query("ALTER TABLE categories CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;").catch(e => {});
     sequelize.query("ALTER TABLE products ADD COLUMN subCategory VARCHAR(255) NULL;").catch(e => {});
     sequelize.query("ALTER TABLE products ADD COLUMN isFreeDelivery TINYINT(1) DEFAULT 0;").catch(e => {});
     sequelize.query("ALTER TABLE products ADD COLUMN stock INT DEFAULT 50;").catch(e => {});
