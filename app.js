@@ -174,7 +174,12 @@ app.use((req, res, next) => {
           include: [{ model: SubCategory, required: false }],
           order: [['order', 'ASC'], ['id', 'ASC']]
         });
-        res.locals.globalCategories = categories || [];
+        const isBannerCategory = (name) => {
+          if (!name) return true;
+          const lower = name.trim().toLowerCase();
+          return lower.includes('banner') || lower.includes('slider') || lower.includes('promo') || lower.includes('popup');
+        };
+        res.locals.globalCategories = (categories || []).filter(c => !isBannerCategory(c.name));
       } catch (catErr) {
         console.log("Error loading global categories:", catErr.message);
         res.locals.globalCategories = [];

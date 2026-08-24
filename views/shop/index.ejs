@@ -163,31 +163,6 @@
     </div>
   </section>
 
-  <div class="trust-bar">
-    <div class="trust-item">
-      <div class="trust-icon red"><i class="fa-solid fa-truck-fast"></i></div>
-      <div>
-        <div class="trust-title"><%= typeof __ !== 'undefined' ? __('Fast Delivery') : 'Fast Delivery' %></div>
-        <div class="trust-sub"><%= typeof __ !== 'undefined' ? __('Inside Dhaka') : 'Inside Dhaka' %> ৳<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.delivery_inside) ? siteSettings.delivery_inside : 60 %></div>
-      </div>
-    </div>
-    <div class="trust-item">
-      <div class="trust-icon blue"><i class="fa-solid fa-shield-halved"></i></div>
-      <div><div class="trust-title"><%= typeof __ !== 'undefined' ? __('Secure Payment') : 'Secure Payment' %></div><div class="trust-sub"><%= typeof __ !== 'undefined' ? __('Cash on Delivery') : 'Cash on Delivery' %></div></div>
-    </div>
-    <div class="trust-item">
-      <div class="trust-icon green"><i class="fa-solid fa-rotate-left"></i></div>
-      <div><div class="trust-title"><%= typeof __ !== 'undefined' ? __('Easy Returns') : 'Easy Returns' %></div><div class="trust-sub"><%= typeof __ !== 'undefined' ? __('7-day return policy') : '7-day return policy' %></div></div>
-    </div>
-    <div class="trust-item">
-      <div class="trust-icon amber"><i class="fa-solid fa-headset"></i></div>
-      <div>
-        <div class="trust-title"><%= typeof __ !== 'undefined' ? __('24/7 Support') : '24/7 Support' %></div>
-        <div class="trust-sub"><%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.phone) ? siteSettings.phone : '01700000000' %></div>
-      </div>
-    </div>
-  </div>
-
   <% if (typeof categoriesList !== 'undefined' && categoriesList.length > 0) { %>
   <div class="cat-pills-wrap">
     <div class="cat-pills">
@@ -299,6 +274,30 @@
       <% } %>
     <% }); %>
   <% } %>
+  <div class="trust-bar" style="margin-top: 3rem; margin-bottom: 1rem;">
+    <div class="trust-item">
+      <div class="trust-icon red"><i class="fa-solid fa-truck-fast"></i></div>
+      <div>
+        <div class="trust-title"><%= typeof __ !== 'undefined' ? __('Fast Delivery') : 'Fast Delivery' %></div>
+        <div class="trust-sub"><%= typeof __ !== 'undefined' ? __('Inside Dhaka') : 'Inside Dhaka' %> ৳<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.delivery_inside) ? siteSettings.delivery_inside : 60 %></div>
+      </div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon blue"><i class="fa-solid fa-shield-halved"></i></div>
+      <div><div class="trust-title"><%= typeof __ !== 'undefined' ? __('Secure Payment') : 'Secure Payment' %></div><div class="trust-sub"><%= typeof __ !== 'undefined' ? __('Cash on Delivery') : 'Cash on Delivery' %></div></div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon green"><i class="fa-solid fa-rotate-left"></i></div>
+      <div><div class="trust-title"><%= typeof __ !== 'undefined' ? __('Easy Returns') : 'Easy Returns' %></div><div class="trust-sub"><%= typeof __ !== 'undefined' ? __('7-day return policy') : '7-day return policy' %></div></div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon amber"><i class="fa-solid fa-headset"></i></div>
+      <div>
+        <div class="trust-title"><%= typeof __ !== 'undefined' ? __('24/7 Support') : '24/7 Support' %></div>
+        <div class="trust-sub"><%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.phone) ? siteSettings.phone : '01700000000' %></div>
+      </div>
+    </div>
+  </div>
 
 </main>
 <script>

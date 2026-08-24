@@ -247,32 +247,65 @@ exports.getIndex = async (req, res, next) => {
       console.log("Error loading sliderBanners:", e.message);
     }
 
-    // 2. Load Banner Categories and merge all DB product categories
-    let categoriesList = [];
+    // 2. Load Banner Categories to exclude them completely from product category list
+    let bannerCategories = [];
+    let bannerCatNames = [];
     try {
       const catFile = path.join(__dirname, '..', 'util', 'banner-categories.json');
       if (fs.existsSync(catFile)) {
         const rawCats = JSON.parse(fs.readFileSync(catFile, "utf8"));
-        categoriesList = (rawCats || []).filter(c => c.status !== false && c.status !== 'inactive');
+        bannerCategories = (rawCats || []).filter(c => c.status !== false && c.status !== 'inactive');
+        bannerCatNames = bannerCategories.map(c => c.name ? c.name.trim().toLowerCase() : '').filter(Boolean);
       }
-    } catch (e) {
-      console.log("Error loading banner-categories.json:", e.message);
-    }
+    } catch (e) {}
 
-    const dbCatNames = Array.from(new Set((prods || []).map(p => p && p.category ? String(p.category).trim() : null).filter(Boolean)));
-    
-    dbCatNames.forEach(dbCat => {
-      const exists = categoriesList.some(c => c.name && c.name.trim().toLowerCase() === dbCat.toLowerCase());
-      if (!exists) {
-        categoriesList.push({
-          id: dbCat,
-          name: dbCat,
-          img: '/images/placeholder.jpg'
-        });
+    const isBannerCategory = (catName) => {
+      if (!catName) return true;
+      const lower = catName.trim().toLowerCase();
+      if (bannerCatNames.includes(lower)) return true;
+      if (lower.includes('banner') || lower.includes('slider') || lower.includes('promo') || lower.includes('popup')) return true;
+      return false;
+    };
+
+    // 3. Load Product Categories ONLY for front page category list
+    let categoriesList = [];
+    const Category = require("../models/category");
+    const dbCategories = await Category.findAll({
+      where: { status: true },
+      order: [['order', 'ASC'], ['id', 'ASC']]
+    }).catch(() => []);
+
+    dbCategories.forEach(cat => {
+      const cName = cat.name ? cat.name.trim() : '';
+      if (cName && !isBannerCategory(cName)) {
+        const exists = categoriesList.some(c => c.name.toLowerCase() === cName.toLowerCase());
+        if (!exists) {
+          categoriesList.push({
+            id: cat.id,
+            name: cName,
+            img: cat.image || '/images/placeholder.jpg'
+          });
+        }
       }
     });
 
-    // 3. Hot Deals
+    const dbProductCatNames = Array.from(new Set((prods || []).map(p => p && p.category ? String(p.category).trim() : null).filter(Boolean)));
+    dbProductCatNames.forEach(pCat => {
+      if (pCat && !isBannerCategory(pCat)) {
+        const exists = categoriesList.some(c => c.name.toLowerCase() === pCat.toLowerCase());
+        if (!exists) {
+          categoriesList.push({
+            id: pCat,
+            name: pCat,
+            img: '/images/placeholder.jpg'
+          });
+        }
+      }
+    });
+
+    categoriesList = categoriesList.filter(c => !isBannerCategory(c.name));
+
+    // 4. Hot Deals
     const hotDeals = (prods || []).filter(p => p.isHotDeal === true || p.isHotDeal === 1 || p.isHotDeal === 'true');
 
     let footerConfig = {
@@ -298,7 +331,7 @@ exports.getIndex = async (req, res, next) => {
       hotDeals: hotDeals || [],
       sliderBanners: sliderBanners || [],
       categoriesList: categoriesList || [],
-      bannerCategories: categoriesList || [],
+      bannerCategories: bannerCategories || [],
       banners: sliderBanners || [],
       pageTitle: "Home - One Commerce",
       path: "/",
