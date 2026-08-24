@@ -570,7 +570,7 @@
             </div>
 
             <!-- Quantity & Actions -->
-            <form action="/cart" method="POST">
+            <form action="/cart" method="POST" data-prod-id="<%= product.id %>" data-prod-title="<%= product.title %>" data-prod-price="<%= product.price %>">
                 <input type="hidden" name="productId" value="<%= product.id %>">
 
                 <div class="qty-counter-row">

@@ -32,6 +32,11 @@
     <% if (typeof pixelConfig !== 'undefined' && pixelConfig && (pixelConfig.status === true || pixelConfig.status == 1) && pixelConfig.code) { %>
         <% if (pixelConfig.code.includes('<script')) { %>
             <%- pixelConfig.code %>
+            <script>
+                if (typeof window.fbq === 'function') {
+                    try { window.fbq('set', 'autoConfig', false); } catch(e){}
+                }
+            </script>
         <% } else { %>
             <!-- Meta Pixel Code -->
             <script>
@@ -43,6 +48,7 @@
             t.src=v;s=b.getElementsByTagName(e)[0];
             s.parentNode.insertBefore(t,s)}(window, document,'script',
             'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('set', 'autoConfig', false, '<%= pixelConfig.code.trim() %>');
             fbq('init', '<%= pixelConfig.code.trim() %>');
             fbq('track', 'PageView');
             </script>
@@ -70,8 +76,8 @@
         var form = e.target;
         if (form && form.action && form.action.includes('/cart')) {
             var prodId = form.getAttribute('data-prod-id') || (form.querySelector('input[name="productId"]') ? form.querySelector('input[name="productId"]').value : null);
-            var prodTitle = form.getAttribute('data-prod-title') || '';
-            var prodPrice = parseFloat(form.getAttribute('data-prod-price') || 0);
+            var prodTitle = form.getAttribute('data-prod-title') || (document.querySelector('.product-title-heading') ? document.querySelector('.product-title-heading').innerText.trim() : '');
+            var prodPrice = parseFloat(form.getAttribute('data-prod-price') || (document.querySelector('.large-bold-new-price') ? document.querySelector('.large-bold-new-price').innerText.replace(/[^\d.]/g, '') : 0));
             var qtyInput = form.querySelector('input[name="quantity"]') || document.getElementById('qty-counter');
             var qty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
             
