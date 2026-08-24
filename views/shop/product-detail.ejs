@@ -524,16 +524,29 @@
 
     <!-- Top Product Hero Card -->
     <div class="product-hero-card">
+        <script>
+            function switchMainImage(thumbElement, url) {
+                const mainImg = document.getElementById('main-preview-img');
+                if (mainImg) {
+                    mainImg.src = url;
+                }
+                const allThumbs = document.querySelectorAll('.gallery-box .thumb-item');
+                allThumbs.forEach(t => t.classList.remove('active'));
+                if (thumbElement) {
+                    thumbElement.classList.add('active');
+                }
+            }
+        </script>
         <!-- Gallery -->
         <div class="gallery-box">
             <div class="thumb-list">
-                <div class="thumb-item active" onclick="document.getElementById('main-preview-img').src='<%= product.imageUrl %>'">
+                <div class="thumb-item active" onclick="switchMainImage(this, '<%= product.imageUrl %>')">
                     <img src="<%= product.imageUrl %>" alt="<%= product.title %>">
                 </div>
                 <% if (typeof product.galleryList !== 'undefined' && product.galleryList && product.galleryList.length > 0) { %>
                     <% product.galleryList.forEach(imgUrl => { %>
                         <% if (imgUrl && imgUrl.trim() !== '') { %>
-                            <div class="thumb-item" onclick="document.getElementById('main-preview-img').src='<%= imgUrl %>'">
+                            <div class="thumb-item" onclick="switchMainImage(this, '<%= imgUrl %>')">
                                 <img src="<%= imgUrl %>" alt="<%= product.title %>">
                             </div>
                         <% } %>
