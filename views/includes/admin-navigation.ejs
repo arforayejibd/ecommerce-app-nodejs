@@ -626,7 +626,7 @@
   </div>
 
   <div class="sidebar-footer p-3 border-top d-flex align-items-center justify-content-between">
-    <span class="font-11 text-muted fw-semibold">OneCommerce Admin <span class="badge bg-soft-primary text-primary ms-1">v2.6</span></span>
+    <span class="font-11 text-muted fw-semibold"><%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.name) ? siteSettings.name : 'OneCommerce' %> Admin <span class="badge bg-soft-primary text-primary ms-1">v2.6</span></span>
     <form action="/admin/logout" method="POST" style="margin: 0;">
         <button type="submit" style="background: none; border: none; color: #ef4444; font-size: 18px; cursor: pointer;" title="Logout">
             <i class="fe-power"></i>
