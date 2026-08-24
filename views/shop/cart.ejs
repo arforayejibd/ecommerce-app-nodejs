@@ -1,7 +1,7 @@
 <%- include('../includes/head.ejs') %>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 <style>
-    /* 100% Exact OneCommerce Customer Checkout Page Styling */
+    /* 100% Exact Rosedrape Customer Checkout Page Styling */
     body {
         background-color: #f8fafc !important;
         font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;
@@ -755,7 +755,7 @@
 
             // 1. Auto-fill saved info on load
             try {
-                const saved = localStorage.getItem('onecommerce_customer_info');
+                const saved = localStorage.getItem('rosedrape_customer_info');
                 if (saved) {
                     const data = JSON.parse(saved);
                     if (data.name && nameInput && !nameInput.value) nameInput.value = data.name;
@@ -773,7 +773,7 @@
                             phone: phoneInput ? phoneInput.value.trim() : '',
                             address: addressInput ? addressInput.value.trim() : ''
                         };
-                        localStorage.setItem('onecommerce_customer_info', JSON.stringify(info));
+                        localStorage.setItem('rosedrape_customer_info', JSON.stringify(info));
                     } catch(e) {}
                 });
             }

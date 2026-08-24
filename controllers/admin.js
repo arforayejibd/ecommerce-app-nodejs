@@ -508,7 +508,7 @@ exports.getCreateOrder = async (req, res, next) => {
     const allUsers = await User.findAll({ attributes: ['id', 'name', 'email'] }).catch(() => []);
 
     res.render("admin/create-order", {
-      pageTitle: "Create New Order - OneCommerce Admin",
+      pageTitle: "Create New Order",
       path: "/admin/orders",
       allProducts: products || [],
       products: products || [],
