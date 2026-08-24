@@ -16,6 +16,10 @@ router.get("/dashboard", isAdmin, adminController.getDashboard);
 
 // Protected Orders Routes
 router.get("/orders", isAdmin, adminController.getAdminOrders);
+router.get("/orders/create", isAdmin, adminController.getCreateOrder);
+router.get("/order/create", isAdmin, adminController.getCreateOrder);
+router.post("/orders/create", isAdmin, adminController.postCreateOrder);
+router.post("/order/create", isAdmin, adminController.postCreateOrder);
 router.get("/order/invoice/:invoiceId", isAdmin, adminController.getInvoice);
 router.get("/order/edit/:invoiceId", isAdmin, adminController.getProcessOrder);
 router.post("/order/edit", isAdmin, adminController.postProcessOrder);

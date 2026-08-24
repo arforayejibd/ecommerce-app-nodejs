@@ -493,6 +493,140 @@ exports.getInvoice = async (req, res, next) => {
   }
 };
 
+exports.getCreateOrder = async (req, res, next) => {
+  try {
+    let products = [];
+    try {
+      products = await Product.findAll({ order: [['title', 'ASC']] });
+    } catch (err1) {
+      products = await Product.findAll({
+        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal'],
+        order: [['title', 'ASC']]
+      }).catch(() => []);
+    }
+
+    const allUsers = await User.findAll({ attributes: ['id', 'name', 'email'] }).catch(() => []);
+
+    res.render("admin/create-order", {
+      pageTitle: "Create New Order - Rosedrape Admin",
+      path: "/admin/orders",
+      allProducts: products || [],
+      products: products || [],
+      allUsers: allUsers || []
+    });
+  } catch (err) {
+    console.log("Error in getCreateOrder:", err);
+    res.redirect("/admin/orders");
+  }
+};
+
+exports.postCreateOrder = async (req, res, next) => {
+  try {
+    const name = (req.body.name || '').trim();
+    const phone = (req.body.phone || '').trim();
+    const address = (req.body.address || '').trim();
+    const area = req.body.area || '60';
+    const status = req.body.status || 'Pending';
+    const paymentMethod = req.body.payment_method || req.body.paymentMethod || 'Cash On Delivery';
+    const discount = parseFloat(req.body.discount || 0) || 0;
+    const advance = parseFloat(req.body.advance_payment || req.body.advance || 0) || 0;
+    const adminNote = (req.body.admin_note || req.body.adminNote || '').trim();
+    const assignee = req.body.assignee || 'Super Admin';
+
+    const rawProdIds = req.body.product_ids || req.body.productIds;
+    const rawQtys = req.body.product_quantities || req.body.quantities;
+
+    const normalizePhone = (p) => {
+      if (!p) return "";
+      let str = String(p).replace(/[০-৯]/g, d => String.fromCharCode(d.charCodeAt(0) - 2534 + 48));
+      let clean = str.replace(/\D/g, "");
+      if (clean.startsWith("880")) clean = "0" + clean.slice(3);
+      return clean;
+    };
+
+    const cleanPhone = normalizePhone(phone);
+
+    let itemsToProcess = [];
+    if (Array.isArray(rawProdIds)) {
+      rawProdIds.forEach((pId, idx) => {
+        const parsedId = parseInt(pId);
+        const qVal = Array.isArray(rawQtys) ? rawQtys[idx] : rawQtys;
+        const parsedQty = parseInt(qVal) || 1;
+        if (!isNaN(parsedId) && parsedId > 0 && parsedQty > 0) {
+          itemsToProcess.push({ productId: parsedId, quantity: parsedQty });
+        }
+      });
+    } else if (rawProdIds) {
+      const parsedId = parseInt(rawProdIds);
+      const parsedQty = parseInt(rawQtys) || 1;
+      if (!isNaN(parsedId) && parsedId > 0 && parsedQty > 0) {
+        itemsToProcess.push({ productId: parsedId, quantity: parsedQty });
+      }
+    }
+
+    let subtotal = 0;
+    const resolvedItems = [];
+    for (const item of itemsToProcess) {
+      const prod = await Product.findByPk(item.productId);
+      if (prod) {
+        const unitPrice = parseFloat(prod.price || 0);
+        subtotal += unitPrice * item.quantity;
+        resolvedItems.push({
+          productId: prod.id,
+          quantity: item.quantity,
+          price: unitPrice
+        });
+      }
+    }
+
+    const shipFee = (area === '120' || String(area).includes('120')) ? 120 : ((area === '0' || String(area).includes('0')) ? 0 : 60);
+    const grandTotal = Math.max(0, subtotal + shipFee - discount - advance);
+
+    const orderData = {
+      invoiceId: 'INV-TEMP',
+      name: name || 'Customer',
+      phone: cleanPhone || '01700000000',
+      address: address || 'Dhaka',
+      area: area,
+      paymentMethod: paymentMethod,
+      status: status,
+      assignee: assignee,
+      adminNote: adminNote,
+      discount: discount,
+      advance: advance,
+      shippingCharge: shipFee,
+      amount: grandTotal
+    };
+
+    const OrderItem = require("../models/order-item");
+    const order = await Order.create(orderData);
+    order.invoiceId = 'INV-' + order.id;
+    await order.save();
+
+    for (const item of resolvedItems) {
+      try {
+        await OrderItem.create({
+          orderId: order.id,
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.price
+        });
+      } catch (e) {
+        await OrderItem.create({
+          orderId: order.id,
+          productId: item.productId,
+          quantity: item.quantity
+        });
+      }
+    }
+
+    return res.redirect('/admin/orders');
+  } catch (err) {
+    console.log("Error in postCreateOrder:", err);
+    return res.redirect('/admin/orders');
+  }
+};
+
 const OrderItem = require("../models/order-item");
 
 exports.getProcessOrder = async (req, res, next) => {
