@@ -606,6 +606,17 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            <% if (editing && typeof product !== 'undefined' && product && product.galleryImages && product.galleryImages.length > 0) { %>
+                const initialGallery = <%- JSON.stringify(product.galleryImages) %>;
+                if (Array.isArray(initialGallery)) {
+                    initialGallery.forEach(url => {
+                        if (url && String(url).trim() !== '') {
+                            addGalleryImageInput(String(url).trim());
+                        }
+                    });
+                }
+            <% } %>
+
             const form = document.querySelector('form');
             if (form) {
                 form.addEventListener('submit', function(e) {

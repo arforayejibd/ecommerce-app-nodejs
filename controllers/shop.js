@@ -45,7 +45,7 @@ const safeFindProductById = async (id) => {
     console.log("Fallback safeFindProductById for id:", id, err.message);
     try {
       return await Product.findByPk(id, {
-        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'subCategory', 'oldPrice', 'isHotDeal', 'isFreeDelivery', 'stock']
+        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'subCategory', 'oldPrice', 'isHotDeal', 'isFreeDelivery', 'stock', 'images']
       });
     } catch (err2) {
       console.log("Secondary fallback safeFindProductById failed:", err2.message);
@@ -205,6 +205,17 @@ exports.getProduct = async (req, res, next) => {
       return res.redirect("/products");
     }
 
+    const prodObj = product.get ? product.get({ plain: true }) : product;
+    let galleryList = [];
+    if (prodObj.images) {
+      try {
+        galleryList = typeof prodObj.images === 'string' ? JSON.parse(prodObj.images) : prodObj.images;
+      } catch (e) {
+        galleryList = String(prodObj.images).split(',').map(s => s.trim()).filter(Boolean);
+      }
+    }
+    prodObj.galleryList = Array.isArray(galleryList) ? galleryList : [];
+
     let relatedProducts = [];
     try {
       relatedProducts = await safeFindAllProducts({
@@ -216,7 +227,7 @@ exports.getProduct = async (req, res, next) => {
     }
 
     res.render("shop/product-detail", {
-      product: product,
+      product: prodObj,
       pageTitle: product.title + " - One Commerce",
       path: "/products",
       relatedProducts: relatedProducts.slice(0, 4)

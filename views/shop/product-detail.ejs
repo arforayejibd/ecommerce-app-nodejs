@@ -530,6 +530,15 @@
                 <div class="thumb-item active" onclick="document.getElementById('main-preview-img').src='<%= product.imageUrl %>'">
                     <img src="<%= product.imageUrl %>" alt="<%= product.title %>">
                 </div>
+                <% if (typeof product.galleryList !== 'undefined' && product.galleryList && product.galleryList.length > 0) { %>
+                    <% product.galleryList.forEach(imgUrl => { %>
+                        <% if (imgUrl && imgUrl.trim() !== '') { %>
+                            <div class="thumb-item" onclick="document.getElementById('main-preview-img').src='<%= imgUrl %>'">
+                                <img src="<%= imgUrl %>" alt="<%= product.title %>">
+                            </div>
+                        <% } %>
+                    <% }); %>
+                <% } %>
             </div>
             <div class="main-image-viewport">
                 <% if (product.oldPrice && product.oldPrice > product.price) { %>

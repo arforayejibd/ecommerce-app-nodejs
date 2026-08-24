@@ -1753,7 +1753,7 @@ const findProductById = async (id) => {
     console.log("Fallback findProductById for id:", id, err.message);
     try {
       const prod = await Product.findByPk(id, {
-        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal']
+        attributes: ['id', 'title', 'price', 'imageUrl', 'description', 'category', 'oldPrice', 'isHotDeal', 'images']
       });
       if (prod) {
         prod.stock = prod.stock !== undefined && prod.stock !== null ? prod.stock : 50;
@@ -1776,11 +1776,23 @@ exports.getEditProduct = async (req, res, next) => {
     }
     const categories = await Category.findAll({ where: { status: true }, order: [['order', 'ASC']] }).catch(() => []);
     const subcategories = await SubCategory.findAll({ where: { status: true }, order: [['name', 'ASC']] }).catch(() => []);
+
+    const prodObj = product.get ? product.get({ plain: true }) : product;
+    let galleryArr = [];
+    if (prodObj.images) {
+      try {
+        galleryArr = typeof prodObj.images === 'string' ? JSON.parse(prodObj.images) : prodObj.images;
+      } catch (e) {
+        galleryArr = String(prodObj.images).split(',').map(s => s.trim()).filter(Boolean);
+      }
+    }
+    prodObj.galleryImages = Array.isArray(galleryArr) ? galleryArr : [];
+
     res.render("admin/edit-product", {
       pageTitle: "Edit Product",
       path: "/admin/edit-product",
       editing: true,
-      product: product,
+      product: prodObj,
       categories: categories || [],
       subcategories: subcategories || []
     });
@@ -1836,6 +1848,13 @@ exports.postAddProduct = async (req, res, next) => {
     const isHotDeal = req.body.isHotDeal === "true" || req.body.isHotDeal === true || req.body.isHotDeal === "on";
     const isFreeDelivery = req.body.isFreeDelivery === "true" || req.body.isFreeDelivery === true || req.body.isFreeDelivery === "on";
 
+    let rawGallery = req.body['galleryImages[]'] || req.body.galleryImages || req.body.gallery_images || [];
+    if (!Array.isArray(rawGallery)) {
+      rawGallery = rawGallery ? [rawGallery] : [];
+    }
+    const galleryImages = rawGallery.map(u => String(u).trim()).filter(u => u && u !== '' && u !== 'undefined');
+    const imagesStr = JSON.stringify(galleryImages);
+
     const User = require("../models/user");
     let adminUser = req.user;
     if (!adminUser) {
@@ -1852,7 +1871,7 @@ exports.postAddProduct = async (req, res, next) => {
     try {
       if (adminUser && typeof adminUser.createProduct === 'function') {
         createdProduct = await adminUser.createProduct({
-          title, price, oldPrice, stock, purchasePrice, imageUrl, description, category, subCategory, isHotDeal, isFreeDelivery, userId: userIdVal
+          title, price, oldPrice, stock, purchasePrice, imageUrl, description, category, subCategory, isHotDeal, isFreeDelivery, images: imagesStr, userId: userIdVal
         });
       }
     } catch (e1) {
@@ -1863,7 +1882,7 @@ exports.postAddProduct = async (req, res, next) => {
     if (!createdProduct) {
       try {
         createdProduct = await Product.create({
-          title, price, oldPrice, stock, purchasePrice, imageUrl, description, category, subCategory, isHotDeal, isFreeDelivery, userId: userIdVal
+          title, price, oldPrice, stock, purchasePrice, imageUrl, description, category, subCategory, isHotDeal, isFreeDelivery, images: imagesStr, userId: userIdVal
         });
       } catch (e2) {
         console.log("postAddProduct Attempt 2 failed:", e2.message);
@@ -1871,7 +1890,7 @@ exports.postAddProduct = async (req, res, next) => {
         // Attempt 3: Product.create with basic fields + userId
         try {
           createdProduct = await Product.create({
-            title, price, oldPrice, stock, purchasePrice, imageUrl, description, category, isHotDeal, userId: userIdVal
+            title, price, oldPrice, stock, purchasePrice, imageUrl, description, category, isHotDeal, images: imagesStr, userId: userIdVal
           });
         } catch (e3) {
           console.log("postAddProduct Attempt 3 failed:", e3.message);
@@ -1882,7 +1901,7 @@ exports.postAddProduct = async (req, res, next) => {
 
           try {
             createdProduct = await Product.create({
-              title: safeTitle, price, oldPrice, stock, purchasePrice, imageUrl, description: safeDesc, category, subCategory, isHotDeal, isFreeDelivery, userId: userIdVal
+              title: safeTitle, price, oldPrice, stock, purchasePrice, imageUrl, description: safeDesc, category, subCategory, isHotDeal, isFreeDelivery, images: imagesStr, userId: userIdVal
             });
           } catch (e4) {
             console.log("postAddProduct Attempt 4 failed:", e4.message);
@@ -1890,7 +1909,7 @@ exports.postAddProduct = async (req, res, next) => {
             // Attempt 5: Safe text + minimum required fields + userId
             try {
               createdProduct = await Product.create({
-                title: safeTitle, price, oldPrice, stock, purchasePrice, imageUrl, description: safeDesc, category, isHotDeal, userId: userIdVal
+                title: safeTitle, price, oldPrice, stock, purchasePrice, imageUrl, description: safeDesc, category, isHotDeal, images: imagesStr, userId: userIdVal
               });
             } catch (e5) {
               console.log("postAddProduct Attempt 5 failed:", e5.message);
@@ -1907,6 +1926,7 @@ exports.postAddProduct = async (req, res, next) => {
                   imageUrl: imageUrl,
                   description: uDesc,
                   category: category || 'General',
+                  images: imagesStr,
                   userId: userIdVal
                 });
               } catch (e6) {
@@ -1969,6 +1989,13 @@ exports.postEditProduct = async (req, res, next) => {
       const stockVal = req.body.stock !== undefined && req.body.stock !== '' ? parseInt(req.body.stock) : (product.stock !== undefined && product.stock !== null ? product.stock : 50);
       const purchasePriceVal = req.body.purchasePrice !== undefined && req.body.purchasePrice !== '' ? parseFloat(req.body.purchasePrice) : (product.purchasePrice !== undefined && product.purchasePrice !== null ? product.purchasePrice : 450);
 
+      let rawGallery = req.body['galleryImages[]'] || req.body.galleryImages || req.body.gallery_images || [];
+      if (!Array.isArray(rawGallery)) {
+        rawGallery = rawGallery ? [rawGallery] : [];
+      }
+      const galleryImages = rawGallery.map(u => String(u).trim()).filter(u => u && u !== '' && u !== 'undefined');
+      const imagesStr = JSON.stringify(galleryImages);
+
       const User = require("../models/user");
       let adminUser = req.user;
       if (!adminUser) {
@@ -1988,6 +2015,7 @@ exports.postEditProduct = async (req, res, next) => {
         subCategory: subCategory,
         isHotDeal: req.body.isHotDeal === "true" || req.body.isHotDeal === true || req.body.isHotDeal === "on",
         isFreeDelivery: isFreeDelivery,
+        images: imagesStr,
         userId: userIdVal
       };
 
@@ -2017,7 +2045,8 @@ exports.postEditProduct = async (req, res, next) => {
             const uDesc = ultraSafeText(rawDesc) || product.description;
             await Product.update({
               title: uTitle,
-              description: uDesc
+              description: uDesc,
+              images: imagesStr
             }, { where: { id: id } }).catch((upErr4) => {
               console.log("Error updating product (Attempt 4):", upErr4.message);
             });

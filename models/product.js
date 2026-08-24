@@ -53,6 +53,10 @@ const Product = sequelize.define("product", {
     defaultValue: 0,
     allowNull: true,
   },
+  images: {
+    type: Sequelize.TEXT,
+    allowNull: true,
+  },
 });
 
 module.exports = Product;

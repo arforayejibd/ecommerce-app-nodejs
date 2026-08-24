@@ -282,6 +282,7 @@ sequelize
     sequelize.query("ALTER TABLE products ADD COLUMN isFreeDelivery TINYINT(1) DEFAULT 0;").catch(e => {});
     sequelize.query("ALTER TABLE products ADD COLUMN stock INT DEFAULT 50;").catch(e => {});
     sequelize.query("ALTER TABLE products ADD COLUMN purchasePrice DOUBLE DEFAULT 0;").catch(e => {});
+    sequelize.query("ALTER TABLE products ADD COLUMN images TEXT NULL;").catch(e => {});
     sequelize.query("ALTER TABLE settings ADD COLUMN language VARCHAR(20) DEFAULT 'bn';").catch(e => {});
     sequelize.query("ALTER TABLE order_items ADD COLUMN price DOUBLE NULL;").catch(e => {});
     sequelize.query("ALTER TABLE orderItems ADD COLUMN price DOUBLE NULL;").catch(e => {});
