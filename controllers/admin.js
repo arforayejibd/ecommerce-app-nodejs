@@ -744,33 +744,73 @@ exports.postProcessOrder = async (req, res, next) => {
   }
 };
 
-exports.getFraudCheck = (req, res, next) => {
-  const phone = req.query.phone;
-  if (!phone) {
-    return res.status(400).json({ status: 'error', message: 'Phone number is required' });
-  }
-  
-  const cleanPhone = phone.replace(/[^0-9]/g, '').slice(-11);
-  
-  setTimeout(() => {
-    const totalParcels = Math.floor(Math.random() * 15) + 3;
-    const deliveredParcels = Math.floor(totalParcels * (0.8 + Math.random() * 0.18));
-    const cancelledParcels = totalParcels - deliveredParcels;
-    const successRatio = Math.round((deliveredParcels / totalParcels) * 100) + '%';
+exports.getFraudCheck = async (req, res, next) => {
+  try {
+    const phone = req.query.phone;
+    if (!phone) {
+      return res.status(400).json({ status: 'error', message: 'Phone number is required' });
+    }
     
-    res.json({
-      status: 'success',
-      phone: cleanPhone,
-      http_status: 200,
-      data: {
-        total_parcels: totalParcels,
-        total_delivered: deliveredParcels,
-        total_cancelled: cancelledParcels,
-        success_ratio: successRatio,
-        total_fraud_reports: cancelledParcels > 3 ? 1 : 0
-      }
+    const cleanPhone = phone.replace(/[^0-9]/g, '').slice(-11);
+    if (!cleanPhone || cleanPhone.length < 10) {
+      return res.status(400).json({ status: 'error', message: 'Invalid phone number format' });
+    }
+
+    const courierConfig = loadCourierConfig();
+    const steadfastConfig = courierConfig.steadfast;
+
+    const baseUrl = (steadfastConfig && steadfastConfig.url ? steadfastConfig.url : 'https://portal.packzy.com/api/v1').replace(/\/+$/, '');
+    const apiUrl = `${baseUrl}/fraud_check/${cleanPhone}`;
+
+    const headers = {};
+    if (steadfastConfig && steadfastConfig.api_key) {
+      headers['Api-Key'] = steadfastConfig.api_key;
+    }
+    if (steadfastConfig && steadfastConfig.secret_key) {
+      headers['Secret-Key'] = steadfastConfig.secret_key;
+    }
+    headers['Content-Type'] = 'application/json';
+
+    const apiRes = await fetch(apiUrl, {
+      method: 'GET',
+      headers: headers
     });
-  }, 400);
+
+    const data = await apiRes.json();
+
+    if (apiRes.status === 200 && data) {
+      const totalParcels = parseInt(data.total_parcels) || 0;
+      const deliveredParcels = parseInt(data.total_delivered) || 0;
+      const cancelledParcels = parseInt(data.total_cancelled) || 0;
+      const fraudReports = Array.isArray(data.total_fraud_reports) ? data.total_fraud_reports : [];
+      
+      const successRatio = totalParcels > 0 
+        ? Math.round((deliveredParcels / totalParcels) * 100) + '%' 
+        : '0%';
+
+      return res.json({
+        status: 'success',
+        phone: cleanPhone,
+        http_status: 200,
+        data: {
+          total_parcels: totalParcels,
+          total_delivered: deliveredParcels,
+          total_cancelled: cancelledParcels,
+          success_ratio: successRatio,
+          total_fraud_reports: fraudReports.length,
+          fraud_reports_list: fraudReports
+        }
+      });
+    } else {
+      return res.status(500).json({
+        status: 'failed',
+        message: data.message || 'Steadfast API error while checking fraud status'
+      });
+    }
+  } catch (err) {
+    console.error('Error in getFraudCheck:', err);
+    return res.status(500).json({ status: 'failed', message: err.message });
+  }
 };
 
 exports.postPrintOrders = async (req, res, next) => {
@@ -830,21 +870,90 @@ const saveCourierConfig = (data) => {
 
 exports.loadCourierConfig = loadCourierConfig;
 
-exports.postSteadfastCourier = (req, res, next) => {
-  const orderIds = req.body.orderIds;
-  const ids = Array.isArray(orderIds) ? orderIds : [orderIds];
-  const courierConfig = loadCourierConfig();
-  const steadfastConfig = courierConfig.steadfast;
-  
-  if (!steadfastConfig.status) {
-    return res.status(400).json({ status: 'failed', message: 'Steadfast Courier API is currently disabled in API Integration Settings.' });
-  }
+exports.postSteadfastCourier = async (req, res, next) => {
+  try {
+    const orderIds = req.body.orderIds;
+    const ids = Array.isArray(orderIds) ? orderIds : [orderIds];
+    const courierConfig = loadCourierConfig();
+    const steadfastConfig = courierConfig.steadfast;
+    
+    if (!steadfastConfig || !steadfastConfig.status) {
+      return res.status(400).json({ status: 'failed', message: 'Steadfast Courier API is currently disabled in API Integration Settings.' });
+    }
 
-  Order.update({ status: 'In Courier' }, { where: { id: ids } })
-    .then(() => {
-      res.json({ status: 'success', message: `${ids.length} Order(s) successfully booked with Steadfast Courier (API Key: ${steadfastConfig.api_key})!` });
-    })
-    .catch(err => res.status(500).json({ status: 'failed', message: err.message }));
+    if (!steadfastConfig.api_key || !steadfastConfig.secret_key) {
+      return res.status(400).json({ status: 'failed', message: 'Steadfast API Key or Secret Key is missing in API Integration Settings.' });
+    }
+
+    const orders = await Order.findAll({ where: { id: ids } });
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({ status: 'failed', message: 'No valid orders found to submit to Steadfast Courier.' });
+    }
+
+    const baseUrl = (steadfastConfig.url || 'https://portal.packzy.com/api/v1').replace(/\/+$/, '');
+    const apiUrl = `${baseUrl}/create_order`;
+
+    const results = [];
+    const successfulIds = [];
+
+    for (const order of orders) {
+      const invoiceId = order.invoiceId || (`INV-` + order.id);
+      const recipientName = (order.name && order.name.trim()) ? order.name.trim() : 'Customer';
+      const recipientPhone = order.phone || '';
+      const recipientAddress = (order.address && order.address.trim()) ? order.address.trim() : 'Dhaka';
+      const codAmount = Math.max(0, parseFloat(order.amount !== undefined && order.amount !== null ? order.amount : (order.totalAmount || 0)));
+
+      const payload = {
+        invoice: invoiceId,
+        recipient_name: recipientName,
+        recipient_phone: recipientPhone,
+        recipient_address: recipientAddress,
+        cod_amount: codAmount,
+        note: `Order #${invoiceId}`
+      };
+
+      try {
+        const apiRes = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Api-Key': steadfastConfig.api_key,
+            'Secret-Key': steadfastConfig.secret_key,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await apiRes.json();
+
+        if ((apiRes.status === 200 || apiRes.status === 201) && (data.status === 200 || data.status === 201 || data.consignment)) {
+          const consignment = data.consignment || {};
+          order.status = 'In Courier';
+          await order.save();
+          successfulIds.push(order.id);
+          results.push(`Order #${order.id} (${invoiceId}): Booked successfully! (Tracking Code: ${consignment.tracking_code || 'N/A'}, Consignment ID: ${consignment.consignment_id || 'N/A'})`);
+        } else {
+          results.push(`Order #${order.id} (${invoiceId}) Failed: ${data.message || (data.errors ? JSON.stringify(data.errors) : 'Unknown Steadfast API Error')}`);
+        }
+      } catch (err) {
+        results.push(`Order #${order.id} (${invoiceId}) Network Error: ${err.message}`);
+      }
+    }
+
+    if (successfulIds.length > 0) {
+      return res.json({
+        status: 'success',
+        message: `Successfully booked ${successfulIds.length} order(s) with Steadfast Courier!\n\n` + results.join('\n')
+      });
+    } else {
+      return res.status(400).json({
+        status: 'failed',
+        message: `Failed to book orders with Steadfast Courier:\n\n` + results.join('\n')
+      });
+    }
+  } catch (err) {
+    console.error("Error in postSteadfastCourier:", err);
+    return res.status(500).json({ status: 'failed', message: err.message });
+  }
 };
 
 exports.postPathaoCourier = (req, res, next) => {

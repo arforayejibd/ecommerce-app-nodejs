@@ -806,6 +806,16 @@
                                     <div style="width: ${ratioNum}%; height: 100%; background: ${badgeBg};"></div>
                                 </div>
                             </div>
+                            ${d.fraud_reports_list && d.fraud_reports_list.length > 0 ? `
+                                <div style="margin-top: 1.2rem; padding: 0.85rem; background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; text-align: left;">
+                                    <div style="font-size: 0.85rem; font-weight: 800; color: #dc2626; margin-bottom: 0.5rem;"><i class="fe-alert-triangle me-1"></i> Merchant Fraud Reports (${d.fraud_reports_list.length}):</div>
+                                    ${d.fraud_reports_list.map(r => `
+                                        <div style="font-size: 0.8rem; color: #991b1b; margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px dashed #fca5a5;">
+                                            <strong style="color: #7f1d1d;">${r.name || 'Reporter'}:</strong> ${r.details || 'No details provided'}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
                         `;
                     }
                 })
