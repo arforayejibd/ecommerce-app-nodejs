@@ -180,12 +180,13 @@
         display: flex !important;
         flex-direction: column !important;
         transform: translateX(-100%) !important;
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.35) !important;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease !important;
+        box-shadow: none !important;
     }
 
     body.sidebar-enable .left-side-menu {
         transform: translateX(0) !important;
+        box-shadow: 10px 15px 25px -5px rgba(0, 0, 0, 0.14) !important;
     }
 
     /* Force all text labels, arrows, and badges visible on mobile (Never Icon-Only) */
@@ -360,8 +361,7 @@
 }
 
 [data-theme="dark"] #side-menu > li > a.sidebar-link:hover {
-    background-color: rgba(255, 255, 255, 0.06) !important;
-    backdrop-filter: blur(8px);
+    background-color: rgba(255, 255, 255, 0.08) !important;
     color: #f8fafc !important;
     transform: translateX(5px) !important;
 }
@@ -398,8 +398,7 @@
 }
 
 [data-theme="light"] #side-menu > li > a.sidebar-link:hover {
-    background-color: rgba(99, 102, 241, 0.07) !important;
-    backdrop-filter: blur(8px);
+    background-color: rgba(99, 102, 241, 0.08) !important;
     color: #4f46e5 !important;
     transform: translateX(5px) !important;
 }

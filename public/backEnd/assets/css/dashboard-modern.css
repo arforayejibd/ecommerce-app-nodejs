@@ -254,15 +254,7 @@ body[data-leftbar-size="condensed"] .topbar-logo-box {
 
     .topbar-logo-box,
     body[data-leftbar-size="condensed"] .topbar-logo-box {
-        width: 70px !important;
-        min-width: 70px !important;
-        max-width: 70px !important;
-        padding: 0 5px !important;
-    }
-
-    .topbar-logo-box img {
-        max-height: 40px !important;
-        max-width: 60px !important;
+        display: none !important;
     }
 }
 
@@ -577,9 +569,8 @@ select {
 }
 
 .hero-actions .btn-hero-action {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: #ffffff;
     border-radius: 12px;
     padding: 10px 18px;
@@ -801,19 +792,15 @@ select {
 }
 
 [data-theme="dark"] .navbar-custom {
-    background: rgba(15, 23, 42, 0.85) !important;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: #0f172a !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 [data-theme="light"] .navbar-custom {
-    background: rgba(255, 255, 255, 0.9) !important;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    background: #ffffff !important;
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
 }
 
 .header-icon-btn {
