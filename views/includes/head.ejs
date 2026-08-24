@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%= pageTitle %> - One Commerce</title>
+    <title><%= pageTitle %> - <%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.name) ? siteSettings.name : 'One Commerce' %></title>
     
     <!-- Global Error Listener & Console Logger -->
     <script>

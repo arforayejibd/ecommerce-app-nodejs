@@ -228,7 +228,7 @@ exports.getProduct = async (req, res, next) => {
 
     res.render("shop/product-detail", {
       product: prodObj,
-      pageTitle: product.title + " - One Commerce",
+      pageTitle: product.title,
       path: "/products",
       relatedProducts: relatedProducts.slice(0, 4)
     });
@@ -344,7 +344,7 @@ exports.getIndex = async (req, res, next) => {
       categoriesList: categoriesList || [],
       bannerCategories: bannerCategories || [],
       banners: sliderBanners || [],
-      pageTitle: "Home - One Commerce",
+      pageTitle: "Home",
       path: "/",
       siteSettings: setting ? setting.get({ plain: true }) : {},
       footerConfig: footerConfig
@@ -358,7 +358,7 @@ exports.getIndex = async (req, res, next) => {
       categoriesList: [],
       bannerCategories: [],
       banners: [],
-      pageTitle: "Home - One Commerce",
+      pageTitle: "Home",
       path: "/",
       siteSettings: {},
       footerConfig: {}
@@ -372,14 +372,14 @@ exports.getCart = async (req, res, next) => {
     const products = await getCartProducts(cart);
 
     return res.render("shop/cart", {
-      pageTitle: "Cart - One Commerce",
+      pageTitle: "Cart",
       path: "/cart",
       products: products || [],
     });
   } catch (error) {
     console.log("Error in shop controller getCart:", error);
     return res.render("shop/cart", {
-      pageTitle: "Cart - One Commerce",
+      pageTitle: "Cart",
       path: "/cart",
       products: [],
     });
@@ -606,14 +606,14 @@ exports.getOrders = async (req, res, next) => {
 
     return res.render('shop/orders', {
       path: '/orders',
-      pageTitle: 'Your Orders - One Commerce',
+      pageTitle: 'Your Orders',
       orders: orders
     });
   } catch (err) {
     console.log("Error in getOrders:", err);
     return res.render('shop/orders', {
       path: '/orders',
-      pageTitle: 'Your Orders - One Commerce',
+      pageTitle: 'Your Orders',
       orders: []
     });
   }
@@ -800,7 +800,7 @@ exports.getOrderTrack = async (req, res, next) => {
     if (!query) {
       return res.render('shop/order-track', {
         path: '/order-track',
-        pageTitle: 'Order Tracking - One Commerce',
+        pageTitle: 'Order Tracking',
         orders: [],
         order: null,
         searchQuery: '',
@@ -885,7 +885,7 @@ exports.getOrderTrack = async (req, res, next) => {
 
     return res.render('shop/order-track', {
       path: '/order-track',
-      pageTitle: 'Order Tracking - One Commerce',
+      pageTitle: 'Order Tracking',
       orders: orders,
       order: orders.length > 0 ? orders[0] : null,
       searchQuery: query,
@@ -896,7 +896,7 @@ exports.getOrderTrack = async (req, res, next) => {
     console.log("Error in getOrderTrack:", err);
     return res.render('shop/order-track', {
       path: '/order-track',
-      pageTitle: 'Order Tracking - One Commerce',
+      pageTitle: 'Order Tracking',
       orders: [],
       order: null,
       searchQuery: req.query.orderId || '',

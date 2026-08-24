@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - One Commerce</title>
-    <meta name="description" content="One Commerce Admin Panel - Secure Login">
+    <title>Admin Login - <%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.name) ? siteSettings.name : 'One Commerce' %></title>
+    <meta name="description" content="<%= (typeof siteSettings !== 'undefined' && siteSettings && siteSettings.name) ? siteSettings.name : 'One Commerce' %> Admin Panel - Secure Login">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
@@ -650,7 +650,7 @@
 
         function applyTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('rosedrape-theme', theme);
+            localStorage.setItem('onecommerce-theme', theme);
             if (theme === 'dark') {
                 themeIcon.className = 'fa-solid fa-moon';
                 if (loginLogo) loginLogo.src = darkLogoUrl;
@@ -667,7 +667,7 @@
 
         // Load saved theme on page load
         (function() {
-            const saved = localStorage.getItem('rosedrape-theme') || 'dark';
+            const saved = localStorage.getItem('onecommerce-theme') || 'dark';
             applyTheme(saved);
         })();
 

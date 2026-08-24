@@ -1,6 +1,6 @@
 <script>
     (function() {
-        var theme = localStorage.getItem('rosedrape-theme') || 'dark';
+        var theme = localStorage.getItem('onecommerce-theme') || 'dark';
         document.documentElement.setAttribute('data-theme', theme);
     })();
     window.addEventListener('error', function(e) {
@@ -10,7 +10,7 @@
         console.error('🚨 [UNHANDLED PROMISE REJECTION]:', e.reason);
     });
 </script>
-<!-- Include Rosedrape Original Local Stylesheets -->
+<!-- Include One Commerce Original Local Stylesheets -->
 <link href="/backEnd/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
 <link href="/backEnd/assets/css/app.min.css" rel="stylesheet" type="text/css" />
 <link href="/backEnd/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
@@ -22,7 +22,7 @@
 <link href="/backEnd/assets/css/sidebar-modern.css" rel="stylesheet" type="text/css" />
 
 <style>
-    /* Exact Rosedrape Layout Engine */
+    /* Exact One Commerce Layout Engine */
     #wrapper {
         display: flex;
         width: 100%;
@@ -668,7 +668,7 @@
     function applyTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         document.body.setAttribute('data-theme', theme);
-        localStorage.setItem('rosedrape-theme', theme);
+        localStorage.setItem('onecommerce-theme', theme);
         
         const darkLogo = document.querySelector('.logo-for-dark');
         const lightLogo = document.querySelector('.logo-for-light');
@@ -688,7 +688,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        const savedTheme = localStorage.getItem('rosedrape-theme') || 'dark';
+        const savedTheme = localStorage.getItem('onecommerce-theme') || 'dark';
         applyTheme(savedTheme);
     });
 

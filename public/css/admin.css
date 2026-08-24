@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap');
 
 /* ============================================================
-   ROSEDRAPE 100% EXACT THEME SYSTEM (DARK & LIGHT)
+   ONECOMMERCE 100% EXACT THEME SYSTEM (DARK & LIGHT)
    ============================================================ */
 
 /* 1. DARK THEME DEFINITION (DEFAULT) */
@@ -382,7 +382,7 @@ body.admin-body {
   width: calc(100% - var(--admin-sidebar-width));
 }
 
-/* Rosedrape Exact Cards */
+/* One Commerce Exact Cards */
 .card, .admin-content-box, .stat-card {
   background-color: var(--bg-tertiary) !important;
   border: 1px solid var(--border-color) !important;
@@ -429,7 +429,7 @@ body.admin-body {
   font-size: 1.5rem;
 }
 
-/* Rosedrape Tables */
+/* One Commerce Tables */
 .admin-table, .table {
   width: 100%;
   border-collapse: collapse;
