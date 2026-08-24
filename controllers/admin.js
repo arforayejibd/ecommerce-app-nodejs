@@ -508,7 +508,7 @@ exports.getCreateOrder = async (req, res, next) => {
     const allUsers = await User.findAll({ attributes: ['id', 'name', 'email'] }).catch(() => []);
 
     res.render("admin/create-order", {
-      pageTitle: "Create New Order - Rosedrape Admin",
+      pageTitle: "Create New Order - OneCommerce Admin",
       path: "/admin/orders",
       allProducts: products || [],
       products: products || [],
@@ -1627,7 +1627,7 @@ const loadSmsConfig = () => {
     const file = getSmsFilePath();
     if (fs.existsSync(file)) return JSON.parse(fs.readFileSync(file, 'utf8'));
   } catch (e) {}
-  return { url: 'https://api.sms.net.bd/sendsms', api_key: '', serderid: 'ROSEDRAPE', status: false, order: false, forget_pass: false, password_g: false };
+  return { url: 'https://api.sms.net.bd/sendsms', api_key: '', serderid: 'ONECOMMERCE', status: false, order: false, forget_pass: false, password_g: false };
 };
 
 const saveSmsConfig = (data) => {

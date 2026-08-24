@@ -1,7 +1,7 @@
 {
   "url": "https://api.sms.net.bd/sendsms",
   "api_key": "sms_net_bd_api_key_83749102",
-  "serderid": "ROSEDRAPE",
+  "serderid": "ONECOMMERCE",
   "status": false,
   "order": false,
   "forget_pass": false,

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
@@ -650,7 +650,7 @@
 
         function applyTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
-            localStorage.setItem('rosedrape-theme', theme);
+            localStorage.setItem('onecommerce-theme', theme);
             if (theme === 'dark') {
                 themeIcon.className = 'fa-solid fa-moon';
                 if (loginLogo) loginLogo.src = darkLogoUrl;
@@ -667,7 +667,7 @@
 
         // Load saved theme on page load
         (function() {
-            const saved = localStorage.getItem('rosedrape-theme') || 'dark';
+            const saved = localStorage.getItem('onecommerce-theme') || 'dark';
             applyTheme(saved);
         })();
 
